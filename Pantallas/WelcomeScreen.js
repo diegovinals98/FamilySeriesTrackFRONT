@@ -6,14 +6,18 @@ import { Dimensions } from 'react-native';
 import { globalStyles } from '../estilosGlobales.js';
 import * as Notifications from 'expo-notifications';
 import * as Application from 'expo-application';
+import { useUser } from '../userContext.js'; // Importa el hook useUser
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
+
+
 
 export default function WelcomeScreen({ navigation }) {
   // data: Almacena datos de usuarios.
   const [todosUsuarios, settodosUsuarios] = useState([]);
   const [IdDevice, setIdDevice] = useState([])
+  const { setUser } = useUser();
 
   useEffect(() => {
     const fetchDeviceIdAndCheck = async () => {
@@ -54,7 +58,23 @@ export default function WelcomeScreen({ navigation }) {
   // Aqui lo que tenemos que hacer coger ese device ID, buscarlo en la BBDD, si existe un usuario para ese devide ID,
   // cogemos los datos de ese usuario e iniciamos sesion sin que haga falta que el propio usuario meta contraseña y usuario.
   const checkDeviceIdInDB = async (deviceId) => {
-  
+    console.log("Dentro de check device")
+
+    if(deviceId == "76C84317-1B3A-47E5-B454-002F574B41ED "){
+      setUser({
+        id: 6610977, // Asegúrate de que estos campos coincidan con los nombres en tu base de datos
+        nombre: "Diego",
+        apellidos: "Viñals Lage",
+        usuario: "dvinals98",
+        contraseña: "asd",
+      });
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'Home' }],
+      });
+    }
+    
+    /*
     try {
       const response = await fetch('https://tu-api.com/check-device-id', {
         method: 'POST',
@@ -74,7 +94,8 @@ export default function WelcomeScreen({ navigation }) {
       console.error('Error verificando el ID del dispositivo:', error);
       return null;
     }
-  
+      */
+
   };
 
 
