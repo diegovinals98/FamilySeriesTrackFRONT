@@ -22,23 +22,25 @@ export default function WelcomeScreen({ navigation }) {
   useEffect(() => {
     const fetchDeviceIdAndCheck = async () => {
       try {
-        // Primero, obtenemos el ID del dispositivo
+        // Obtenemos el ID del dispositivo
         const deviceId = await getDeviceId();
-        setIdDevice(deviceId); // Establecemos el ID del dispositivo en el estado
-
-        // Luego, verificamos en la base de datos
+        
+        // Guardamos el deviceId en el estado local
+        setIdDevice(deviceId);
+  
+        // Si el deviceId es válido, lo verificamos en la base de datos
         if (deviceId) {
-          const userData = await checkDeviceIdInDB(deviceId);
-          // Aquí puedes manejar el resultado de la verificación en la base de datos
-          console.log('UserData:', userData);
+          checkDeviceIdInDB(deviceId);
         }
       } catch (error) {
-        console.error('Error:', error);
+        // Manejamos cualquier error que pueda ocurrir
+        console.error('Error obteniendo o verificando el ID del dispositivo:', error);
       }
     };
-
-    fetchDeviceIdAndCheck(); // Ejecutamos la función asíncrona
+  
+    fetchDeviceIdAndCheck(); // Ejecutamos la función asíncrona cuando el componente se monta
   }, []);
+  
 
 
   const getDeviceId = async () => {
@@ -58,42 +60,68 @@ export default function WelcomeScreen({ navigation }) {
   // Aqui lo que tenemos que hacer coger ese device ID, buscarlo en la BBDD, si existe un usuario para ese devide ID,
   // cogemos los datos de ese usuario e iniciamos sesion sin que haga falta que el propio usuario meta contraseña y usuario.
   const checkDeviceIdInDB = async (deviceId) => {
-    console.log("Dentro de check device")
-
-    if(deviceId == "76C84317-1B3A-47E5-B454-002F574B41ED "){
-      setUser({
-        id: 6610977, // Asegúrate de que estos campos coincidan con los nombres en tu base de datos
-        nombre: "Diego",
-        apellidos: "Viñals Lage",
-        usuario: "dvinals98",
-        contraseña: "asd",
-      });
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Home' }],
-      });
-    }
-    
-    /*
+    console.log("Dentro de check device");
+  
     try {
+      // Primer fetch: Verifica si el deviceId existe en la base de datos
       const response = await fetch(`https://apitfg.lapspartbox.com/check-device-id?deviceId=${deviceId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
-        if (!response.ok) {
-          throw new Error('Error al consultar la base de datos');
+  
+      // Manejo de errores en la consulta inicial
+      if (!response.ok) {
+        throw new Error('Error al consultar la base de datos');
+      }
+  
+      const data = await response.json();
+  
+      // Verifica si se ha encontrado un usuario asociado al deviceId
+      if (data.length !== 0 && data.IdUsuario) {
+        const userId = data.IdUsuario; // Obtiene el IdUsuario del resultado
+  
+        // Segundo fetch: Obtiene la información completa del usuario
+        const userResponse = await fetch(`https://apitfg.lapspartbox.com/get-user/${userId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+  
+        // Manejo de errores al obtener los detalles del usuario
+        if (!userResponse.ok) {
+          throw new Error('Error al obtener los detalles del usuario');
         }
-        const data = await response.json();
-        return data; // Esto debería contener la información del usuario si existe
-      } catch (error) {
-        console.error('Error verificando el ID del dispositivo:', error);
+  
+        const userData = await userResponse.json();
+  
+        // Si se encuentra el usuario, establece los datos y navega a la página de inicio
+        setUser({
+          id: userId, // Asegúrate de que estos campos coincidan con los nombres en tu base de datos
+          nombre: userData.Nombre,
+          apellidos: userData.Apellidos,
+          usuario: userData.Usuario,
+          contraseña: userData.Contraseña,
+        });
+  
+        // Redirige al usuario a la página de inicio
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      } else {
+        // Si no se encuentra el deviceId en la base de datos, no hacemos nada
+        console.log('Device ID no encontrado, no se realiza ninguna acción.');
         return null;
       }
-      */
-
+    } catch (error) {
+      console.error('Error verificando el ID del dispositivo o consultando la información del usuario:', error);
+      return null;
+    }
   };
+  
 
 
 
