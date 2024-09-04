@@ -35,6 +35,7 @@ const LogInScreen = () => {
   const [loginError, setLoginError] = useState('');
   const { setUser } = useUser();
 
+
   useEffect(() => {
    //console.log('ENTRAMOS EN PANTALLA LOGIN')
     //authenticate()

@@ -94,6 +94,7 @@ const ComentariosSerie = () => {
             // Comprobar si los nuevos comentarios son diferentes a los actuales antes de actualizar
             if (JSON.stringify(comentariosRef.current) !== JSON.stringify(nuevosComentarios)) {
               setComentarios(nuevosComentarios);
+              console.log(nuevosComentarios);
               setCambio(prev => !prev);
               console.log('Los comentarios SI han cambiado');
             } else {
@@ -203,12 +204,19 @@ const ComentariosSerie = () => {
               
               style={styles.scrollView}>
               {comentarios.map((comentario, index) => (
-                <View key={index} style={styles.comentarioContainer}>
-                    <Text style={styles.autor}>{comentario.nombreCompleto}</Text>
-                    <Text>{comentario.comentario}</Text>
-                    <Text style={styles.fecha}>{moment.utc(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}</Text>
-                </View>
-                ))}
+                <View 
+                  key={index} 
+                  style={[
+                    styles.comentarioContainer, 
+                    //comentario.idUsuario === user.id ? styles.comentarioDerecha : styles.comentarioIzquierda
+                      `${comentario.nombreCompleto}` === "Diego Viñals" ? styles.comentarioDerecha : styles.comentarioIzquierda
+                  ]}
+                >
+                <Text style={styles.autor}>{comentario.nombreCompleto}</Text>
+                <Text>{comentario.comentario} {comentario.idUsuario}</Text>
+                <Text style={styles.fecha}>{moment.utc(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}</Text>
+              </View>
+            ))}
                 </ScrollView>
               {/* Área para introducir comentarios */}
               <View style={styles.commentBox}>
@@ -314,7 +322,26 @@ const ComentariosSerie = () => {
         fontSize: 12,  // Tamaño de letra más pequeño para la fecha
         color: '#999',  // Gris más claro para la fecha
         marginTop: '1%'  // Espacio arriba de la fecha
-      }
+      },
+      comentarioDerecha: {
+        alignSelf: 'flex-end',  // Alinea el comentario a la derecha
+        backgroundColor: '#DCF8C6',  // Fondo de color claro (ej. verde claro, como en los chats de WhatsApp)
+        borderRadius: 15,
+        padding: '3%',
+        marginVertical: '2%',
+        marginHorizontal: '2%',
+        maxWidth: '80%',  // Limita el ancho de los comentarios
+  },
+  
+  comentarioIzquierda: {
+    alignSelf: 'flex-start',  // Alinea el comentario a la izquierda
+    backgroundColor: '#FFFFFF',  // Fondo blanco
+    borderRadius: 15,
+    padding: '3%',
+    marginVertical: '2%',
+    marginHorizontal: '2%',
+    maxWidth: '80%',  // Limita el ancho de los comentarios
+  },
     });
 
 export default ComentariosSerie;

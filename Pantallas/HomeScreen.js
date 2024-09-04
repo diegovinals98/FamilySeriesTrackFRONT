@@ -365,11 +365,17 @@ const HomeScreen = () => {
             ) : null}
           </View>
 
+          {
+          /* 
           <View style={styles.ordenarBotonContainer}>
             <TouchableOpacity style={styles.ordenarBoton} onPress={ordenarSeriesPorTitulo}>
               <Text style={styles.ordenarBotonTexto}>Ordenar por Título</Text>
             </TouchableOpacity>
           </View>
+          */
+          }
+
+          
 
           <View style={{ flexDirection: 'row', height: windowHeight * 0.65 }}>
             <ScrollView refreshControl={
