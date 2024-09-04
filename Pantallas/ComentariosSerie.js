@@ -217,6 +217,7 @@ const ComentariosSerie = () => {
                 <Text style={styles.fecha}>{moment.utc(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}</Text>
               </View>
             ))}
+            
                 </ScrollView>
               {/* Área para introducir comentarios */}
               <View style={styles.commentBox}>
