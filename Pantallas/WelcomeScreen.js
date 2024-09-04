@@ -76,24 +76,21 @@ export default function WelcomeScreen({ navigation }) {
     
     /*
     try {
-      const response = await fetch('https://tu-api.com/check-device-id', {
-        method: 'POST',
+      const response = await fetch(`https://apitfg.lapspartbox.com/check-device-id?deviceId=${deviceId}`, {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ deviceId }),
       });
-  
-      if (!response.ok) {
-        throw new Error('Error al consultar la base de datos');
+        if (!response.ok) {
+          throw new Error('Error al consultar la base de datos');
+        }
+        const data = await response.json();
+        return data; // Esto debería contener la información del usuario si existe
+      } catch (error) {
+        console.error('Error verificando el ID del dispositivo:', error);
+        return null;
       }
-  
-      const data = await response.json();
-      return data; // Esto debería contener la información del usuario si existe
-    } catch (error) {
-      console.error('Error verificando el ID del dispositivo:', error);
-      return null;
-    }
       */
 
   };
