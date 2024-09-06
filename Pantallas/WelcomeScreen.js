@@ -61,10 +61,12 @@ export default function WelcomeScreen({ navigation }) {
   // cogemos los datos de ese usuario e iniciamos sesion sin que haga falta que el propio usuario meta contraseña y usuario.
   const checkDeviceIdInDB = async (deviceId) => {
     console.log("Dentro de check device");
+
   
     try {
       // Primer fetch: Verifica si el deviceId existe en la base de datos
-      const response = await fetch(`https://apitfg.lapspartbox.com/check-device-id?deviceId=${deviceId}`, {
+      console.log("Lo que se esta enviando: " , deviceId);
+      const response = await fetch(`https://apitfg.lapspartbox.com/check-device-id/${deviceId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -98,12 +100,28 @@ export default function WelcomeScreen({ navigation }) {
         const userData = await userResponse.json();
   
         // Si se encuentra el usuario, establece los datos y navega a la página de inicio
+        // Console logs para ver cada valor
+        console.log("ID del usuario:", userId);
+        console.log("Nombre:", userData.nombre);
+        console.log("Apellidos:", userData.apellidos);
+        console.log("Usuario:", userData.usuario);
+        console.log("Contraseña:", userData.contraseña);
+
+        // Ahora configura el usuario en el estado
         setUser({
           id: userId, // Asegúrate de que estos campos coincidan con los nombres en tu base de datos
-          nombre: userData.Nombre,
-          apellidos: userData.Apellidos,
-          usuario: userData.Usuario,
-          contraseña: userData.Contraseña,
+          nombre: userData.nombre,
+          apellidos: userData.apellidos,
+          usuario: userData.usuario,
+          contraseña: userData.contraseña,
+        });
+
+        console.log("Objeto user configurado:", {
+          id: userId,
+          nombre: userData.nombre,
+          apellidos: userData.apellidos,
+          usuario: userData.usuario,
+          contraseña: userData.contraseña,
         });
   
         // Redirige al usuario a la página de inicio

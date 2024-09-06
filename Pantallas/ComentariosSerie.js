@@ -213,7 +213,7 @@ const ComentariosSerie = () => {
                   ]}
                 >
                 <Text style={styles.autor}>{comentario.nombreCompleto}</Text>
-                <Text>{comentario.comentario} {comentario.idUsuario}</Text>
+                <Text>{comentario.comentario}</Text>
                 <Text style={styles.fecha}>{moment.utc(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}</Text>
               </View>
             ))}

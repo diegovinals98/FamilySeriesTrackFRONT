@@ -7,6 +7,7 @@ import * as Crypto from 'expo-crypto';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Application from 'expo-application';
 
 
 
@@ -34,13 +35,26 @@ const LogInScreen = () => {
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
   const { setUser } = useUser();
-
+  const [IdDevice, setIdDevice] = useState([])
+  const [userid, setUserid] = useState();
 
   useEffect(() => {
    //console.log('ENTRAMOS EN PANTALLA LOGIN')
     //authenticate()
  
   }, []);
+
+  const getDeviceId = async () => {
+    let deviceId;
+    
+    if (Platform.OS === 'android') {
+      deviceId = Application.androidId; // Android ID
+    } else if (Platform.OS === 'ios') {
+      deviceId = await Application.getIosIdForVendorAsync(); 
+    }
+    console.log('Id del dispositivo: ' , deviceId)
+    return deviceId;
+  };
 
   async function authenticate() {
     // Verificar la disponibilidad de autenticación biométrica
@@ -75,7 +89,7 @@ const LogInScreen = () => {
       );
     
     try {
-      let response = await fetch('https://apitfg.lapspartbox.com/login2', { // Asegúrate de que la IP y el puerto sean correctos
+      let response = await fetch('https://apitfg.lapspartbox.com/login2', { 
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -90,17 +104,17 @@ const LogInScreen = () => {
       let json = await response.json();
       console.log('RESPUESTA ', json)
 
-
-      
        // Aquí obtendrías el hash de la contraseña almacenada para el 'username' desde tu base de datos
       const storedHashedPassword = json.hashPassword; 
 
-  
      
     if (storedHashedPassword == hashedPassword) {
+      
       console.log('Inicio de sesión exitoso');
       // Aquí puedes agregar la navegación a otra pantalla si es necesario
       //Alert.alert("Éxito", "Inicio de sesión exitoso.");
+      setUserid(json.usuario.Id);
+      
       setUser({
         id: json.usuario.Id, // Asegúrate de que estos campos coincidan con los nombres en tu base de datos
         nombre: json.usuario.Nombre,
@@ -108,10 +122,46 @@ const LogInScreen = () => {
         usuario: json.usuario.Usuario,
         contraseña: json.usuario.Contraseña,
       });
+      console.log("id del usuario: ", json.usuario.Id);
+      
+      
+      /** 
+       *  1. Sacamos el deviceId
+       *  2. Metemos en la tabla de deviceTokens el deviceId junto con el id del usuario
+       */
+      // Obtenemos el ID del dispositivo
+      const deviceId = await getDeviceId();
+      try {
+        
+        
+        // Enviar el deviceId y userId al backend
+        const response = await fetch('https://apitfg.lapspartbox.com/insert-device-id', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ userId: json.usuario.Id, deviceId  }), // Enviar deviceId y userId en el cuerpo de la solicitud
+        });
+    
+        // Verificar si la respuesta es correcta
+        if (!response.ok) {
+          throw new Error('Error al insertar el Device ID y User ID en la base de datos');
+        }
+    
+        const data = await response.json();
+        console.log('Inserción exitosa:', data);
+    
+      } catch (error) {
+        console.error('Error al insertar el Device ID y User ID:', error);
+        // Aquí puedes mostrar un mensaje de error al usuario
+      }
+
       navigation.reset({
         index: 0,
         routes: [{ name: 'Home' }],
       });
+
+    
     } else {
       // Aquí manejas el caso de éxito 0 o cualquier otro caso
       console.log('Error en el inicio de sesión');

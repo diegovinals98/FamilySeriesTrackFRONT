@@ -20,6 +20,7 @@ import { useUser } from '../userContext.js';
 import * as LocalAuthentication from 'expo-local-authentication';
 import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
+import * as Application from 'expo-application';
 
 const windowHeight = Dimensions.get('window').height;
 
@@ -105,6 +106,18 @@ const Settings = () => {
     
   }
 
+  const getDeviceId = async () => {
+    let deviceId;
+    
+    if (Platform.OS === 'android') {
+      deviceId = Application.androidId; // Android ID
+    } else if (Platform.OS === 'ios') {
+      deviceId = await Application.getIosIdForVendorAsync(); 
+    }
+    console.log('Id del dispositivo: ' , deviceId)
+    return deviceId;
+  };
+
   async function eliminarCuenta(idUser){
     Alert.alert(
       `¿Estás seguro de que quieres eliminar la cuenta?`,
@@ -166,11 +179,45 @@ const Settings = () => {
     }
   };
 
-  const cerrarSesion = () =>{
-    navigation.reset({
+  const cerrarSesion = async () =>{
+
+    /*
+    1. Borrar el deviceID de la tabla y luego ya salir 
+    */
+    console.log("Borrar device id de: ", user.id);
+    try {
+ 
+    
+      const deviceId = await getDeviceId(); // Suponiendo que tienes una función para obtener el deviceId
+  
+      console.log("Cerrando sesión para el usuario con ID:", user.id);
+      console.log("Eliminando el deviceId:", deviceId);
+  
+      // 2. Hacer la solicitud al backend para eliminar el deviceId asociado con el userId
+      const response = await fetch('https://apitfg.lapspartbox.com/delete-device-id', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id, deviceId }), // Enviar userId y deviceId en el cuerpo de la solicitud
+      });
+  
+      if (!response.ok) {
+        throw new Error('Error al eliminar el Device ID de la base de datos');
+      }
+  
+      console.log('Device ID eliminado exitosamente');
+  
+      // 3. Redirigir al usuario a la pantalla de bienvenida (Welcome)
+      navigation.reset({
         index: 0,
         routes: [{ name: 'Welcome' }],
       });
+  
+    } catch (error) {
+      console.error('Error al cerrar sesión:', error);
+      // Manejar el error adecuadamente
+    }
   }
 
   return (

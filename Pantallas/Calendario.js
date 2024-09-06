@@ -96,16 +96,22 @@ const Calendario = () => {
     return (
         <View style={styles.container}>
             <Calendar
+            style={{
+              borderWidth: 1,
+              borderColor: 'gray',
+              height: 350
+            }}
                 onDayPress={day => {
                     setSelected(day.dateString);
                 }}
                 markedDates={{
                     ...markedDates,
-                    [selected]: { ...markedDates[selected], selected: true, selectedColor: 'green'}
+                    [selected]: { ...markedDates[selected], selected: true, selectedColor: 'blue'},
                 }}
+                 
+             
             />
 
-            {/* ScrollView movido al nivel superior */}
             <ScrollView style={styles.scrollView}>
                 {seriesDetalles.map((detalle, index) => {
                     if (detalle.next_episode_to_air && detalle.next_episode_to_air.air_date === selected) {
@@ -130,37 +136,45 @@ const Calendario = () => {
 
 const styles = StyleSheet.create({
     container: {
-        flex: 1,  // Asegura que el contenedor ocupe todo el espacio
+        flex: 1,
+        backgroundColor: '#f5f5f5',  // Fondo del contenedor
     },
     scrollView: {
-        flex: 1,  // Hace que el ScrollView ocupe todo el espacio disponible
+        flex: 1,
     },
     detalleContainer: {
         flex: 1,
-        padding: 20,
-        justifyContent: 'center',
+        paddingLeft: 10,
+        paddingBottom: 10,
+        paddingRight: 10,
+        marginVertical: 10,
+        borderRadius: 10
     },
     poster: {
-        height: 400,  // Ajusta la altura como prefieras
+        height: 400,
         width: '100%',
         resizeMode: 'contain',
+        borderRadius: 10,
     },
     titulo: {
-        fontSize: 24,
+        fontSize: 30,
         fontWeight: 'bold',
         textAlign: 'center',
         marginVertical: 10,
+        color: '#333',
     },
     title: {
         fontSize: 18,
         textAlign: 'center',
         marginVertical: 10,
+        color: '#555',
     },
     detalles: {
         fontSize: 16,
         textAlign: 'justify',
         marginVertical: 10,
-    },
+        color: '#777',
+    }
 });
 
 export default Calendario;
