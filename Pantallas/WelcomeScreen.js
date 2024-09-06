@@ -98,30 +98,17 @@ export default function WelcomeScreen({ navigation }) {
         }
   
         const userData = await userResponse.json();
+        console.log("------------- USER DATA -----------------")
+        console.log(userData);
   
-        // Si se encuentra el usuario, establece los datos y navega a la página de inicio
-        // Console logs para ver cada valor
-        console.log("ID del usuario:", userId);
-        console.log("Nombre:", userData.nombre);
-        console.log("Apellidos:", userData.apellidos);
-        console.log("Usuario:", userData.usuario);
-        console.log("Contraseña:", userData.contraseña);
 
         // Ahora configura el usuario en el estado
         setUser({
           id: userId, // Asegúrate de que estos campos coincidan con los nombres en tu base de datos
-          nombre: userData.nombre,
-          apellidos: userData.apellidos,
-          usuario: userData.usuario,
-          contraseña: userData.contraseña,
-        });
-
-        console.log("Objeto user configurado:", {
-          id: userId,
-          nombre: userData.nombre,
-          apellidos: userData.apellidos,
-          usuario: userData.usuario,
-          contraseña: userData.contraseña,
+          nombre: userData.usuario.Nombre,
+          apellidos: userData.usuario.Apellidos,
+          usuario: userData.usuario.Usuario,
+          contraseña: userData.usuario.Contraseña,
         });
   
         // Redirige al usuario a la página de inicio
