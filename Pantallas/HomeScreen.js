@@ -12,7 +12,6 @@ import {
   TouchableWithoutFeedback,
   FlatList,
   Keyboard,
-  Button,
   Alert,
   ScrollView,
   RefreshControl,
@@ -35,36 +34,28 @@ import { set } from 'lodash';
 // Obtiene las dimensiones de la ventana del dispositivo.
 const windowHeight = Dimensions.get('window').height;
 
-// Componente principal de la pantalla de inicio.
 const HomeScreen = () => {
-  // Hook de navegación y rutas de react-navigation.
   const route = useRoute();
   const navigation = useNavigation();
-
   const insets = useSafeAreaInsets();
 
-  // Estilos condicionales basados en la plataforma
   const platformStyles = Platform.select({
-    ios: { paddingTop: StatusBar.currentHeight }, // para iOS usamos el inset top
-    android: { paddingTop: insets.top }, // para Android usamos la altura de la barra de estado
+    ios: { paddingTop: StatusBar.currentHeight },
+    android: { paddingTop: insets.top },
   });
 
-  // Accede a los datos del usuario desde el contexto.
   const { user } = useUser();
-  // Calcula las iniciales del usuario para mostrar.
   const iniciales = user?.nombre ? `${user?.nombre.charAt(0)}${user?.apellidos.charAt(0)}` : '';
 
-  // Estados del componente.
-  const [data, setData] = useState([]); // Estado para datos de usuarios.
-  const [seriesData, setSeriesData] = useState([]); // Estado para datos generales de series.
-  const [serieDetalle, setSerieDetalle] = useState([]); // Estado para detalles específicos de una serie.
+  const [data, setData] = useState([]);
+  const [seriesData, setSeriesData] = useState([]);
+  const [serieDetalle, setSerieDetalle] = useState([]);
   const [seriesIds, setseriesIds] = useState([]);
   const [seriesDetalles, setSeriesDetalles] = useState([]);
   const [idelegido, setIdElegido] = useState();
 
-  // Estado para la visibilidad del menú desplegable y el grupo seleccionado.
-  const [TodosGrupos, setTodosGrupos] = useState([]); // Estado para almacenar todos los grupos.
-  const [value, setValue] = useState("Grupos"); // variable que almacena en que grupo estamos
+  const [TodosGrupos, setTodosGrupos] = useState([]);
+  const [value, setValue] = useState("Grupos");
   const [isFocus, setIsFocus] = useState(false);
   const [refrescar, setRefrescar] = useState(false);
   const [refrescando, setRefrescando] = useState(false);
@@ -75,29 +66,23 @@ const HomeScreen = () => {
 
   useFocusEffect(
     React.useCallback(() => {
-      // Llama a las funciones que cargan los datos
       console.log('---------------------------------------- HOME SCREEN ----------------------------------------');
       llamarAGrupos();
       obtenerSeries();
       resetearBusqueda();
       setRefrescar(prev => !prev);
-
     }, [])
   );
 
   const onRefresh = React.useCallback(() => {
     setRefrescando(true);
-    // Aquí debes llamar a las funciones que actualizan tus datos
     resetearBusqueda();
     setRefrescar(prev => !prev);
     llamarAGrupos();
     obtenerSeries();
-    console.log(' ---------------------- ID elegido ----------------------' + idelegido)
-
     setRefrescando(false);
   }, []);
 
-  // Función para manejar la selección de un grupo.
   const handleSelectItem = (item) => {
     setSelectedItem(item.Nombre_grupo);
     setIsVisible(false);
@@ -107,7 +92,6 @@ const HomeScreen = () => {
     navigation.navigate('Añadir Grupo')
   }
 
-  // Función para realizar la llamada a la API y obtener los grupos del Usuario
   const llamarAGrupos = () => {
     console.log('Entrado en llamarGrupos')
     fetch(`https://apitfg.lapspartbox.com/grupos/${user?.id}`)
@@ -116,29 +100,24 @@ const HomeScreen = () => {
       .catch((error) => console.error('Error al obtener los grupos:', error));
     console.log("Grupos del Usuario: " + user.nombre + user.apellidos);
     console.log(TodosGrupos);
-
   }
 
   useEffect(() => {
     console.log('El ID elegido es ahora: ' + idelegido);
     obtenerSeries();
-    // Cualquier otra acción que necesite el estado actualizado
   }, [idelegido]);
 
-  const obtenerSeriesDelUsuario = async (userId, nombre, idgrupo) => {
-    console.log('Obtener series del usuario con id: ' + userId);
+  const obtenerSeriesDelGrupo = async (idgrupo) => {
     console.log('Obtener series del grupo con id: ' + idgrupo);
-    console.log('Obtener series del grupo con nombre: ' + nombre);
     try {
-      const url = new URL(`https://apitfg.lapspartbox.com/series-ids-usuario/${userId}/${idgrupo}`);
+      const url = new URL(`https://apitfg.lapspartbox.com/series-grupo/${idgrupo}`);
 
-      // Llamada al endpoint con userId y value como parámetros de consulta
       const respuesta = await fetch(url);
       if (!respuesta.ok) {
         throw new Error('Respuesta de red no fue ok.');
       }
       const seriesIds = await respuesta.json();
-      console.log('Series: ' + seriesIds)
+      console.log('Series del grupo: ' + seriesIds)
       return seriesIds;
     } catch (error) {
       console.error('Hubo un problema con la petición fetch:', error);
@@ -146,37 +125,31 @@ const HomeScreen = () => {
   };
 
   const obtenerSeries = () => {
-
     if (value == 'Grupos') {
       console.log('Estamos en grupos, por lo que no hay series')
-      setSeriesDetalles([])
+      setSeriesDetalles([]);
     } else {
-      obtenerSeriesDelUsuario(user.id, value, idelegido).then(seriesIds => {
-        // Verifica si seriesIds está vacío
+      obtenerSeriesDelGrupo(idelegido).then(seriesIds => {
         if (seriesIds.length === 0) {
           console.log('No hay series para mostrar');
-          return; // Sale de la función si no hay IDs de series
+          return;
         }
 
-        // Si seriesIds no está vacío, ejecuta el resto del código
         Promise.all(seriesIds.map(serieID =>
           fetch(`https://api.themoviedb.org/3/tv/${serieID}?api_key=c51082efa7d62553e4c05812ebf6040e&language=es-ES`)
             .then(response => response.json())
         )).then(seriesDetalles => {
-          setSeriesDetalles(seriesDetalles); // Guardar los detalles de las series en el estado
+          setSeriesDetalles(seriesDetalles);
         }).catch(error => console.error('Error:', error));
       });
     }
-
   }
 
-  // Efecto para cargar datos de una serie específica.
   useEffect(() => {
     llamarAGrupos();
     obtenerSeries();
   }, [refrescar]);
 
-  // Función para navegar a la pantalla de ajustes.
   const handleSettings = () => {
     navigation.navigate('Settings');
   }
@@ -218,7 +191,7 @@ const HomeScreen = () => {
     }
   };
 
-  const agregarSerieAUsuario = async (userId, idSerie) => {
+  const agregarSerieAGrupoYUsuario = async (userId, idSerie, idGrupo) => {
     try {
       let response = await fetch('https://apitfg.lapspartbox.com/agregar-serie-usuario', {
         method: 'POST',
@@ -227,7 +200,8 @@ const HomeScreen = () => {
         },
         body: JSON.stringify({
           userId: userId,
-          idSerie: idSerie
+          idSerie: idSerie,
+          idGrupo: idGrupo // Añadimos el idGrupo a la solicitud
         }),
       });
 
@@ -239,7 +213,7 @@ const HomeScreen = () => {
   };
 
   const seleccionSerie = (text, idSerie) => {
-    console.log("Se quire añadir " + text + ', con el id: ' + idSerie)
+    console.log("Se quiere añadir " + text + ', con el id: ' + idSerie)
     Alert.alert(
       'Confirmación',
       `¿Estás seguro de que quieres añadir la serie: ${text}?`,
@@ -247,7 +221,7 @@ const HomeScreen = () => {
         {
           text: 'Sí',
           onPress: async () => {
-            agregarSerieAUsuario(user.id, idSerie)
+            agregarSerieAGrupoYUsuario(user.id, idSerie, idelegido);
             resetearBusqueda();
             setRefrescar(prev => !prev);
           },
@@ -290,7 +264,7 @@ const HomeScreen = () => {
       }
     });
     setSeriesDetalles(seriesOrdenadas);
-    setOrdenAscendente(!ordenAscendente); // Cambia el orden para la próxima vez
+    setOrdenAscendente(!ordenAscendente);
   };
 
   return (
@@ -323,18 +297,17 @@ const HomeScreen = () => {
               onBlur={() => setIsFocus(false)}
               onChange={item => {
                 setValue(item.Nombre_grupo);
-                console.log('ID DE ITEM ' + item.ID_Grupo)
+                console.log('ID DE ITEM ' + item.ID_Grupo);
                 setIdElegido(item.ID_Grupo);
                 obtenerSeries();
                 setIsFocus(false);
-                onRefresh()
+                onRefresh();
               }}
               renderLeftIcon={() => (
                 <Text style={styles.buttonText}>{value}</Text>
               )}
             />
 
-            {/* Botón para añadir un nuevo grupo. */}
             <TouchableOpacity style={styles.circle} onPress={() => anadirGrupo()}>
               <Text style={styles.initials}>+</Text>
             </TouchableOpacity>
@@ -365,18 +338,6 @@ const HomeScreen = () => {
             ) : null}
           </View>
 
-          {
-          /* 
-          <View style={styles.ordenarBotonContainer}>
-            <TouchableOpacity style={styles.ordenarBoton} onPress={ordenarSeriesPorTitulo}>
-              <Text style={styles.ordenarBotonTexto}>Ordenar por Título</Text>
-            </TouchableOpacity>
-          </View>
-          */
-          }
-
-          
-
           <View style={{ flexDirection: 'row', height: windowHeight * 0.65 }}>
             <ScrollView refreshControl={
               <RefreshControl
@@ -404,15 +365,13 @@ const HomeScreen = () => {
           </View>
 
           <View style={{ flexDirection: 'row', textAlign: 'center' }}>
-            {
-              value !== 'Grupos' &&
+            {value !== 'Grupos' &&
               <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => editarGrupo(value)}>
                 <Text style={styles.editarGrupoTexto}>Editar Grupo: {value}</Text>
               </TouchableOpacity>
             }
 
-            {
-              value !== 'Grupos' &&
+            {value !== 'Grupos' &&
               <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => verCalendario(value)}>
                 <Text style={styles.editarGrupoTexto}>Ver Calendario</Text>
               </TouchableOpacity>
