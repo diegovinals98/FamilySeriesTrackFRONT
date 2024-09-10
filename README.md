@@ -40,5 +40,9 @@ Para ejecutar este proyecto localmente, sigue estos pasos:
 4. Navega al directorio del proyecto y ejecuta `npm install` para instalar las dependencias.
 5. Inicia el servidor de desarrollo con `npx expo start`
 
+## TODO’s relacionados con el FrontEnd
 
+	1.	Chat: Implementar un sistema de mensajería en tiempo real, similar a Whatsapp, para que los usuarios puedan comunicarse dentro de la plataforma.
+	2.	Estadísticas: Desarrollar un sistema de estadísticas para que los usuarios puedan ver el progreso de sus series, cuánto tiempo han invertido en visualizarlas y qué tan cerca están de finalizar.
+	3.	Rediseño: Proponer y realizar un rediseño de la aplicación para mejorar la experiencia de usuario y actualizar la interfaz a las últimas tendencias de diseño.
 
