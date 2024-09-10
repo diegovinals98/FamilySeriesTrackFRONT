@@ -224,10 +224,12 @@ const ComentariosSerie = () => {
                   <Text>{comentario.comentario}</Text>
                   <Text style={styles.fecha}>{moment.utc(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}</Text>
                   
-                  {/* Botón para responder */}
+                  {/* Botón para responder 
                   <TouchableOpacity onPress={() => seleccionarComentarioAResponder(comentario.id)}> 
                     <Text style={styles.responderText}>Responder</Text>
                   </TouchableOpacity>
+                  **/
+                  }
 
                   {/* Si el comentario tiene respuestas */}
                   {comentario.respuestas && comentario.respuestas.length > 0 && (
