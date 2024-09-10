@@ -48,7 +48,7 @@ const LogInScreen = () => {
     let deviceId;
     
     if (Platform.OS === 'android') {
-      deviceId = Application.androidId; // Android ID
+      deviceId = Application.getAndroidId();// Android ID
     } else if (Platform.OS === 'ios') {
       deviceId = await Application.getIosIdForVendorAsync(); 
     }

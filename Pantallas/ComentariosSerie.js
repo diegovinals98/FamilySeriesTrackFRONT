@@ -208,8 +208,8 @@ const ComentariosSerie = () => {
                   key={index} 
                   style={[
                     styles.comentarioContainer, 
-                    //comentario.idUsuario === user.id ? styles.comentarioDerecha : styles.comentarioIzquierda
-                      `${comentario.nombreCompleto}` === "Diego Viñals" ? styles.comentarioDerecha : styles.comentarioIzquierda
+                    comentario.idUsuario === user.id ? styles.comentarioDerecha : styles.comentarioIzquierda
+                      //`${comentario.nombreCompleto}` === "Diego Viñals" ? styles.comentarioDerecha : styles.comentarioIzquierda
                   ]}
                 >
                 <Text style={styles.autor}>{comentario.nombreCompleto}</Text>
