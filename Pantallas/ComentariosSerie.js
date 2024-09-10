@@ -57,11 +57,64 @@ const ComentariosSerie = () => {
     const [refrescar, setRefrescar] = useState(false);
     const [cambio, setCambio] = useState(false);
     const comentariosRef = useRef(comentarios);
+    const [comentarioAResponder, setComentarioAResponder] = useState(null); // Almacena el comentario seleccionado para responder
 
     useEffect(() => {
       comentariosRef.current = comentarios;
     }, [comentarios]);
       
+    // Función que permite seleccionar un comentario para responder
+    const seleccionarComentarioAResponder = (idComentario) => {
+      setComentarioAResponder(idComentario);
+      console.log("id a responder: ", idComentario);
+    };
+
+    async function enviarComentario(userId) {
+      if (!comentarioaEnviar) return;
+    
+      const url = `https://apitfg.lapspartbox.com/anadir_comentario_a_serie`;
+    
+      // Datos que se enviarán al servidor
+      const datosAEnviar = {
+        idUsuario: userId,
+        idGrupo: idGrupo,
+        idSerie: idSerie,
+        comentario: comentarioaEnviar,
+        respuestaA: comentarioAResponder, // Añadimos el comentario padre si existe
+      };
+      
+      // Log para ver los datos que se van a enviar
+      console.log("✅-----------------------------------------------------------------------");
+      console.log("📤 Enviando datos al servidor:");
+      console.log("🆔 Usuario:", datosAEnviar.idUsuario);
+      console.log("🔢 Grupo:", datosAEnviar.idGrupo);
+      console.log("📺 Serie:", datosAEnviar.idSerie);
+      console.log("💬 Comentario:", datosAEnviar.comentario);
+      console.log("↩️ Respuesta a:", datosAEnviar.respuestaA);
+      console.log("✅-----------------------------------------------------------------------");
+      
+    
+      try {
+        let response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(datosAEnviar), // Datos que se envían al servidor
+        });
+    
+        if (!response.ok) {
+          throw new Error('Error al enviar el comentario');
+        }
+    
+        setComentarioaEnviar('');
+        setComentarioAResponder(null); // Reseteamos el comentario padre
+        setRefrescar(prev => !prev);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    }
+    
 
     useEffect(() => {
         // Función para obtener el ID del grupo y cargar los datos
@@ -147,45 +200,7 @@ const ComentariosSerie = () => {
         return () => clearTimeout(timer);
       }, [cambio, enviarComentario]);
     
-      async function enviarComentario(userId){
-        if (!comentarioaEnviar){
-
-        }else {
-            
-            // Asegúrate de reemplazar <tu_servidor> con la dirección de tu servidor
-            const url = `https://apitfg.lapspartbox.com/anadir_comentario_a_serie`;
-    
-            try {
-                let response = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    idUsuario: userId,
-                    idGrupo: idGrupo,
-                    idSerie: idSerie,
-                    comentario: comentarioaEnviar,
-                }), // Datos que se envían al servidor
-                });
-    
-                if (!response.ok) {
-                throw new Error('Error al enviar el comentario');
-                }
-    
-                let data = await response.json();
-                console.log('Respuesta del servidor:', data.mensaje);
-                setComentarioaEnviar('');
-                setRefrescar(prev => !prev);
-                
-                // aqui tendriamos que refrescar para obtener los comentarios
-
-                // Aquí puedes continuar con la lógica de tu aplicación usando la respuesta del servidor
-            } catch (error) {
-                console.error('Error:', error);
-            }
-        }
-      }
+      
 
       return (
         <KeyboardAvoidingView
@@ -204,19 +219,28 @@ const ComentariosSerie = () => {
               
               style={styles.scrollView}>
               {comentarios.map((comentario, index) => (
-                <View 
-                  key={index} 
-                  style={[
-                    styles.comentarioContainer, 
-                    comentario.idUsuario === user.id ? styles.comentarioDerecha : styles.comentarioIzquierda
-                      //`${comentario.nombreCompleto}` === "Diego Viñals" ? styles.comentarioDerecha : styles.comentarioIzquierda
-                  ]}
-                >
-                <Text style={styles.autor}>{comentario.nombreCompleto}</Text>
-                <Text>{comentario.comentario}</Text>
-                <Text style={styles.fecha}>{moment.utc(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}</Text>
-              </View>
-            ))}
+                <View key={index} style={comentario.idUsuario === user.id ? styles.comentarioDerecha : styles.comentarioIzquierda}>
+                  <Text style={styles.autor}>{comentario.nombreCompleto}</Text>
+                  <Text>{comentario.comentario}</Text>
+                  <Text style={styles.fecha}>{moment.utc(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}</Text>
+                  
+                  {/* Botón para responder */}
+                  <TouchableOpacity onPress={() => seleccionarComentarioAResponder(comentario.id)}> 
+                    <Text style={styles.responderText}>Responder</Text>
+                  </TouchableOpacity>
+
+                  {/* Si el comentario tiene respuestas */}
+                  {comentario.respuestas && comentario.respuestas.length > 0 && (
+                    <View style={styles.respuestasContainer}>
+                      {comentario.respuestas.map((respuesta, i) => (
+                        <View key={i} style={styles.comentarioRespuesta}>
+                          <Text>{respuesta.comentario}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  )}
+                </View>
+              ))}
             
                 </ScrollView>
               {/* Área para introducir comentarios */}
@@ -334,6 +358,7 @@ const ComentariosSerie = () => {
         maxWidth: '80%',  // Limita el ancho de los comentarios
   },
   
+  
   comentarioIzquierda: {
     alignSelf: 'flex-start',  // Alinea el comentario a la izquierda
     backgroundColor: '#FFFFFF',  // Fondo blanco
@@ -342,6 +367,22 @@ const ComentariosSerie = () => {
     marginVertical: '2%',
     marginHorizontal: '2%',
     maxWidth: '80%',  // Limita el ancho de los comentarios
+  },
+  responderText: {
+    color: 'blue',
+    fontSize: 12,
+  },
+  respuestasContainer: {
+    marginLeft: 20,
+    borderLeftWidth: 2,
+    borderLeftColor: 'gray',
+    paddingLeft: 10,
+  },
+  comentarioRespuesta: {
+    marginTop: 5,
+    padding: 5,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
   },
     });
 

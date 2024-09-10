@@ -26,6 +26,7 @@ const Stack = createNativeStackNavigator();
 function App() {
 
   return (
+    
     <UserProvider>
       <NavigationContainer>
         <Stack.Navigator initialRouteName="Welcome">

@@ -386,7 +386,7 @@ const HomeScreen = () => {
             {
               value !== 'Grupos' &&
               <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => verCalendario(value)}>
-                <Text style={styles.editarGrupoTexto}>Ver Calendario</Text>
+                <Text style={styles.editarGrupoTexto}>Calendario</Text>
               </TouchableOpacity>
             }
           </View>

@@ -214,7 +214,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
         <Text style={styles.eliminarSerieTexto}>Eliminar Serie</Text>
       </TouchableOpacity>
       <TouchableOpacity style={styles.comentariosBoton} onPress={() => irComentaros(idSerie,NombreGrupo ,detallesSerie.name)}>
-        <Text style={styles.eliminarSerieTexto}>Comentarios</Text>
+        <Text style={styles.eliminarSerieTexto}>Chat</Text>
       </TouchableOpacity>
       </View>
       
