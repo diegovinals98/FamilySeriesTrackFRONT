@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Calendar } from 'react-native-calendars';
+import { LocaleConfig, Calendar } from 'react-native-calendars';
 import { View, Text, StyleSheet, Image, ScrollView, Dimensions } from 'react-native';
 import { useRoute } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
@@ -64,20 +64,6 @@ const Calendario = () => {
         }
     };
 
-    const formatDate = (dateString) => {
-        const months = [
-            "enero", "febrero", "marzo", "abril", 
-            "mayo", "junio", "julio", "agosto", 
-            "septiembre", "octubre", "noviembre", "diciembre"
-        ];
-        const dateParts = dateString.split("-");
-        const year = dateParts[0];
-        const month = months[parseInt(dateParts[1], 10) - 1];
-        const day = parseInt(dateParts[2], 10);
-
-        return `${day} de ${month} de ${year}`;
-    };
-
     const poster = (path) => {
         if (!path) {
             return null;
@@ -93,14 +79,29 @@ const Calendario = () => {
         );
     };
 
+    // Configuración del idioma para el calendario
+    LocaleConfig.locales['es'] = {
+        monthNames: [
+        'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
+        ],
+        monthNamesShort: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
+        dayNames: ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'],
+        dayNamesShort: ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'],
+        today: 'Hoy'
+    };
+    LocaleConfig.defaultLocale = 'es'; 
+
     return (
         <View style={styles.container}>
             <Calendar
-            style={{
-              borderWidth: 1,
-              borderColor: 'gray',
-              height: 350
-            }}
+                style={{
+                borderWidth: 1,
+                borderColor: 'gray',
+                height: 350
+                }}
+                firstDay={1}  // Comienza la semana en lunes
+                locale={'es'}
                 onDayPress={day => {
                     setSelected(day.dateString);
                 }}
@@ -108,8 +109,6 @@ const Calendario = () => {
                     ...markedDates,
                     [selected]: { ...markedDates[selected], selected: true, selectedColor: 'blue'},
                 }}
-                 
-             
             />
 
             <ScrollView style={styles.scrollView}>
