@@ -29,72 +29,54 @@ import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-cont
 const windowHeight = Dimensions.get('window').height;
 
 const HomeScreen = () => {
-  // Hook de navegación y rutas de react-navigation.
   const route = useRoute();
   const navigation = useNavigation();
-
   const insets = useSafeAreaInsets();
-
-  // Estilos condicionales basados en la plataforma
-  const platformStyles = Platform.select({
-    ios: { paddingTop: StatusBar.currentHeight }, // para iOS usamos el inset top
-    android: { paddingTop: insets.top }, // para Android usamos la altura de la barra de estado
-  });
 
   // Accede a los datos del usuario desde el contexto.
   const { user } = useUser();
-  // Calcula las iniciales del usuario para mostrar.
   const iniciales = user?.nombre ? `${user?.nombre.charAt(0)}${user?.apellidos.charAt(0)}` : '';
 
   // Estados del componente.
   const [seriesDetalles, setSeriesDetalles] = useState([]);
   const [idelegido, setIdElegido] = useState();
-  const [grupoInicialSeleccionado, setGrupoInicialSeleccionado] = useState(false); // Controla si el grupo inicial ya fue seleccionado
-
-  // Estado para la visibilidad del menú desplegable y el grupo seleccionado.
-  const [TodosGrupos, setTodosGrupos] = useState([]); // Estado para almacenar todos los grupos.
-  const [value, setValue] = useState(null); // Inicialmente sin valor hasta cargar grupos.
+  const [grupoInicialSeleccionado, setGrupoInicialSeleccionado] = useState(false); 
+  const [TodosGrupos, setTodosGrupos] = useState([]); 
+  const [value, setValue] = useState(null); 
   const [isFocus, setIsFocus] = useState(false);
   const [refrescar, setRefrescar] = useState(false);
   const [refrescando, setRefrescando] = useState(false);
 
-  // Ejecuta al cargar la pantalla por primera vez
   useFocusEffect(
     React.useCallback(() => {
       if (!grupoInicialSeleccionado) {
-        llamarAGrupos(); // Solo se llama al cargar la primera vez
+        llamarAGrupos(); 
       }
-    }, [grupoInicialSeleccionado]) // Solo depende de si se ha seleccionado el grupo inicial
+    }, [grupoInicialSeleccionado])
   );
 
   const onRefresh = React.useCallback(() => {
     setRefrescando(true);
     resetearBusqueda();
     setRefrescar(prev => !prev);
-    obtenerSeries(); // Solo actualizará series, no selecciona el primer grupo nuevamente
+    obtenerSeries();
     setRefrescando(false);
-  }, [value, idelegido]); // Evita que se pierda la selección actual del grupo
+  }, [value, idelegido]);
 
-  // Función para realizar la llamada a la API y obtener los grupos del Usuario
   const llamarAGrupos = async () => {
     try {
-      console.log('Entrando en llamarGrupos');
       const response = await fetch(`https://apitfg.lapspartbox.com/grupos/${user?.id}`);
       const json = await response.json();
       setTodosGrupos(json);
 
-      // Si hay grupos y el grupo inicial aún no fue seleccionado
       if (json.length > 0 && !grupoInicialSeleccionado) {
-        console.log("Solo debería aparecer una vez");
         setValue(json[0].Nombre_grupo);
         setIdElegido(json[0].ID_Grupo);
-        setGrupoInicialSeleccionado(true); // Marca que el grupo inicial ya fue seleccionado
+        setGrupoInicialSeleccionado(true); 
       } else if (json.length == 0){
         setValue("Grupos");
       }
 
-      console.log("Grupos del Usuario: " + user.nombre + " " + user.apellidos);
-      console.log(json);
     } catch (error) {
       console.error('Error al obtener los grupos:', error);
     }
@@ -102,7 +84,6 @@ const HomeScreen = () => {
 
   useEffect(() => {
     if (idelegido) {
-      console.log('El ID elegido es ahora: ' + idelegido);
       obtenerSeries();
     }
   }, [idelegido]);
@@ -123,13 +104,11 @@ const HomeScreen = () => {
 
   const obtenerSeries = () => {
     if (!value) {
-      console.log('No hay grupos seleccionados.');
       setSeriesDetalles([]);
       return;
     }
     obtenerSeriesDelUsuario(user.id, value, idelegido).then(seriesIds => {
       if (seriesIds.length === 0) {
-        console.log('No hay series para mostrar');
         return;
       }
       Promise.all(seriesIds.map(serieID =>
@@ -253,23 +232,11 @@ const HomeScreen = () => {
     navigation.navigate('Calendario', { nombreGrupo, idelegido });
   };
 
-  const ordenarSeriesPorTitulo = () => {
-    const seriesOrdenadas = [...seriesDetalles].sort((a, b) => {
-      if (ordenAscendente) {
-        return a.name.localeCompare(b.name);
-      } else {
-        return b.name.localeCompare(a.name);
-      }
-    });
-    setSeriesDetalles(seriesOrdenadas);
-    setOrdenAscendente(!ordenAscendente); // Cambia el orden para la próxima vez
-  };
-
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f7f7' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
       <StatusBar />
       <TouchableWithoutFeedback onPress={() => resetearBusqueda()}>
-        <View style={[globalStyles.container, styles.container, platformStyles]}>
+        <View style={[globalStyles.container, styles.container]}>
 
           {/* Renderizado de la fila superior con las iniciales del usuario y el botón de grupos. */}
           <View style={styles.row}>
@@ -295,18 +262,16 @@ const HomeScreen = () => {
               onBlur={() => setIsFocus(false)}
               onChange={item => {
                 setValue(item.Nombre_grupo);
-                console.log('ID DE ITEM ' + item.ID_Grupo)
                 setIdElegido(item.ID_Grupo);
                 obtenerSeries();
                 setIsFocus(false);
-                onRefresh()
+                onRefresh();
               }}
               renderLeftIcon={() => (
                 <Text style={styles.buttonText}>{value}</Text>
               )}
             />
 
-            {/* Botón para añadir un nuevo grupo. */}
             <TouchableOpacity style={styles.circle} onPress={() => anadirGrupo()}>
               <Text style={styles.initials}>+</Text>
             </TouchableOpacity>
@@ -337,19 +302,7 @@ const HomeScreen = () => {
             ) : null}
           </View>
 
-          {
-          /* 
-          <View style={styles.ordenarBotonContainer}>
-            <TouchableOpacity style={styles.ordenarBoton} onPress={ordenarSeriesPorTitulo}>
-              <Text style={styles.ordenarBotonTexto}>Ordenar por Título</Text>
-            </TouchableOpacity>
-          </View>
-          */
-          }
-
-          
-
-          <View style={{ flexDirection: 'row', height: windowHeight * 0.65 }}>
+          <View style={{ flexDirection: 'row', height: windowHeight * 0.68 }}>
             <ScrollView refreshControl={
               <RefreshControl
                 refreshing={refrescando}
@@ -412,36 +365,44 @@ const styles = StyleSheet.create({
   circle: {
     aspectRatio: 1,
     borderRadius: 1000,
-    backgroundColor: '#6666ff',
+    backgroundColor: '#4A90E2',
     alignItems: 'center',
     marginRight: '1%',
     marginLeft: '1%',
     flex: 1,
     justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   initials: {
-    fontSize: 25,
+    fontSize: 28,
     color: 'white',
     fontWeight: 'bold',
   },
   buttonGroup: {
     height: '100%',
     flexDirection: 'row',
-    backgroundColor: '#6666ff',
+    backgroundColor: '#f0f0f0',
     borderRadius: 50,
     justifyContent: 'center',
     alignItems: 'center',
     flex: 4,
     justifyContent: 'center',
+    padding: 5,
+    borderColor: '#4A90E2',
+    borderWidth: 1,
   },
   buttonText: {
-    color: 'white',
+    color: '#4A90E2',
     fontWeight: 'bold',
-    fontSize: 25,
+    fontSize: 18,
     marginRight: 5,
   },
   dropdownIcon: {
-    color: 'white',
+    color: '#4A90E2',
     fontSize: 18,
   },
   item: {
@@ -455,7 +416,7 @@ const styles = StyleSheet.create({
   },
   serieTitle: {
     marginTop: '5%',
-    fontSize: 12,
+    fontSize: 14,
     fontWeight: 'bold',
     color: '#4A90E2',
     marginBottom: '1%',
@@ -467,6 +428,7 @@ const styles = StyleSheet.create({
   },
   placeholderStyle: {
     fontSize: 16,
+    color: '#aaa',
   },
   selectedTextStyle: {
     fontSize: 16,
@@ -478,6 +440,7 @@ const styles = StyleSheet.create({
   poster: {
     height: windowHeight * 0.19,
     resizeMode: 'contain',
+    borderRadius: 10,
   },
   serieDetailContainer: {
     width: '33%',
@@ -497,6 +460,7 @@ const styles = StyleSheet.create({
   searchContainer: {
     width: '80%',
     flexDirection: 'column',
+    marginVertical: 10,
   },
   flatList: {
     borderRadius: 10,
@@ -506,47 +470,24 @@ const styles = StyleSheet.create({
   },
   textoBuscadas: {
     margin: '5%',
-    textAlign: 'center'
-  },
-  searchButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#005f99',
-    borderRadius: 10,
-    padding: '4%',
-  },
-  cajaBoton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingBottom: 10,
-    marginLeft: '2%'
+    textAlign: 'center',
+    fontSize: 14,
   },
   editarGrupoBoton: {
-    backgroundColor: 'grey',
+    backgroundColor: '#4A90E2',
     padding: 10,
     margin: '2%',
     alignItems: 'center',
     borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
   },
   editarGrupoTexto: {
     color: 'white',
     fontSize: 16,
-  },
-  ordenarBotonContainer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginVertical: 10,
-  },
-  ordenarBoton: {
-    backgroundColor: '#6666ff',
-    padding: 10,
-    borderRadius: 5,
-    alignItems: 'center',
-  },
-  ordenarBotonTexto: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
   }
 });
 

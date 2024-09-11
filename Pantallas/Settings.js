@@ -14,16 +14,13 @@ import {
   Dimensions
 } from 'react-native';
 
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { globalStyles } from '../estilosGlobales.js';
 import { useUser } from '../userContext.js';
-import * as LocalAuthentication from 'expo-local-authentication';
-import * as SecureStore from 'expo-secure-store';
 import * as Crypto from 'expo-crypto';
 import * as Application from 'expo-application';
 
 const windowHeight = Dimensions.get('window').height;
-
 
 const Settings = () => {
 
@@ -31,42 +28,29 @@ const Settings = () => {
   const { user, setUser } = useUser();
   const [errorMessage, setErrorMessage] = useState('');
 
-  // Los datos del usuario, para usarlos, hay que poner {id} o {nombre}
   const [nombre, setNombre] = useState(user?.nombre || '');
   const [apellidos, setApellidos] = useState(user?.apellidos || '');
   const [usuario, setUsuario] = useState(user?.usuario || '');
   const [contrasena, setContrasena] = useState('');
   const [contrasena2, setContrasena2] = useState('');
-  const [id, setId] = useState(user?.id || '');
-
-
   const iniciales = user?.nombre ? `${user?.nombre.charAt(0)}${user?.apellidos.charAt(0)}` : '';
 
   function validarContraseña(contraseña) {
-    const longitudValida = contraseña.length >= 8; // Verifica la longitud mínima de 8 caracteres
-    const tieneMayuscula = /[A-Z]/.test(contraseña); // Verifica la presencia de al menos una letra mayúscula
-    const tieneNumero = /[0-9]/.test(contraseña); // Verifica la presencia de al menos un número
+    const longitudValida = contraseña.length >= 8;
+    const tieneMayuscula = /[A-Z]/.test(contraseña);
+    const tieneNumero = /[0-9]/.test(contraseña);
   
     return longitudValida && tieneMayuscula && tieneNumero;
   }
   
-
   async function updateUser(userId, newNombre, newApellidos, newUsuario, newContrasena) {
-    console.log(contrasena)
-    console.log(contrasena2)
-
-    // Verifica si las contraseñas coinciden
-    if(contrasena != contrasena2){
-      alert('Contraseñas no coinciden');
-    } else if(!validarContraseña(contrasena)){
+    if (contrasena !== contrasena2) {
+      alert('Las contraseñas no coinciden');
+    } else if (!validarContraseña(contrasena)) {
       setErrorMessage('La contraseña debe tener al menos 8 caracteres, incluyendo una letra mayúscula y un número');
       return;
-    }else{
-      // Utiliza expo-crypto para generar un hash de la contraseña
-      const newContrasena = await Crypto.digestStringAsync(
-        Crypto.CryptoDigestAlgorithm.SHA512,
-        contrasena
-      );
+    } else {
+      const newContrasenaHash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA512, contrasena);
       try {
         let response = await fetch(`https://apitfg.lapspartbox.com/usuario/${userId}`, {
           method: 'PUT',
@@ -77,99 +61,53 @@ const Settings = () => {
             newNombre,
             newApellidos,
             newUsuario,
-            newContrasena
+            newContrasena: newContrasenaHash
           })
         });
     
         if (response.ok) {
-          console.log("Datos del usuario actualizados correctamente.");
-          setUser({
-            id: userId,
-            nombre: newNombre,
-            apellidos: newApellidos,
-            usuario: newUsuario,
-            // Es recomendable no almacenar la contraseña en el estado global
-          });
+          setUser({ id: userId, nombre: newNombre, apellidos: newApellidos, usuario: newUsuario });
           alert('Datos del usuario actualizados correctamente.');
           navigation.goBack();
         } else {
-          console.error('Error al actualizar el usuario:', response);
           alert('Error al actualizar usuario.');
         }
       } catch (error) {
-        console.error('Error en la solicitud:', error);
         alert('Error al actualizar usuario.');
       }
-
     }
-
-    
   }
 
-  const getDeviceId = async () => {
-    let deviceId;
-    
-    if (Platform.OS === 'android') {
-      deviceId = Application.getAndroidId();// Android ID
-    } else if (Platform.OS === 'ios') {
-      deviceId = await Application.getIosIdForVendorAsync(); 
-    }
-    console.log('Id del dispositivo: ' , deviceId)
-    return deviceId;
-  };
-
-  async function eliminarCuenta(idUser){
+  async function eliminarCuenta(idUser) {
     Alert.alert(
-      `¿Estás seguro de que quieres eliminar la cuenta?`,
-      `Se borrará toda la Información`,
+      '¿Estás seguro de que quieres eliminar la cuenta?',
+      'Se borrará toda la información',
       [
         {
           text: 'Sí',
           onPress: async () => {
-            //logica dfe borrar cuenta
             try {
-              // Ajusta esta URL según sea necesario para apuntar a tu servidor real
               const response = await fetch(`https://apitfg.lapspartbox.com/eliminar-cuenta/${idUser}`, {
                 method: 'DELETE',
               });
-          
               if (response.ok) {
-                const data = await response.text(); // o response.json() si esperas una respuesta JSON
-                console.log('Cuenta eliminada:', data);
-                navigation.reset({
-                  index: 0,
-                  routes: [{ name: 'Welcome' }],
-                });
-                // Aquí puedes agregar código para manejar la actualización de la UI,
-                // como remover el grupo eliminado de la lista mostrada al usuario.
+                navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
               } else {
-                // Manejo de respuestas no exitosas
-                console.error('Error al eliminar la cuenta');
                 alert('Error al eliminar la cuenta.');
               }
             } catch (error) {
-              // Manejo de errores de red o al realizar la solicitud
-              console.error('Error al conectar con el servidor:', error);
               alert('Error al conectar con el servidor.');
             }
           },
-          
         },
         {
           text: 'No',
-          style: 'cancel', // Pone este botón con un estilo de cancelar
-          onPress: () => {
-            // Lógica para añadir la serie
-            //resetearBusqueda
-          }
+          style: 'cancel',
         },
       ],
-      { cancelable: false } // Evita que el cuadro de diálogo se cierre al tocar fuera de él
+      { cancelable: false }
     );
   }
-
-  
-  
 
   const guardarCambios = () => {
     if (nombre.trim() && apellidos.trim() && usuario.trim() && contrasena.trim()) {
@@ -179,124 +117,95 @@ const Settings = () => {
     }
   };
 
-  const cerrarSesion = async () =>{
-
-    /*
-    1. Borrar el deviceID de la tabla y luego ya salir 
-    */
-    console.log("Borrar device id de: ", user.id);
+  const cerrarSesion = async () => {
     try {
- 
-    
-      const deviceId = await getDeviceId(); // Suponiendo que tienes una función para obtener el deviceId
-  
-      console.log("Cerrando sesión para el usuario con ID:", user.id);
-      console.log("Eliminando el deviceId:", deviceId);
-  
-      // 2. Hacer la solicitud al backend para eliminar el deviceId asociado con el userId
-      const response = await fetch('https://apitfg.lapspartbox.com/delete-device-id', {
+      const deviceId = await Application.getAndroidId();
+      await fetch('https://apitfg.lapspartbox.com/delete-device-id', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: user.id, deviceId }), // Enviar userId y deviceId en el cuerpo de la solicitud
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userId: user.id, deviceId }),
       });
-  
-      if (!response.ok) {
-        throw new Error('Error al eliminar el Device ID de la base de datos');
-      }
-  
-      console.log('Device ID eliminado exitosamente');
-  
-      // 3. Redirigir al usuario a la pantalla de bienvenida (Welcome)
-      navigation.reset({
-        index: 0,
-        routes: [{ name: 'Welcome' }],
-      });
-  
+      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
     } catch (error) {
-      console.error('Error al cerrar sesión:', error);
-      // Manejar el error adecuadamente
+      alert('Error al cerrar sesión.');
     }
-  }
+  };
 
   return (
-    <KeyboardAvoidingView
-  behavior={Platform.OS === "ios" ? "padding" : "height"} // "padding" para iOS y "height" para Android
-  style={{ flex: 1 }}
->
-    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-      <View style={[globalStyles.container, styles.container]}>
-        <View style={styles.circle}>
-          <Text style={styles.initials}>{iniciales}</Text>
+    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={[globalStyles.container, styles.container]}>
+          <View style={styles.circle}>
+            <Text style={styles.initials}>{iniciales}</Text>
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nombre</Text>
+            <TextInput 
+              style={styles.input}
+              onChangeText={setNombre}
+              value={nombre}
+              placeholder="Nombre"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Apellidos</Text>
+            <TextInput 
+              style={styles.input}
+              onChangeText={setApellidos}
+              value={apellidos}
+              placeholder="Apellidos"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nombre de Usuario</Text>
+            <TextInput 
+              style={styles.input}
+              onChangeText={setUsuario}
+              value={usuario}
+              autoCapitalize="none"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nueva Contraseña</Text>
+            <TextInput 
+              style={styles.input}
+              onChangeText={setContrasena}
+              value={contrasena}
+              placeholder="Nueva Contraseña"
+              secureTextEntry
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Repite Nueva Contraseña</Text>
+            <TextInput 
+              style={styles.input}
+              onChangeText={setContrasena2}
+              value={contrasena2}
+              placeholder="Repite Nueva Contraseña"
+              secureTextEntry
+            />
+          </View>
+
+          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+
+          <TouchableOpacity style={globalStyles.button} onPress={guardarCambios}>
+            <Text style={globalStyles.buttonText}>Guardar Cambios</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={[globalStyles.button, globalStyles.buttonOutline]} onPress={cerrarSesion}>
+            <Text style={globalStyles.buttonText}>Cerrar Sesión</Text>
+          </TouchableOpacity>
+
+          <View style={styles.eliminar}>
+            <Button title='Eliminar Cuenta' color='white' onPress={() => eliminarCuenta(user.id)}></Button>  
+          </View>
         </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nombre</Text>
-          <TextInput 
-            style={styles.input}
-            onChangeText={setNombre}
-            value={nombre}
-            placeholder="Nombre"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Apellidos</Text>
-          <TextInput 
-            style={styles.input}
-            onChangeText={setApellidos}
-            value={apellidos}
-            placeholder="Apellidos"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nombre de Usuario</Text>
-          <TextInput 
-            style={styles.input}
-            onChangeText={setUsuario}
-            value={usuario}
-            autoCapitalize="none"
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nueva Contraseña</Text>
-          <TextInput 
-            style={styles.input}
-            onChangeText={setContrasena}
-            value={contrasena}
-            placeholder="Nueva Contraseña"
-            secureTextEntry
-          />
-        </View>
-
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Repite Nueva Contraseña</Text>
-          <TextInput 
-            style={styles.input}
-            onChangeText={setContrasena2}
-            value={contrasena2}
-            placeholder="Repite Nueva Contraseña"
-            secureTextEntry
-          />
-        </View>
-
-        {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-
-        <TouchableOpacity style={globalStyles.button} onPress={guardarCambios}>
-          <Text style={globalStyles.buttonText}>Guardar Cambios</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[globalStyles.button, globalStyles.buttonOutline]} onPress={() => cerrarSesion()}>
-        <Text style = {globalStyles.buttonText} >Cerrar Sesión</Text>
-      </TouchableOpacity>
-      <View style={styles.eliminar}>
-        <Button title='Eliminar Cuenta' color= 'black' onPress={() => eliminarCuenta(user.id)}></Button>  
-      </View>
-      
-      </View>
-    </TouchableWithoutFeedback>
+      </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 };
@@ -306,19 +215,23 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-  },eliminar:{
-    backgroundColor:'red',
+    backgroundColor: '#f7f7f7',
+  },
+  eliminar: {
+    backgroundColor: 'red',
     borderRadius: 10,
-    width:'80%',
+    width: '80%',
     margin: '2%',
-   
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 10,
   },
   circle: {
     marginBottom: '5%',
     width: windowHeight * 0.1,
     height: windowHeight * 0.1,
-    borderRadius: 10000,
-    backgroundColor: '#007bff',
+    borderRadius: 1000,
+    backgroundColor: '#4A90E2',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -329,7 +242,6 @@ const styles = StyleSheet.create({
   },
   input: {
     width: '100%',
-    borderWidth: 1,
     borderWidth: 1,
     borderColor: '#ddd',
     padding: windowHeight * 0.015,
@@ -342,16 +254,18 @@ const styles = StyleSheet.create({
     width: '80%',
     alignItems: 'center',
     justifyContent: 'center',
-    height: windowHeight * 0.1
-    
+    marginBottom: 10,
   },
   label: {
-    marginBottom: '1%'
+    marginBottom: '1%',
+    fontSize: 16,
   },
   errorText: {
     color: 'red',
     width: '80%',
-    justifyContent: 'center'
+    justifyContent: 'center',
+    textAlign: 'center',
+    marginBottom: 10,
   },
 });
 

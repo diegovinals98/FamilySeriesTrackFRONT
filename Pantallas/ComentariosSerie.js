@@ -228,7 +228,7 @@ const ComentariosSerie = () => {
                   <TouchableOpacity onPress={() => seleccionarComentarioAResponder(comentario.id)}> 
                     <Text style={styles.responderText}>Responder</Text>
                   </TouchableOpacity>
-                  **/
+                  *
                   }
 
                   {/* Si el comentario tiene respuestas */}
@@ -274,118 +274,82 @@ const ComentariosSerie = () => {
         flex: 1,
       },
       container: {
+        alignItems: 'center',
         flex: 1,
-        justifyContent: 'space-between', // Distribuye el espacio
+        justifyContent: 'space-between',
       },
       title: {
-        fontSize: 40, // Tamaño grande para el título
-        fontWeight: 'bold', // Negrita para resaltar
-        borderColor: '#4A90E2', // Color de la línea inferior
-        backgroundColor:'white',
-        borderWidth: 4, // Grosor de la línea inferior
+        fontSize: 30,
+        fontWeight: 'bold',
+        backgroundColor: 'white',
+        borderColor: '#4A90E2',
+        borderWidth: 4,
         width: '100%',
-        paddingBottom: '2%', // Espacio debajo del título
-        paddingTop: '2%', // Espacio debajo del título
-        textAlign: 'center', // Centrar el texto
+        paddingBottom: '2%',
+        paddingTop: '2%',
+        textAlign: 'center',
       },
       scrollView: {
-        flex: 1, // Ocupa todo el espacio disponible
+        flex: 1,
+        width: '100%',
+        paddingHorizontal: 10,
       },
       commentBox: {
-        marginTop: '1%',
-        paddingLeft: '5%',
-        paddingRight: '5%',
-        height: windowHeigh * 0.12, // Ajusta según necesites
-      },inputRow: {
-        flexDirection: 'row', // Coloca los elementos en fila
-        alignItems: 'center', // Centra los elementos verticalmente
+        width: '100%',
+        padding: 10,
+        height: windowHeigh * 0.12,
+      },
+      inputRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
       },
       input: {
-        // Estilos para tu TextInput
-        flex: 5, // Hace que el input ocupe todo el espacio disponible excepto el que ocupe el botón
+        flex: 5,
         borderWidth: 1,
-        borderColor: 'gray',
-        padding: windowHeigh * 0.01,
-        marginRight: '1%', // Añadido para separar el input del botón
-        borderRadius: 5,
-        
+        borderColor: '#ddd',
+        padding: windowHeigh * 0.015,
+        marginRight: 10,
+        borderRadius: 8,
+        backgroundColor: '#fff',
       },
       button: {
         flex: 1,
-        backgroundColor: '#4A90E2', // Un color de ejemplo, puedes cambiarlo
-        borderRadius: 5,
-        padding: windowHeigh * 0.01,
-        alignItems: 'center', 
-        justifyContent: 'center'
+        backgroundColor: '#005f99',
+        borderRadius: 10,
+        padding: windowHeigh * 0.015,
+        justifyContent: 'center',
+        alignItems: 'center',
       },
       buttonText: {
-        
-        color: 'white', // Un color de ejemplo para el texto del botón
-      },
-      label: {
-        // Estilos para la etiqueta del área de comentarios
-        marginLeft: '10%',
-      },comentarioContainer:{
-        flex: 1
-      },
-      comentarioContainer: {
-        borderRadius: 15,
-        backgroundColor: '#ffffff',  // Fondo blanco para cada comentario
-        padding: '3%',  // Espacio interior para cada comentario
-        marginVertical: '2%',  // Margen vertical para separar los comentarios
-        marginHorizontal: '2%'  // Margen horizontal para un poco de espacio a los lados
-      },
-      autor: {
-        fontWeight: 'bold',  // Texto en negrita para el autor
-        fontSize: 16,  // Tamaño de letra adecuado
-        color: '#333'  // Color oscuro para el texto del autor
-      },
-      comentario: {
-        fontSize: 14,  // Tamaño de letra para el comentario
-        color: '#666',  // Gris oscuro para el texto del comentario
-        marginTop: '1%'  // Espacio arriba del comentario
-      },
-      fecha: {
-        fontSize: 12,  // Tamaño de letra más pequeño para la fecha
-        color: '#999',  // Gris más claro para la fecha
-        marginTop: '1%'  // Espacio arriba de la fecha
+        color: 'white',
+        fontWeight: 'bold',
       },
       comentarioDerecha: {
-        alignSelf: 'flex-end',  // Alinea el comentario a la derecha
-        backgroundColor: '#DCF8C6',  // Fondo de color claro (ej. verde claro, como en los chats de WhatsApp)
+        alignSelf: 'flex-end',
+        backgroundColor: '#DCF8C6',
         borderRadius: 15,
-        padding: '3%',
-        marginVertical: '2%',
-        marginHorizontal: '2%',
-        maxWidth: '80%',  // Limita el ancho de los comentarios
-  },
-  
-  
-  comentarioIzquierda: {
-    alignSelf: 'flex-start',  // Alinea el comentario a la izquierda
-    backgroundColor: '#FFFFFF',  // Fondo blanco
-    borderRadius: 15,
-    padding: '3%',
-    marginVertical: '2%',
-    marginHorizontal: '2%',
-    maxWidth: '80%',  // Limita el ancho de los comentarios
-  },
-  responderText: {
-    color: 'blue',
-    fontSize: 12,
-  },
-  respuestasContainer: {
-    marginLeft: 20,
-    borderLeftWidth: 2,
-    borderLeftColor: 'gray',
-    paddingLeft: 10,
-  },
-  comentarioRespuesta: {
-    marginTop: 5,
-    padding: 5,
-    backgroundColor: '#f0f0f0',
-    borderRadius: 5,
-  },
+        padding: 15,
+        marginVertical: 10,
+        maxWidth: '80%',
+      },
+      comentarioIzquierda: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
+        padding: 15,
+        marginVertical: 10,
+        maxWidth: '80%',
+      },
+      autor: {
+        fontWeight: 'bold',
+        fontSize: 16,
+        color: '#333',
+      },
+      fecha: {
+        fontSize: 12,
+        color: '#999',
+        marginTop: '1%',
+      },
     });
 
 export default ComentariosSerie;
