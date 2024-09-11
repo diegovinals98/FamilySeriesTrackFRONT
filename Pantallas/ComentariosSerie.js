@@ -42,6 +42,7 @@ import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 // Obtiene las dimensiones de la ventana del dispositivo.
 const windowHeigh = Dimensions.get('window').height;
 
+// TODO Implementar un sistema de mensajería en tiempo real, similar a Whatsapp, para que los usuarios puedan comunicarse dentro de la plataforma.
 const ComentariosSerie = () => {
     const scrollViewRef = useRef();
     const route = useRoute()

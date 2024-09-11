@@ -12,6 +12,7 @@ Notifications.setNotificationHandler({
   }),
 });
 
+// TODO todo esto, tema de notificaciones
 async function sendPushNotification(expoPushToken: string) {
   const message = {
     to: expoPushToken,

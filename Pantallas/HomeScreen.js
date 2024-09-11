@@ -334,8 +334,9 @@ const HomeScreen = () => {
               <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => editarGrupo(value)}>
                 <Text style={styles.editarGrupoTexto}>Editar Grupo: {value}</Text>
               </TouchableOpacity>
+              // TODO Igual aqui meter otro boton que sea estadisticas y te lleve a una pagina donde puedas ver esto.
             }
-
+            
             {
               value !== 'Grupos' &&
               <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => verCalendario(value)}>
