@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { useUser } from '../userContext.js'; // Importa el contexto del usuario.
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
+import { useUser } from '../userContext.js'; 
 import { useFocusEffect } from '@react-navigation/native';
 
 const PantallaDeDetalles = ({ route, navigation }) => {
   const { idSerie, NombreGrupo } = route.params;
   const [detallesSerie, setDetallesSerie] = useState(null);
   const [UsuariosSerie, setUsuariosSerie] = useState([]);
+  const [watchProvider, setWatchProvider] = useState(null); // Estado para almacenar un solo proveedor
 
   const { user } = useUser();
 
@@ -20,6 +21,21 @@ const PantallaDeDetalles = ({ route, navigation }) => {
         setDetallesSerie(data);
       })
       .catch((error) => console.error('Error al obtener detalles de la serie:', error));
+  };
+
+  const obtenerWatchProviders = (idSerie) => {
+    const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
+    const url = `https://api.themoviedb.org/3/tv/${idSerie}/watch/providers?api_key=${apiKey}`;
+
+    fetch(url)
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.results && data.results.ES && data.results.ES.flatrate) {
+          // Solo seleccionamos el primer proveedor disponible
+          setWatchProvider(data.results.ES.flatrate[0]);
+        }
+      })
+      .catch((error) => console.error('Error al obtener proveedores de visualización:', error));
   };
 
   const obtenerUsuariosViendoSerie = async (nombreGrupo, idSerie) => {
@@ -39,6 +55,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     useCallback(() => {
       obtenerDetallesSerie(idSerie);
       obtenerUsuariosViendoSerie(NombreGrupo, idSerie);
+      obtenerWatchProviders(idSerie); 
     }, [idSerie, NombreGrupo])
   );
 
@@ -95,6 +112,37 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     navigation.navigate('Comentarios Serie', { idSerie, NombreGrupo, nombreSerie: detallesSerie.name });
   };
 
+  // Función para abrir la aplicación de la plataforma de streaming
+  const abrirAppPlataforma = () => {
+    let appUrl;
+
+    switch (watchProvider.provider_name) {
+      case 'Netflix':
+        appUrl = 'nflx://';
+        break;
+      case 'Disney Plus':
+        appUrl = 'disneyplus://';
+        break;
+      case 'HBO Max':
+        appUrl = 'hbomax://';
+        break;
+      case 'Amazon Prime Video':
+        appUrl = 'primevideo://';
+        break;
+      default:
+        appUrl = null;
+    }
+
+    if (appUrl) {
+      Linking.openURL(appUrl).catch((err) => {
+        console.error('No se puede abrir la app', err);
+        Alert.alert('Error', 'No se pudo abrir la aplicación.');
+      });
+    } else {
+      Alert.alert('Error', 'No hay una aplicación disponible para esta plataforma.');
+    }
+  };
+
   if (!detallesSerie) {
     return (
       <View style={styles.container}>
@@ -109,9 +157,19 @@ const PantallaDeDetalles = ({ route, navigation }) => {
       <Text style={styles.title}>{detallesSerie.name.toUpperCase()}</Text>
 
       <ScrollView>
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-         
+        {/* Mostrar el proveedor de streaming */}
+        {watchProvider && (
+          <TouchableOpacity style={styles.providerContainer} onPress={abrirAppPlataforma}>
+            <Image
+              source={{ uri: `https://image.tmdb.org/t/p/w500${watchProvider.logo_path}` }}
+              style={styles.providerLogo}
+            />
+            <Text style={styles.providerName}>{watchProvider.provider_name}</Text>
+          </TouchableOpacity>
+        )}
 
+        {/* Tabla de usuarios */}
+        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
           <View style={styles.usuarioContainer}>
             <View style={styles.usuarioTextoContainer}>
               <Text style={styles.header}>USUARIO</Text>
@@ -126,9 +184,12 @@ const PantallaDeDetalles = ({ route, navigation }) => {
               </View>
             ))}
           </View>
-          <Text style={styles.detail}>{detallesSerie.overview}</Text>
         </View>
 
+        {/* Descripción de la serie */}
+        <Text style={styles.detail}>{detallesSerie.overview}</Text>
+
+        {/* Mostrar las temporadas */}
         <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
           {detallesSerie.seasons &&
             detallesSerie.seasons.map((season, index) => (
@@ -257,6 +318,28 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: '#4A90E2',
     fontWeight: 'bold',
+  },
+  providerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 15,
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    elevation: 5,
+  },
+  providerLogo: {
+    width: 50,
+    height: 50,
+    resizeMode: 'contain',
+    marginRight: 10,
+    borderRadius: 10
+  },
+  providerName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4A90E2',
   },
 });
 

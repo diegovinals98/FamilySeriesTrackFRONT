@@ -7,9 +7,9 @@ import { UserProvider } from './userContext.js';
 import * as Application from 'expo-application';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import WelcomeScreen from './Pantallas/WelcomeScreen.js';
+import WelcomeScreen from './Pantallas/Welcome/WelcomeScreen.js';
 import LogInScreen from './Pantallas/LogInScreen.js';
-import HomeScreen from './Pantallas/HomeScreen.js';
+import HomeScreen from './Pantallas/Home Screen/HomeScreen.js';
 import SignUp from './Pantallas/SignUp.js';
 import Settings from './Pantallas/Settings.js';
 import AnadirGrupo from './Pantallas/AnadirGrupo.js';
@@ -18,6 +18,7 @@ import DetallesDeTemporada from './Pantallas/TemporadaDetalle.js';
 import EditarGrupo from './Pantallas/EditarGrupo.js';
 import Calendario from './Pantallas/Calendario.js';
 import ComentariosSerie from './Pantallas/ComentariosSerie.js';
+import Estadisticas from './Pantallas/Estadisticas.js';
 import Not from './Pantallas/pruebsNotf.tsx';
 
 const Stack = createNativeStackNavigator();
@@ -51,7 +52,8 @@ function App() {
           <Stack.Screen name="Temporada" component={DetallesDeTemporada} />
           <Stack.Screen name="Editar Grupo" component={EditarGrupo} />
           <Stack.Screen name="Calendario" component={Calendario} />
-          <Stack.Screen name="Comentarios Serie" options={{ title: 'Comentarios' }} component={ComentariosSerie} />
+          <Stack.Screen name="Comentarios Serie" options={{ title: 'Chat' }} component={ComentariosSerie} />
+          <Stack.Screen name="Estadisticas" options={{ title: 'Estadisticas' }} component={Estadisticas} />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

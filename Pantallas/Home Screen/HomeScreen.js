@@ -4,7 +4,6 @@ import React, { useEffect, useState } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
   TouchableOpacity, 
   Dimensions, 
   Image,
@@ -18,18 +17,19 @@ import {
   Platform
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useUser } from '../userContext.js'; // Importa el contexto del usuario.
+import { useUser } from '../../userContext.js'; // Importa el contexto del usuario.
 import { StatusBar } from 'expo-status-bar';
-import { globalStyles } from '../estilosGlobales.js'; // Importa estilos globales.
+import { globalStyles } from '../../estilosGlobales.js'; // Importa estilos globales.
 import { Dropdown } from 'react-native-element-dropdown';
 import { useFocusEffect } from '@react-navigation/native';
-import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { styles } from './HomeScreenStyles.js';
 
 // Obtiene las dimensiones de la ventana del dispositivo.
 const windowHeight = Dimensions.get('window').height;
 
 const HomeScreen = () => {
-  const route = useRoute();
+
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
 
@@ -88,7 +88,7 @@ const HomeScreen = () => {
     }
   }, [idelegido]);
 
-  const obtenerSeriesDelUsuario = async (userId, nombre, idgrupo) => {
+  const obtenerSeriesDelUsuario = async (userId, idgrupo) => {
     try {
       const url = new URL(`https://apitfg.lapspartbox.com/series-ids-usuario/${userId}/${idgrupo}`);
       const respuesta = await fetch(url);
@@ -107,7 +107,7 @@ const HomeScreen = () => {
       setSeriesDetalles([]);
       return;
     }
-    obtenerSeriesDelUsuario(user.id, value, idelegido).then(seriesIds => {
+    obtenerSeriesDelUsuario(user.id, idelegido).then(seriesIds => {
       if (seriesIds.length === 0) {
         return;
       }
@@ -233,6 +233,12 @@ const HomeScreen = () => {
     navigation.navigate('Calendario', { nombreGrupo, idelegido });
   };
 
+  const estadisticas = (idUsuario) => {
+
+    console.log(idUsuario, "ha pulsado boton estadisticas");
+    navigation.navigate('Estadisticas', { idUsuario });
+  }
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
       <StatusBar />
@@ -344,6 +350,13 @@ const HomeScreen = () => {
                 <Text style={styles.editarGrupoTexto}>Calendario</Text>
               </TouchableOpacity>
             }
+
+            {
+              value !== 'Grupos' &&
+              <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => estadisticas(user.id)}>
+                <Text style={styles.editarGrupoTexto}>Estadisticas</Text>
+              </TouchableOpacity>
+            }
           </View>
 
         </View>
@@ -352,145 +365,6 @@ const HomeScreen = () => {
   );
 };
 
-const styles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    flex: 1
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    padding: '2%',
-  },
-  circle: {
-    aspectRatio: 1,
-    borderRadius: 1000,
-    backgroundColor: '#4A90E2',
-    alignItems: 'center',
-    marginRight: '1%',
-    marginLeft: '1%',
-    flex: 1,
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  initials: {
-    fontSize: 28,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  buttonGroup: {
-    height: '100%',
-    flexDirection: 'row',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 4,
-    justifyContent: 'center',
-    padding: 5,
-    borderColor: '#4A90E2',
-    borderWidth: 1,
-  },
-  buttonText: {
-    color: '#4A90E2',
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginRight: 5,
-  },
-  dropdownIcon: {
-    color: '#4A90E2',
-    fontSize: 18,
-  },
-  item: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
-  },
-  itemText: {
-    textAlign: 'center',
-    fontSize: 16,
-  },
-  serieTitle: {
-    marginTop: '5%',
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#4A90E2',
-    marginBottom: '1%',
-    textAlign: 'center',
-    paddingHorizontal: 10,
-  },
-  icon: {
-    marginRight: 5,
-  },
-  placeholderStyle: {
-    fontSize: 16,
-    color: '#aaa',
-  },
-  selectedTextStyle: {
-    fontSize: 16,
-  },
-  iconStyle: {
-    width: 20,
-    height: 20,
-  },
-  poster: {
-    height: windowHeight * 0.19,
-    resizeMode: 'contain',
-    borderRadius: 10,
-  },
-  serieDetailContainer: {
-    width: '33%',
-    padding: 10,
-    flexDirection: 'column',
-  },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: '4%',
-    borderRadius: 8,
-    marginBottom: '2%',
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
-  searchContainer: {
-    width: '80%',
-    flexDirection: 'column',
-    marginVertical: 10,
-  },
-  flatList: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#ddd',
-    backgroundColor: 'white'
-  },
-  textoBuscadas: {
-    margin: '5%',
-    textAlign: 'center',
-    fontSize: 14,
-  },
-  editarGrupoBoton: {
-    backgroundColor: '#4A90E2',
-    padding: 10,
-    margin: '2%',
-    alignItems: 'center',
-    borderRadius: 5,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  editarGrupoTexto: {
-    color: 'white',
-    fontSize: 16,
-  }
-});
+
 
 export default HomeScreen;

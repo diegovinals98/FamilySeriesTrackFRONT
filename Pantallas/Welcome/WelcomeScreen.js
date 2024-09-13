@@ -1,10 +1,11 @@
 import { React, useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
-import logoFST from '../assets/logoFST.png';
+import logoFST from '../../assets/logoFST.png';
 import { Dimensions } from 'react-native';
-import { globalStyles } from '../estilosGlobales.js';
+import { globalStyles } from '../../estilosGlobales.js';
 import * as Application from 'expo-application';
-import { useUser } from '../userContext.js';
+import { useUser } from '../../userContext.js';
+import { styles} from './WelcomeScreenStyle';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -119,20 +120,3 @@ export default function WelcomeScreen({ navigation }) {
   );
 }
 
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#f7f7f7',
-  },
-  logo: {
-    height: 0.4 * windowHeight,
-    width: 0.4 * windowHeight,
-    marginBottom: 20,
-  },
-  titulo: {
-    fontSize: 38,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: '10%',
-  },
-});
