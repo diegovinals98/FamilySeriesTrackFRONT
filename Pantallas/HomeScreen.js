@@ -170,7 +170,7 @@ const HomeScreen = () => {
     }
   };
 
-  const agregarSerieAUsuario = async (userId, idSerie) => {
+  const agregarSerieAUsuario = async (userId, idSerie, idGrupo) => {
     try {
       let response = await fetch('https://apitfg.lapspartbox.com/agregar-serie-usuario', {
         method: 'POST',
@@ -179,7 +179,8 @@ const HomeScreen = () => {
         },
         body: JSON.stringify({
           userId: userId,
-          idSerie: idSerie
+          idSerie: idSerie,
+          idGrupo: idGrupo
         }),
       });
 
@@ -198,7 +199,7 @@ const HomeScreen = () => {
         {
           text: 'Sí',
           onPress: async () => {
-            agregarSerieAUsuario(user.id, idSerie);
+            agregarSerieAUsuario(user.id, idSerie, idelegido);
             resetearBusqueda();
             setRefrescar(prev => !prev);
           },
