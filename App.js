@@ -20,6 +20,7 @@ import Calendario from './Pantallas/Calendario.js';
 import ComentariosSerie from './Pantallas/ComentariosSerie.js';
 import Estadisticas from './Pantallas/Estadisticas.js';
 import Not from './Pantallas/pruebsNotf.tsx';
+import Serie from './Pantallas/serie.js';
 
 const Stack = createNativeStackNavigator();
 
@@ -48,12 +49,31 @@ function App() {
           <Stack.Screen name="SignUp" options={{ headerShown: false }} component={SignUp} />
           <Stack.Screen name="Settings" options={{ title: 'Ajustes' }} component={Settings} />
           <Stack.Screen name="Añadir Grupo" options={{ title: 'Crear Grupo' }} component={AnadirGrupo} />
-          <Stack.Screen name="Detalles Serie" component={PantallaDeDetalles} />
+          <Stack.Screen 
+            name="Detalles Serie" 
+            component={PantallaDeDetalles} 
+            options={({ route }) => ({ 
+              title: route.params?.nombreSerie || 'Detalles Serie',
+            })}
+          />
           <Stack.Screen name="Temporada" component={DetallesDeTemporada} />
-          <Stack.Screen name="Editar Grupo" component={EditarGrupo} />
+          <Stack.Screen 
+            name="Editar Grupo" 
+            component={EditarGrupo} 
+            options={({ route }) => ({ 
+              title: `Editar ${route.params?.nombreGrupo}` || 'Editar Grupo',
+            })}
+          />
           <Stack.Screen name="Calendario" component={Calendario} />
           <Stack.Screen name="Comentarios Serie" options={{ title: 'Chat' }} component={ComentariosSerie} />
           <Stack.Screen name="Estadisticas" options={{ title: 'Estadisticas' }} component={Estadisticas} />
+          <Stack.Screen 
+            name="Serie" 
+            component={Serie} 
+            options={({ route }) => ({ 
+              title: route.params?.serieData?.name || 'Serie',
+            })}
+          />
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>

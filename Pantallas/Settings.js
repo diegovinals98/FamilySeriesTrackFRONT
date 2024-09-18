@@ -119,15 +119,29 @@ const Settings = () => {
 
   const cerrarSesion = async () => {
     try {
-      const deviceId = await Application.getAndroidId();
-      await fetch('https://apitfg.lapspartbox.com/delete-device-id', {
+      let deviceId;
+      if (Platform.OS === 'ios') {
+        deviceId = await Application.getIosIdForVendorAsync();
+      } else if (Platform.OS === 'android') {
+        deviceId = await Application.getAndroidId();
+      }
+      console.log('Device ID: ', deviceId);
+      const response = await fetch('https://apitfg.lapspartbox.com/delete-device-id', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, deviceId }),
       });
+
+      // Verificar si la respuesta es correcta
+      if (!response.ok) {
+        const errorMessage = await response.text();
+        throw new Error(`Error al cerrar sesión: ${errorMessage}`);
+      }
+
       navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
     } catch (error) {
-      alert('Error al cerrar sesión.');
+      console.log('Error al cerrar sesión:', error);
+      alert('No se ha podido cerrar sesión');
     }
   };
 

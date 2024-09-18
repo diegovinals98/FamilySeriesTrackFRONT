@@ -1,6 +1,4 @@
-// Importaciones de React, React Native y otras librerías.
 import React, { useEffect, useState } from 'react';
-
 import { 
   View, 
   Text, 
@@ -13,47 +11,57 @@ import {
   Alert,
   ScrollView,
   RefreshControl,
-  SafeAreaView ,
-  Platform
+  SafeAreaView,
+  Platform,
+  ActivityIndicator
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
-import { useUser } from '../../userContext.js'; // Importa el contexto del usuario.
+import { useNavigation } from '@react-navigation/native';
+import { useUser } from '../../userContext.js';
 import { StatusBar } from 'expo-status-bar';
-import { globalStyles } from '../../estilosGlobales.js'; // Importa estilos globales.
+import { globalStyles } from '../../estilosGlobales.js';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { styles } from './HomeScreenStyles.js';
 
-// Obtiene las dimensiones de la ventana del dispositivo.
 const windowHeight = Dimensions.get('window').height;
 
 const HomeScreen = () => {
-
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-
-  // Accede a los datos del usuario desde el contexto.
   const { user } = useUser();
   const iniciales = user?.nombre ? `${user?.nombre.charAt(0)}${user?.apellidos.charAt(0)}` : '';
 
-  // Estados del componente.
   const [seriesDetalles, setSeriesDetalles] = useState([]);
   const [idelegido, setIdElegido] = useState();
-  const [grupoInicialSeleccionado, setGrupoInicialSeleccionado] = useState(false); 
-  const [TodosGrupos, setTodosGrupos] = useState([]); 
-  const [value, setValue] = useState(null); 
+  const [grupoInicialSeleccionado, setGrupoInicialSeleccionado] = useState(false);
+  const [TodosGrupos, setTodosGrupos] = useState([]);
+  const [value, setValue] = useState(null);
   const [isFocus, setIsFocus] = useState(false);
   const [refrescar, setRefrescar] = useState(false);
   const [refrescando, setRefrescando] = useState(false);
+  const [cargando, setCargando] = useState(true);
+  const [query, setQuery] = useState('');
+  const [series, setSeries] = useState([]);
 
   useFocusEffect(
     React.useCallback(() => {
       if (!grupoInicialSeleccionado) {
-        llamarAGrupos(); 
+        llamarAGrupos();
       }
     }, [grupoInicialSeleccionado])
   );
+
+  useEffect(() => {
+    if (idelegido) {
+      obtenerSeries();
+    }
+  }, [idelegido]);
+
+  useEffect(() => {
+    llamarAGrupos();
+    obtenerSeries();
+  }, [refrescar]);
 
   const onRefresh = React.useCallback(() => {
     setRefrescando(true);
@@ -72,21 +80,14 @@ const HomeScreen = () => {
       if (json.length > 0 && !grupoInicialSeleccionado) {
         setValue(json[0].Nombre_grupo);
         setIdElegido(json[0].ID_Grupo);
-        setGrupoInicialSeleccionado(true); 
+        setGrupoInicialSeleccionado(true);
       } else if (json.length == 0){
         setValue("Grupos");
       }
-
     } catch (error) {
       console.error('Error al obtener los grupos:', error);
     }
   };
-
-  useEffect(() => {
-    if (idelegido) {
-      obtenerSeries();
-    }
-  }, [idelegido]);
 
   const obtenerSeriesDelUsuario = async (userId, idgrupo) => {
     try {
@@ -103,12 +104,16 @@ const HomeScreen = () => {
   };
 
   const obtenerSeries = () => {
+    setCargando(true);
     if (!value) {
       setSeriesDetalles([]);
+      setCargando(false);
       return;
     }
     obtenerSeriesDelUsuario(user.id, idelegido).then(seriesIds => {
       if (seriesIds.length === 0) {
+        setSeriesDetalles([]);
+        setCargando(false);
         return;
       }
       Promise.all(seriesIds.map(serieID =>
@@ -116,22 +121,21 @@ const HomeScreen = () => {
           .then(response => response.json())
       )).then(seriesDetalles => {
         setSeriesDetalles(seriesDetalles);
-      }).catch(error => console.error('Error:', error));
+        setCargando(false);
+      }).catch(error => {
+        console.error('Error:', error);
+        setCargando(false);
+      });
     });
   };
-
-  useEffect(() => {
-    llamarAGrupos();
-    obtenerSeries();
-  }, [refrescar]);
 
   const handleSettings = () => {
     navigation.navigate('Settings');
   };
 
-  async function anadirGrupo() {
-    navigation.navigate('Añadir Grupo')
-  }
+  const anadirGrupo = () => {
+    navigation.navigate('Añadir Grupo');
+  };
 
   const poster = (path) => {
     if (!path) {
@@ -145,9 +149,6 @@ const HomeScreen = () => {
       />
     );
   };
-
-  const [query, setQuery] = useState('');
-  const [series, setSeries] = useState([]);
 
   const handleTextChange = (text) => {
     setQuery(text);
@@ -234,18 +235,15 @@ const HomeScreen = () => {
   };
 
   const estadisticas = (idUsuario) => {
-
     console.log(idUsuario, "ha pulsado boton estadisticas");
     navigation.navigate('Estadisticas', { idUsuario });
-  }
+  };
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
       <StatusBar />
       <TouchableWithoutFeedback onPress={() => resetearBusqueda()}>
         <View style={[globalStyles.container, styles.container]}>
-
-          {/* Renderizado de la fila superior con las iniciales del usuario y el botón de grupos. */}
           <View style={styles.row}>
             <TouchableOpacity style={styles.circle} onPress={() => handleSettings()}>
               <Text style={styles.initials}>{iniciales}</Text>
@@ -294,6 +292,7 @@ const HomeScreen = () => {
               />
             </View>
 
+      
             {series.length > 0 ? (
               <FlatList
                 data={series}
@@ -314,24 +313,36 @@ const HomeScreen = () => {
               <RefreshControl
                 refreshing={refrescando}
                 onRefresh={onRefresh}
+                style={styles.refreshContainer}
+                tintColor="#6666ff"
+                title="Cargando series..."
+                titleColor="#6666ff"
               />
             }>
-              <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-                {seriesDetalles.map((detalle, index) => (
-                  <TouchableOpacity
-                    key={index}
-                    style={styles.serieDetailContainer}
-                    onPress={() => navegarADetalles(detalle.id)}
-                  >
-                    <View style={{ flex: 1 }}>
-                      {poster(detalle.poster_path)}
-                    </View>
-                    <View style={{ flex: 5, marginBottom: '2%' }}>
-                      <Text style={styles.serieTitle}>{detalle.name}</Text>
-                    </View>
-                  </TouchableOpacity>
-                ))}
-              </View>
+              {seriesDetalles.length > 0 ? (
+                <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+                  {seriesDetalles.map((detalle, index) => (
+                    <TouchableOpacity
+                      key={index}
+                      style={styles.serieDetailContainer}
+                      onPress={() => navegarADetalles(detalle.id)}
+                    >
+                      <View style={{ flex: 1 }}>
+                        {poster(detalle.poster_path)}
+                      </View>
+                      <View style={{ flex: 5, marginBottom: '2%' }}>
+                        <Text style={styles.serieTitle}>{detalle.name}</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              ) : (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color="#4A90E2" />
+                  <Text style={styles.loadingText}>Cargando series...</Text>
+                  <Text style={styles.loadingText}>Por favor, espere un momento</Text>
+                </View>
+              )}
             </ScrollView>
           </View>
 
@@ -341,7 +352,6 @@ const HomeScreen = () => {
               <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => editarGrupo(value)}>
                 <Text style={styles.editarGrupoTexto}>Editar Grupo: {value}</Text>
               </TouchableOpacity>
-              // TODO Igual aqui meter otro boton que sea estadisticas y te lleve a una pagina donde puedas ver esto.
             }
             
             {
@@ -364,7 +374,5 @@ const HomeScreen = () => {
     </SafeAreaView>
   );
 };
-
-
 
 export default HomeScreen;

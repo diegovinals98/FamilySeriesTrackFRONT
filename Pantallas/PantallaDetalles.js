@@ -1,13 +1,17 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Linking } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Linking, Share } from 'react-native';
 import { useUser } from '../userContext.js'; 
 import { useFocusEffect } from '@react-navigation/native';
+import Icon from 'react-native-vector-icons/FontAwesome';
+import { Rating } from 'react-native-elements';
 
 const PantallaDeDetalles = ({ route, navigation }) => {
   const { idSerie, NombreGrupo } = route.params;
   const [detallesSerie, setDetallesSerie] = useState(null);
   const [UsuariosSerie, setUsuariosSerie] = useState([]);
-  const [watchProvider, setWatchProvider] = useState(null); // Estado para almacenar un solo proveedor
+  const [watchProviders, setWatchProviders] = useState([]);
+  const [rating, setRating] = useState(0);
+  const [isFavorite, setIsFavorite] = useState(false);
 
   const { user } = useUser();
 
@@ -19,6 +23,8 @@ const PantallaDeDetalles = ({ route, navigation }) => {
       .then((response) => response.json())
       .then((data) => {
         setDetallesSerie(data);
+        setRating(data.vote_average / 2); // Convertir a escala de 5 estrellas
+        navigation.setParams({ nombreSerie: data.name });
       })
       .catch((error) => console.error('Error al obtener detalles de la serie:', error));
   };
@@ -31,8 +37,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
       .then((response) => response.json())
       .then((data) => {
         if (data.results && data.results.ES && data.results.ES.flatrate) {
-          // Solo seleccionamos el primer proveedor disponible
-          setWatchProvider(data.results.ES.flatrate[0]);
+          setWatchProviders(data.results.ES.flatrate);
         }
       })
       .catch((error) => console.error('Error al obtener proveedores de visualización:', error));
@@ -62,13 +67,13 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   const poster = (path) => {
     if (!path) return null;
     let imagePath = { uri: `https://image.tmdb.org/t/p/w500${path}` };
-    return <Image source={imagePath} style={styles.poster} />;
+    return <Image source={imagePath} style={styles.posterImage} />;
   };
 
   const posterSeason = (path) => {
     if (!path) return null;
     let imagePath = { uri: `https://image.tmdb.org/t/p/w500${path}` };
-    return <Image source={imagePath} style={styles.posterSeason} />;
+    return <Image source={imagePath} style={styles.posterSeasonImage} />;
   };
 
   const navegarADetallesDeTemporada = (idSerie, NumeroTemporada, nombreGrupo, nombreSerie) => {
@@ -112,11 +117,10 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     navigation.navigate('Comentarios Serie', { idSerie, NombreGrupo, nombreSerie: detallesSerie.name });
   };
 
-  // Función para abrir la aplicación de la plataforma de streaming
-  const abrirAppPlataforma = () => {
+  const abrirAppPlataforma = (providerName) => {
     let appUrl;
 
-    switch (watchProvider.provider_name) {
+    switch (providerName) {
       case 'Netflix':
         appUrl = 'nflx://';
         break;
@@ -143,6 +147,37 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     }
   };
 
+  const toggleFavorite = () => {
+    setIsFavorite(!isFavorite);
+    // Aquí puedes agregar la lógica para guardar el estado de favorito en el backend
+  };
+
+  const compartirSerie = async () => {
+    try {
+      const result = await Share.share({
+        message: `¡Mira esta serie genial: ${detallesSerie.name}!`,
+        title: detallesSerie.name,
+        url: `https://www.themoviedb.org/tv/${idSerie}`,
+      });
+      if (result.action === Share.sharedAction) {
+        if (result.activityType) {
+          // shared with activity type of result.activityType
+        } else {
+          // shared
+        }
+      } else if (result.action === Share.dismissedAction) {
+        // dismissed
+      }
+    } catch (error) {
+      Alert.alert(error.message);
+    }
+  };
+
+  const navegarAInfo = (idSerie) => {
+    console.log("idSerie", idSerie);
+    navigation.navigate('Serie', { serieData: idSerie  });
+  };
+
   if (!detallesSerie) {
     return (
       <View style={styles.container}>
@@ -154,51 +189,56 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   return (
     <View style={styles.container}>
       {poster(detallesSerie.poster_path)}
-      <Text style={styles.title}>{detallesSerie.name.toUpperCase()}</Text>
+      <Text style={styles.titleText}>{detallesSerie.name.toUpperCase()}</Text>
 
       <ScrollView>
-        {/* Mostrar el proveedor de streaming */}
-        {watchProvider && (
-          <TouchableOpacity style={styles.providerContainer} onPress={abrirAppPlataforma}>
-            <Image
-              source={{ uri: `https://image.tmdb.org/t/p/w500${watchProvider.logo_path}` }}
-              style={styles.providerLogo}
-            />
-            <Text style={styles.providerName}>{watchProvider.provider_name}</Text>
-          </TouchableOpacity>
+        
+        {watchProviders.length > 0 && (
+          <View style={styles.providersContainer}>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              {watchProviders.map((provider, index) => (
+                <TouchableOpacity 
+                  key={index} 
+                  style={styles.providerItem} 
+                  onPress={() => abrirAppPlataforma(provider.provider_name)}
+                >
+                  <Image
+                    source={{ uri: `https://image.tmdb.org/t/p/w500${provider.logo_path}` }}
+                    style={styles.providerLogo}
+                  />
+                  <Text style={styles.providerName}>{provider.provider_name}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
         )}
 
-        {/* Tabla de usuarios */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-          <View style={styles.usuarioContainer}>
-            <View style={styles.usuarioTextoContainer}>
-              <Text style={styles.header}>USUARIO</Text>
-              <Text style={styles.header}>TEMPORADA</Text>
-              <Text style={styles.header}>CAPÍTULO</Text>
-            </View>
-            {UsuariosSerie.map((usuario, index) => (
-              <View key={index} style={styles.usuarioTextoContainer}>
-                <Text style={styles.usuarioTexto}>{usuario.Nombre}</Text>
-                <Text style={styles.usuarioTexto}>{usuario.Temporada_Mas_Alta}</Text>
-                <Text style={styles.usuarioTexto}>{usuario.Capitulo_Mas_Reciente}</Text>
-              </View>
-            ))}
+        <View style={styles.tableContainer}>
+          <View style={styles.tableHeader}>
+            <Text style={styles.headerCell}>USUARIO</Text>
+            <Text style={styles.headerCell}>TEMPORADA</Text>
+            <Text style={styles.headerCell}>CAPÍTULO</Text>
           </View>
+          {UsuariosSerie.map((usuario, index) => (
+            <View key={index} style={styles.tableRow}>
+              <Text style={styles.tableCell}>{usuario.Nombre}</Text>
+              <Text style={styles.tableCell}>{usuario.Temporada_Mas_Alta}</Text>
+              <Text style={styles.tableCell}>{usuario.Capitulo_Mas_Reciente}</Text>
+            </View>
+          ))}
         </View>
 
-        {/* Descripción de la serie */}
-        <Text style={styles.detail}>{detallesSerie.overview}</Text>
+        <Text style={styles.overviewText}>{detallesSerie.overview}</Text>
 
-        {/* Mostrar las temporadas */}
-        <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
+        <View style={styles.seasonsContainer}>
           {detallesSerie.seasons &&
             detallesSerie.seasons.map((season, index) => (
               <TouchableOpacity
                 key={index}
-                style={styles.serieDetailContainer}
+                style={styles.seasonItem}
                 onPress={() => navegarADetallesDeTemporada(idSerie, season.season_number, NombreGrupo, detallesSerie.name)}
               >
-                <View style={{ flex: 1, marginTop: 0 }}>
+                <View style={styles.seasonContent}>
                   <Text key={index} style={styles.seasonTitle}>
                     {season.name}
                   </Text>
@@ -207,14 +247,25 @@ const PantallaDeDetalles = ({ route, navigation }) => {
               </TouchableOpacity>
             ))}
         </View>
+        <View style={styles.actionContainer}>
+          <TouchableOpacity onPress={toggleFavorite} style={styles.actionButton}>
+            <Icon name={isFavorite ? 'heart' : 'heart-o'} size={24} color={isFavorite ? 'red' : 'black'} />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={compartirSerie} style={styles.actionButton}>
+            <Icon name="share" size={24} color="black" />
+          </TouchableOpacity>
+        </View>
       </ScrollView>
 
-      <View style={{ flexDirection: 'row', marginRight: '1%', marginLeft: '1%' }}>
-        <TouchableOpacity style={styles.eliminarSerieBoton} onPress={() => eliminarSerie(idSerie, user.id)}>
-          <Text style={styles.eliminarSerieTexto}>Eliminar Serie</Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarSerie(idSerie, user.id)}>
+          <Text style={styles.buttonText}>Eliminar Serie</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.comentariosBoton} onPress={() => irComentaros(idSerie, NombreGrupo)}>
-          <Text style={styles.eliminarSerieTexto}>Chat</Text>
+        <TouchableOpacity style={styles.chatButton} onPress={() => irComentaros(idSerie, NombreGrupo)}>
+          <Text style={styles.buttonText}>Chat</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.infoButton} onPress={() => navegarAInfo(idSerie)}>
+          <Text style={styles.buttonText}>Información</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -222,124 +273,158 @@ const PantallaDeDetalles = ({ route, navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  actionButton: {
+    padding: 10,
+  },
+  actionContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginVertical: 10,
+    paddingHorizontal: 20,
+  },
+  buttonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  chatButton: {
     alignItems: 'center',
+    backgroundColor: '#3498DB',
+    borderRadius: 5,
+    flex: 1,
+    marginHorizontal: 5,
+    padding: 10,
+  },
+  container: {
+    alignItems: 'center',
+    flex: 1,
     padding: '2%',
   },
-  title: {
-    fontSize: 30,
-    fontWeight: 'bold',
-    color: '#4A90E2',
-    paddingVertical: 10,
-    textAlign: 'center',
-    width: '100%',
-    backgroundColor: '#f0f0f0',
-    borderRadius: 10,
-    marginBottom: 10,
+  deleteButton: {
+    alignItems: 'center',
+    backgroundColor: '#E74C3C',
+    borderRadius: 5,
     elevation: 5,
+    flex: 1,
+    marginHorizontal: 5,
+    padding: 10,
   },
-  detail: {
-    fontSize: 16,
+  headerCell: {
+    color: 'white',
+    flex: 1,
+    fontWeight: 'bold',
+    padding: 10,
+    textAlign: 'center',
+  },
+  infoButton: {
+    alignItems: 'center',
+    backgroundColor: '#4A90E2',
+    borderRadius: 5,
+    justifyContent: 'center',
+  },
+  overviewText: {
     color: 'grey',
+    fontSize: 16,
     margin: '5%',
     textAlign: 'justify',
   },
-  poster: {
-    height: 250,
-    width: '100%',
-    resizeMode: 'contain',
+  posterImage: {
     borderRadius: 10,
+    height: 250,
     marginBottom: 15,
+    resizeMode: 'contain',
+    width: '100%',
   },
-  posterSeason: {
+  posterSeasonImage: {
+    borderRadius: 10,
     height: 150,
     resizeMode: 'contain',
-    borderRadius: 10,
   },
-  serieDetailContainer: {
-    width: '33%',
-    padding: 10,
-  },
-  eliminarSerieBoton: {
-    backgroundColor: '#E74C3C',
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 5,
-    elevation: 5,
-  },
-  comentariosBoton: {
-    backgroundColor: '#3498DB',
-    padding: 10,
-    borderRadius: 5,
-    flex: 1,
-    alignItems: 'center',
-    marginHorizontal: 5,
-    elevation: 5,
-  },
-  eliminarSerieTexto: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  usuarioContainer: {
-    flex: 1,
-    marginHorizontal: '5%',
-    marginBottom: 10,
-  },
-  usuarioTextoContainer: {
-    flexDirection: 'row',
-    marginBottom: 5,
-  },
-  usuarioTexto: {
-    flex: 1,
-    textAlign: 'center',
-    borderWidth: 2,
-    borderColor: '#ddd',
-    padding: 5,
-    borderRadius: 5,
-    backgroundColor: '#f9f9f9',
-  },
-  header: {
-    flex: 1,
-    textAlign: 'center',
-    borderWidth: 2,
-    borderColor: '#ddd',
-    padding: 5,
-    backgroundColor: '#9ca3ad',
-    color: 'white',
-    fontWeight: 'bold',
-    borderRadius: 5,
-  },
-  seasonTitle: {
-    textAlign: 'center',
-    marginBottom: 10,
-    color: '#4A90E2',
-    fontWeight: 'bold',
-  },
-  providerContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  providersContainer: {
     marginBottom: 20,
     paddingHorizontal: 10,
-    paddingVertical: 15,
-    backgroundColor: '#fff',
-    borderRadius: 10,
-    elevation: 5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  providersTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#4A90E2',
+  },
+  providerItem: {
+    alignItems: 'center',
+    marginRight: 15,
   },
   providerLogo: {
     width: 50,
     height: 50,
-    resizeMode: 'contain',
-    marginRight: 10,
-    borderRadius: 10
+    borderRadius: 25,
   },
   providerName: {
-    fontSize: 18,
-    fontWeight: 'bold',
+    marginTop: 5,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  ratingContainer: {
+    paddingVertical: 10,
+  },
+  seasonContent: {
+    flex: 1,
+    marginTop: 0,
+  },
+  seasonItem: {
+    padding: 10,
+    width: '33%',
+  },
+  seasonTitle: {
     color: '#4A90E2',
+    fontWeight: 'bold',
+    marginBottom: 10,
+    textAlign: 'center',
+  },
+  seasonsContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+  },
+  tableCell: {
+    flex: 1,
+    padding: 10,
+    textAlign: 'center',
+  },
+  tableContainer: {
+    borderColor: '#ddd',
+    borderRadius: 5,
+    borderWidth: 1,
+    marginBottom: 10,
+    marginHorizontal: '5%',
+    overflow: 'hidden',
+  },
+  tableHeader: {
+    backgroundColor: '#4A90E2',
+    flexDirection: 'row',
+  },
+  tableRow: {
+    borderColor: '#ddd',
+    borderTopWidth: 1,
+    flexDirection: 'row',
+  },
+  titleText: {
+    backgroundColor: '#f0f0f0',
+    borderRadius: 10,
+    color: '#4A90E2',
+    elevation: 5,
+    fontSize: 30,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    paddingVertical: 10,
+    textAlign: 'center',
+    width: '100%',
   },
 });
 

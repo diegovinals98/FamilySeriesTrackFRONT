@@ -1,30 +1,34 @@
 import React, { useState } from 'react';
-import logoFST from '../assets/logoFST.png';
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity, 
+  Dimensions, 
+  Image,
+  Alert, 
+  SafeAreaView, 
+  KeyboardAvoidingView, 
+  TouchableWithoutFeedback, 
+  Keyboard, 
+  Platform 
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import { useUser } from '../userContext.js'; // Importa el hook useUser
-import { Alert, SafeAreaView, KeyboardAvoidingView, TouchableWithoutFeedback, Keyboard, Platform } from 'react-native';
+import { useUser } from '../userContext.js';
 import * as Crypto from 'expo-crypto';
 import * as Application from 'expo-application';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TextInput,
-  TouchableOpacity,
-  Dimensions,
-  Image,
-} from 'react-native';
+import logoFST from '../assets/logoFST.png';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 const LogInScreen = () => {
   const navigation = useNavigation();
+  const { setUser } = useUser();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
-  const { setUser } = useUser();
 
-  // Obtener Device ID
   const getDeviceId = async () => {
     let deviceId;
     if (Platform.OS === 'android') {
@@ -35,9 +39,7 @@ const LogInScreen = () => {
     return deviceId;
   };
 
-  // Manejo del login
   async function handleLogin() {
-    // Generar el hash de la contraseña ingresada usando expo-crypto
     const hashedPassword = await Crypto.digestStringAsync(
       Crypto.CryptoDigestAlgorithm.SHA512,
       password
@@ -51,7 +53,7 @@ const LogInScreen = () => {
         },
         body: JSON.stringify({
           usuario: username,
-          contraseña: hashedPassword, // Usar el hashedPassword aquí
+          contraseña: hashedPassword,
         }),
       });
 
@@ -59,7 +61,6 @@ const LogInScreen = () => {
       const storedHashedPassword = json.hashPassword;
 
       if (storedHashedPassword === hashedPassword) {
-        // Establecer el usuario en el contexto
         setUser({
           id: json.usuario.Id,
           nombre: json.usuario.Nombre,
@@ -68,7 +69,6 @@ const LogInScreen = () => {
           contraseña: json.usuario.Contraseña,
         });
 
-        // Obtener Device ID y guardarlo
         const deviceId = await getDeviceId();
         try {
           await fetch('https://apitfg.lapspartbox.com/insert-device-id', {
@@ -79,7 +79,6 @@ const LogInScreen = () => {
             body: JSON.stringify({ userId: json.usuario.Id, deviceId }),
           });
 
-          // Navegar a la pantalla principal
           navigation.reset({
             index: 0,
             routes: [{ name: 'Home' }],

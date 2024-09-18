@@ -91,7 +91,7 @@ export const styles = StyleSheet.create({
     height: 20,
   },
   poster: {
-    height: windowHeight * 0.19,
+    height: windowHeight * 0.20,
     resizeMode: 'contain',
     borderRadius: 10,
   },
@@ -141,5 +141,15 @@ export const styles = StyleSheet.create({
   editarGrupoTexto: {
     color: 'white',
     fontSize: 16,
+  }, loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F4F6F8',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#333',
+    marginTop: 10,
   }
 });

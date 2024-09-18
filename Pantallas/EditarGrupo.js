@@ -16,8 +16,8 @@ import { useUser } from '../userContext.js';
 
 const windowHeigh = Dimensions.get('window').height;
 
-const EditarGrupo = () => {
-  const route = useRoute();
+const EditarGrupo = ({ route }) => {
+  const navigation = useNavigation();
   const [nombreGrupo, setNombregrupo] = useState(route.params.nombreGrupo);
   const { user } = useUser();
   const [miembros, setMiembros] = useState([]);
@@ -25,7 +25,6 @@ const EditarGrupo = () => {
   const [editedNombreGrupo, setEditedNombreGrupo] = useState(nombreGrupo);
   const [idGrupo, setIdGrupo] = useState();
   const [refrescar, setRefrescar] = useState(false);
-  const navigation = useNavigation();
   const [admin, setAdmin] = useState(0);
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUserName, setNewUserName] = useState('');
@@ -108,6 +107,7 @@ const EditarGrupo = () => {
         alert('Nombre del grupo actualizado correctamente.');
         setNombregrupo(editedNombreGrupo);
         setRefrescar((prev) => !prev);
+        navigation.setParams({ nombreGrupo: editedNombreGrupo });
       } else {
         alert('Error al actualizar el nombre del grupo.');
       }

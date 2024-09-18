@@ -270,87 +270,109 @@ const ComentariosSerie = () => {
       );
     };
     
-    const styles = StyleSheet.create({
-      keyboardView: {
-        flex: 1,
-      },
-      container: {
-        alignItems: 'center',
-        flex: 1,
-        justifyContent: 'space-between',
-      },
-      title: {
-        fontSize: 30,
-        fontWeight: 'bold',
-        backgroundColor: 'white',
-        borderColor: '#4A90E2',
-        borderWidth: 4,
-        width: '100%',
-        paddingBottom: '2%',
-        paddingTop: '2%',
-        textAlign: 'center',
-      },
-      scrollView: {
-        flex: 1,
-        width: '100%',
-        paddingHorizontal: 10,
-      },
-      commentBox: {
-        width: '100%',
-        padding: 10,
-        height: windowHeigh * 0.12,
-      },
-      inputRow: {
-        flexDirection: 'row',
-        alignItems: 'center',
-      },
-      input: {
-        flex: 5,
-        borderWidth: 1,
-        borderColor: '#ddd',
-        padding: windowHeigh * 0.015,
-        marginRight: 10,
-        borderRadius: 8,
-        backgroundColor: '#fff',
-      },
-      button: {
-        flex: 1,
-        backgroundColor: '#005f99',
-        borderRadius: 10,
-        padding: windowHeigh * 0.015,
-        justifyContent: 'center',
-        alignItems: 'center',
-      },
-      buttonText: {
-        color: 'white',
-        fontWeight: 'bold',
-      },
-      comentarioDerecha: {
-        alignSelf: 'flex-end',
-        backgroundColor: '#DCF8C6',
-        borderRadius: 15,
-        padding: 15,
-        marginVertical: 10,
-        maxWidth: '80%',
-      },
-      comentarioIzquierda: {
-        alignSelf: 'flex-start',
-        backgroundColor: '#FFFFFF',
-        borderRadius: 15,
-        padding: 15,
-        marginVertical: 10,
-        maxWidth: '80%',
-      },
-      autor: {
-        fontWeight: 'bold',
-        fontSize: 16,
-        color: '#333',
-      },
-      fecha: {
-        fontSize: 12,
-        color: '#999',
-        marginTop: '1%',
-      },
-    });
+const styles = StyleSheet.create({
+  keyboardView: {
+    flex: 1,
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#F0F2F5',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#4A90E2',
+    backgroundColor: 'white',
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    textAlign: 'center',
+    borderWidth: 2,
+    borderColor: 'black',
+  },
+  scrollView: {
+    flex: 1,
+    paddingHorizontal: 15,
+    paddingTop: 10,
+  },
+  commentBox: {
+    backgroundColor: 'white',
+    borderTopWidth: 1,
+    borderTopColor: '#E0E0E0',
+    paddingVertical: '3%',
+    paddingHorizontal: '5%',
+  },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  input: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#E0E0E0',
+    borderRadius: 20,
+    paddingHorizontal: 15,
+    paddingVertical: 10,
+    marginRight: 10,
+    fontSize: 16,
+    backgroundColor: '#F8F8F8',
+  },
+  button: {
+    backgroundColor: '#4A90E2',
+    borderRadius: 20,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  comentarioDerecha: {
+    alignSelf: 'flex-end',
+    backgroundColor: '#DCF8C6',
+    borderRadius: 15,
+    padding: 12,
+    marginVertical: 5,
+    maxWidth: '80%',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  comentarioIzquierda: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 15,
+    padding: 12,
+    marginVertical: 5,
+    maxWidth: '80%',
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.18,
+    shadowRadius: 1.00,
+    elevation: 1,
+  },
+  autor: {
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#4A4A4A',
+    marginBottom: 3,
+  },
+  fecha: {
+    fontSize: 11,
+    color: '#888',
+    marginTop: 4,
+    alignSelf: 'flex-end',
+  },
+});
 
 export default ComentariosSerie;

@@ -1,18 +1,20 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Dimensions, ScrollView, StyleSheet } from 'react-native';
-import { BarChart, PieChart } from 'react-native-chart-kit';
-import { useRoute } from '@react-navigation/native';
-
-const windowWidth = Dimensions.get('window').width;
+import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { useRoute, useNavigation } from '@react-navigation/native';
 
 const Estadisticas = () => {
   const route = useRoute();
+  const navigation = useNavigation();
   const [idUsuario, setIdUsuario] = useState(route.params.idUsuario);
   const [capitulosPorSerie, setCapitulosPorSerie] = useState([]);
-  const [nombresSeries, setNombresSeries] = useState([]); // Estado para los nombres de las series
+  const [seriesData, setSeriesData] = useState([]);
   const [temporadasVistas, setTemporadasVistas] = useState(0);
   const [seriesVistas, setSeriesVistas] = useState([]);
+  const [totalCapitulosVistos, setTotalCapitulosVistos] = useState(0);
+  const [serieMasVista, setSerieMasVista] = useState(null);
+  const [loading, setLoading] = useState(true);
   const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
+  const baseImageUrl = 'https://image.tmdb.org/t/p/w92';
 
   useEffect(() => {
     obtenerCapitulosVistos();
@@ -22,7 +24,9 @@ const Estadisticas = () => {
 
   useEffect(() => {
     if (capitulosPorSerie.length > 0) {
-      obtenerNombresSeries(); // Llama para obtener nombres cuando hay datos de series
+      obtenerSeriesData();
+      calcularTotalCapitulosVistos();
+      determinarSerieMasVista();
     }
   }, [capitulosPorSerie]);
 
@@ -56,94 +60,102 @@ const Estadisticas = () => {
     }
   };
 
-  // Función para obtener los nombres de las series por sus IDs
-  const obtenerNombreSerie = async (serieId) => {
+  const obtenerSerieData = async (serieId) => {
     try {
       const response = await fetch(`https://api.themoviedb.org/3/tv/${serieId}?api_key=${apiKey}&language=es-ES`);
       const data = await response.json();
-      return data.name; // El nombre de la serie
+      return { id: serieId, name: data.name, posterPath: data.poster_path };
     } catch (error) {
-      console.error('Error obteniendo nombre de serie:', error);
-      return 'Nombre desconocido'; // En caso de error
+      console.error('Error obteniendo nombre y póster de serie:', error);
+      return { id: serieId, name: 'Nombre desconocido', posterPath: null };
     }
   };
 
-  // Función para obtener los nombres de todas las series
-  const obtenerNombresSeries = async () => {
-    const nombres = await Promise.all(
+  const obtenerSeriesData = async () => {
+    const seriesInfo = await Promise.all(
       capitulosPorSerie.map(async (serie) => {
-        const nombre = await obtenerNombreSerie(serie.serie); // Llama a la API de TMDb por cada serie
-        return nombre;
+        const data = await obtenerSerieData(serie.serie);
+        return data;
       })
     );
-    setNombresSeries(nombres); // Actualiza el estado con los nombres
+    setSeriesData(seriesInfo);
+    setLoading(false);
   };
 
-  // Si los nombres de las series aún no se han obtenido, muestra un texto de carga
-  if (nombresSeries.length === 0) {
-    return <Text style={styles.loadingText}>Cargando nombres de series...</Text>;
+  const calcularTotalCapitulosVistos = () => {
+    const total = capitulosPorSerie.reduce((acc, serie) => acc + serie.capitulosVistos, 0);
+    setTotalCapitulosVistos(total);
+  };
+
+  const determinarSerieMasVista = () => {
+    if (capitulosPorSerie.length > 0) {
+      const serieMasVistos = capitulosPorSerie.reduce((prev, current) => 
+        (prev.capitulosVistos > current.capitulosVistos) ? prev : current
+      );
+      setSerieMasVista(serieMasVistos);
+    }
+  };
+
+  const navegarADetalleSerie = (serieId) => {
+    navigation.navigate('Serie', { serieData:  serieId  });
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#1F8EFA" />
+        <Text style={styles.loadingText}>Cargando estadísticas...</Text>
+      </View>
+    );
   }
 
   return (
-    <ScrollView>
-      <Text style={styles.title}>Tus estadísticas personales</Text>
-      <View style={styles.container}>
-        {/* Gráfico de Capítulos Vistos */}
-        <Text style={styles.chartTitle}>Capítulos Vistos por Serie</Text>
-        <BarChart
-        style={styles.pieChartContainer}
-          data={{
-            labels: nombresSeries, // Usamos los nombres en lugar de los IDs
-            datasets: [
-              {
-                data: capitulosPorSerie.map(serie => serie.capitulosVistos),
-              }
-            ]
-          }}
-          width={windowWidth - 16}
-          height={300} // Reducimos la altura
-          chartConfig={{
-            backgroundColor: '#1cc910',
-            backgroundGradientFrom: '#eff3ff',
-            backgroundGradientTo: '#efefef',
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-            strokeWidth: 2, // optional, default 3
-            barPercentage: 0.5,
-            propsForLabels: {
-              fontSize: 10, // Reducimos el tamaño de las etiquetas
-            },
-          }}
-          verticalLabelRotation={45} // Cambiamos la rotación para que las etiquetas se vean mejor
-        />
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Tus estadísticas</Text>
 
-        {/* Gráfico de Temporadas Vistas */}
-        <Text style={styles.chartTitle}>Total de Temporadas Vistas</Text>
-        <Text style={styles.subtitle}>{temporadasVistas}</Text>
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Capítulos Vistos</Text>
+        {capitulosPorSerie.map((serie, index) => (
+          <TouchableOpacity key={index} onPress={() => navegarADetalleSerie(serie.serie)} style={styles.listItem}>
+            {seriesData[index]?.posterPath && (
+              <Image
+                source={{ uri: `${baseImageUrl}${seriesData[index].posterPath}` }}
+                style={styles.poster}
+              />
+            )}
+            <Text style={styles.seriesName}>{seriesData[index]?.name}</Text>
+            <Text style={styles.seriesStat}>{serie.capitulosVistos} capítulos</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
 
-        {/* Gráfico de Series Vistas */}
-        <Text style={styles.chartTitle}>Series Vistas</Text>
-        <PieChart
-            style={styles.pieChartContainer}
-          data={seriesVistas.map(serie => ({
-            name: serie.serie,
-            population: serie.temporadasVistas,
-            color: '#' + Math.floor(Math.random() * 16777215).toString(16), // Genera colores aleatorios
-            legendFontColor: '#7F7F7F',
-            legendFontSize: 15
-          }))}
-          width={windowWidth - 16}
-          height={220}
-          chartConfig={{
-            backgroundColor: '#1cc910',
-            backgroundGradientFrom: '#eff3ff',
-            backgroundGradientTo: '#efefef',
-            color: (opacity = 1) => `rgba(0, 0, 0, ${opacity})`,
-          }}
-          accessor="population"
-          backgroundColor="transparent"
-          paddingLeft="15"
-          absolute
-        />
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Total de capítulos vistos</Text>
+        <Text style={styles.totalStat}>{totalCapitulosVistos}</Text>
+      </View>
+
+      {serieMasVista && (
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Serie más vista</Text>
+          <Text style={styles.totalStat}>
+            {seriesData.find(serie => serie.id === serieMasVista.serie)?.name}: {serieMasVista.capitulosVistos} capítulos
+          </Text>
+        </View>
+      )}
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Total de Temporadas Vistas</Text>
+        <Text style={styles.totalStat}>{temporadasVistas}</Text>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>Series Vistas</Text>
+        {seriesVistas.map((serie, index) => (
+          <TouchableOpacity key={index} onPress={() => navegarADetalleSerie(serie.serie)} style={styles.listItem}>
+            <Text style={styles.seriesName}>{serie.serie}:</Text>
+            <Text style={styles.seriesStat}>{serie.temporadasVistas} temporadas</Text>
+          </TouchableOpacity>
+        ))}
       </View>
     </ScrollView>
   );
@@ -154,77 +166,74 @@ export default Estadisticas;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: '#fff', // Fondo blanco para consistencia
-    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#F4F6F8',
   },
   title: {
-    fontSize: 22,
+    fontSize: 26,
     fontWeight: 'bold',
-    color: '#4A90E2',
-    marginVertical: 10,
+    color: '#333',
     textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 18,
-    color: '#4A90E2',
-    fontWeight: '600',
-    textAlign: 'center',
-    marginBottom: 15,
-  },
-  chartContainer: {
-    width: windowWidth - 20,
-    alignItems: 'center',
     marginVertical: 20,
   },
-  pieChartContainer: {
-    alignItems: 'center',
+  section: {
     marginVertical: 20,
-    borderWidth: '2px',
-    borderRadius: '10px'
-  },
-  pieChartLegend: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    width: windowWidth - 20,
-  },
-  seriesListContainer: {
-    marginTop: 10,
-    width: '100%',
-    backgroundColor: '#f8f8f8',
+    backgroundColor: '#fff',
+    padding: 15,
     borderRadius: 10,
-    paddingVertical: 15,
-    paddingHorizontal: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
   },
-  seriesItem: {
-    padding: 10,
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#555',
+  },
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
     borderBottomWidth: 1,
-    borderBottomColor: '#ddd',
+    borderBottomColor: '#eee',
+  },
+  poster: {
+    width: 50,
+    height: 75,
+    marginRight: 15,
+    borderRadius: 8,
   },
   seriesName: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#4A90E2',
+    color: '#333',
+    flex: 1,
+    marginRight: 10,
   },
   seriesStat: {
-    fontSize: 14,
-    color: '#7F7F7F',
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#1F8EFA',
   },
-  chartTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#4A90E2',
-    marginVertical: 10,
+  totalStat: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#1F8EFA',
     textAlign: 'center',
+    marginVertical: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F4F6F8',
   },
   loadingText: {
-    fontSize: 16,
-    color: '#4A90E2',
-    marginVertical: 20,
-    textAlign: 'center',
-  },
-  pieChartLegendText: {
-    fontSize: 14,
-    color: '#7F7F7F',
+    fontSize: 18,
+    color: '#333',
+    marginTop: 10,
   },
 });

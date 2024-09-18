@@ -93,6 +93,12 @@ const DetallesDeTemporada = ({ route }) => {
         <View style={styles.episodesContainer}>
           {detallesTemporada.episodes && detallesTemporada.episodes.map((capitulo, index) => (
             <View key={capitulo.id} style={styles.capituloContainer}>
+              {capitulo.still_path && (
+                <Image
+                  source={{ uri: `https://image.tmdb.org/t/p/w500${capitulo.still_path}` }}
+                  style={styles.capituloImage}
+                />
+              )}
               <Text style={styles.capituloTitle}>Capítulo {capitulo.episode_number}: {capitulo.name}</Text>
               <Text style={styles.capituloDescription}>{capitulo.overview}</Text>
               {(capitulosVistos || []).includes(capitulo.id) ? (
@@ -146,9 +152,15 @@ const styles = StyleSheet.create({
   capituloContainer: {
     backgroundColor: '#f9f9f9',
     borderRadius: 10,
-    padding: '5%',
     marginBottom: 15,
     elevation: 5,
+  },
+  capituloImage: {
+    width: '100%',
+    height: 200,
+    resizeMode: 'cover',
+    borderRadius: 10,
+    marginBottom: 10,
   },
   capituloTitle: {
     fontSize: 18,
