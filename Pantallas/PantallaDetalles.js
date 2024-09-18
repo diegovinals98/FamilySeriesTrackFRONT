@@ -220,7 +220,10 @@ const PantallaDeDetalles = ({ route, navigation }) => {
             <Text style={styles.headerCell}>CAPÍTULO</Text>
           </View>
           {UsuariosSerie.map((usuario, index) => (
-            <View key={index} style={styles.tableRow}>
+            <View key={index} style={[
+              styles.tableRow,
+              { backgroundColor: index % 2 === 0 ? '#e6e6e6' : '#f9f9f9' }
+            ]}>
               <Text style={styles.tableCell}>{usuario.Nombre}</Text>
               <Text style={styles.tableCell}>{usuario.Temporada_Mas_Alta}</Text>
               <Text style={styles.tableCell}>{usuario.Capitulo_Mas_Reciente}</Text>
@@ -233,18 +236,20 @@ const PantallaDeDetalles = ({ route, navigation }) => {
         <View style={styles.seasonsContainer}>
           {detallesSerie.seasons &&
             detallesSerie.seasons.map((season, index) => (
-              <TouchableOpacity
-                key={index}
-                style={styles.seasonItem}
-                onPress={() => navegarADetallesDeTemporada(idSerie, season.season_number, NombreGrupo, detallesSerie.name)}
-              >
-                <View style={styles.seasonContent}>
-                  <Text key={index} style={styles.seasonTitle}>
-                    {season.name}
-                  </Text>
-                  {posterSeason(season.poster_path)}
-                </View>
-              </TouchableOpacity>
+              season.name !== 'Especiales' && (
+                <TouchableOpacity
+                  key={index}
+                  style={styles.seasonItem}
+                  onPress={() => navegarADetallesDeTemporada(idSerie, season.season_number, NombreGrupo, detallesSerie.name)}
+                >
+                  <View style={styles.seasonContent}>
+                    <Text key={index} style={styles.seasonTitle}>
+                      {season.name}
+                    </Text>
+                    {posterSeason(season.poster_path)}
+                  </View>
+                </TouchableOpacity>
+              )
             ))}
         </View>
         <View style={styles.actionContainer}>

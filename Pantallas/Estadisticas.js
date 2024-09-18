@@ -143,7 +143,10 @@ const Estadisticas = () => {
         </View>
       )}
 
-      <View style={styles.section}>
+
+      {/* TODO: Añadir estadísticas de temporadas vistas */}
+      
+      {/* <View style={styles.section}>
         <Text style={styles.sectionTitle}>Total de Temporadas Vistas</Text>
         <Text style={styles.totalStat}>{temporadasVistas}</Text>
       </View>
@@ -156,7 +159,7 @@ const Estadisticas = () => {
             <Text style={styles.seriesStat}>{serie.temporadasVistas} temporadas</Text>
           </TouchableOpacity>
         ))}
-      </View>
+      </View> */}
     </ScrollView>
   );
 };
