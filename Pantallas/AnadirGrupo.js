@@ -8,6 +8,7 @@ import {
   TextInput,
   TouchableWithoutFeedback,
   Keyboard,
+  ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
@@ -100,57 +101,63 @@ const AnadirGrupo = () => {
 
   return (
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
-      <View style={styles.container}>
-        <Text style={styles.titulo}>Añadir Grupo</Text>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <View style={styles.container}>
+          <Text style={styles.titulo}>Añadir Grupo</Text>
 
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Nombre del Grupo</Text>
-          <TextInput
-            style={styles.input}
-            onChangeText={(text) => setnombreGrupo(text)}
-            placeholder="Nombre del grupo"
-          />
-        </View>
-
-        {inputsUsuarios.map((input, index) => (
-          <View key={input.key} style={styles.inputGroup}>
-            <Text style={styles.label}>Usuario {index + 1}</Text>
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Nombre del Grupo</Text>
             <TextInput
               style={styles.input}
-              onChangeText={(text) => actualizarUsuario(index, text)}
-              placeholder="Usuario a añadir"
-              value={input.value}
+              onChangeText={(text) => setnombreGrupo(text)}
+              placeholder="Nombre del grupo"
             />
           </View>
-        ))}
 
-        <View style={styles.usuarios}>
-          <TouchableOpacity onPress={agregarInputUsuario} style={styles.botonUsuario}>
-            <Text style={styles.textoBoton}>Añadir Usuario</Text>
-          </TouchableOpacity>
+          {inputsUsuarios.map((input, index) => (
+            <View key={input.key} style={styles.inputGroup}>
+              <Text style={styles.label}>Usuario {index + 1}</Text>
+              <TextInput
+                style={styles.input}
+                onChangeText={(text) => actualizarUsuario(index, text)}
+                placeholder="Usuario a añadir"
+                value={input.value}
+              />
+            </View>
+          ))}
 
-          <TouchableOpacity onPress={agregarDatos} style={styles.botonAgregar}>
-            <Text style={styles.textoBoton}>Crear Grupo</Text>
-          </TouchableOpacity>
+          <View style={styles.usuarios}>
+            <TouchableOpacity onPress={agregarInputUsuario} style={styles.botonUsuario}>
+              <Text style={styles.textoBoton}>Añadir Usuario</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity onPress={agregarDatos} style={styles.botonAgregar}>
+              <Text style={styles.textoBoton}>Crear Grupo</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </View>
+      </ScrollView>
     </TouchableWithoutFeedback>
   );
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
   container: {
     flex: 1,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'flex-start',
     padding: 20,
-    backgroundColor: '#f7f7f7', // Fondo claro
+    backgroundColor: '#f7f7f7',
   },
   titulo: {
     fontSize: 32,
     fontWeight: 'bold',
     color: '#005f99',
     marginBottom: 20,
+    textAlign: 'center',
   },
   inputGroup: {
     width: '100%',

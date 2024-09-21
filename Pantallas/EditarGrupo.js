@@ -7,14 +7,14 @@ import {
   Dimensions,
   TextInput,
   FlatList,
-  Button,
   Alert,
   ScrollView,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
+import { Ionicons } from '@expo/vector-icons';
 
-const windowHeigh = Dimensions.get('window').height;
+const windowHeight = Dimensions.get('window').height;
 
 const EditarGrupo = ({ route }) => {
   const navigation = useNavigation();
@@ -174,175 +174,182 @@ const EditarGrupo = ({ route }) => {
   };
 
   return (
-    <View style={styles.contenedorPrincipal}>
-      <View style={styles.container}>
-        {isEditing ? (
-          <View style={styles.contenedorNombre}>
-            <Text style={styles.label}>Nombre:</Text>
+    <View style={styles.container}>
+      <ScrollView contentContainerStyle={styles.scrollView}>
+       
+
+        <View style={styles.card}>
+          {isEditing ? (
             <TextInput
               value={editedNombreGrupo}
               onChangeText={setEditedNombreGrupo}
               autoFocus={true}
               onBlur={handleSave}
-              style={styles.inputNombre}
+              style={styles.input}
             />
-          </View>
-        ) : (
-          <View style={styles.contenedorNombre}>
-            <Text style={styles.label}>Nombre: </Text>
-            <Text style={styles.nombregrupo}>{nombreGrupo}</Text>
+          ) : (
+            <Text style={styles.groupName}>{nombreGrupo}</Text>
+          )}
+          <TouchableOpacity onPress={isEditing ? handleSave : handleEdit} style={styles.editButton}>
+            <Ionicons name={isEditing ? "checkmark-circle" : "create-outline"} size={24} color="#4A90E2" />
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.card}>
+          <Text style={styles.sectionTitle}>Miembros</Text>
+          <FlatList
+            data={miembros}
+            keyExtractor={(item) => item.id.toString()}
+            renderItem={({ item }) => (
+              <View style={styles.memberItem}>
+                <Ionicons name="person-circle-outline" size={24} color="#4A90E2" />
+                <Text style={styles.memberName}>{item.Nombre} {item.Apellidos}</Text>
+              </View>
+            )}
+          />
+        </View>
+
+        {showAddUser && (
+          <View style={styles.addUserContainer}>
+            <TextInput
+              value={newUserName}
+              onChangeText={setNewUserName}
+              placeholder="Nombre del nuevo usuario"
+              placeholderTextColor="#999"
+              autoCapitalize="none"
+              style={styles.input}
+            />
+            <TouchableOpacity onPress={() => setShowAddUser(false)} style={styles.cancelButton}>
+              <Ionicons name="close-circle" size={24} color="#FF6347" />
+            </TouchableOpacity>
           </View>
         )}
 
-        <TouchableOpacity style={styles.buttonEdit} onPress={isEditing ? handleSave : handleEdit}>
-          <Text style={styles.buttonText}>{isEditing ? 'Guardar' : 'Editar Nombre'}</Text>
-        </TouchableOpacity>
-      </View>
-
-      <View style={styles.container}>
-        <Text style={styles.label}>Usuarios:</Text>
-        <FlatList
-          data={miembros}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={({ item }) => (
-            <View style={styles.contenedorNombre}>
-              <Text style={styles.nombreUsuario}>{item.Nombre} {item.Apellidos}</Text>
-            </View>
-          )}
-        />
-      </View>
-
-      {showAddUser && (
-        <TextInput
-          value={newUserName}
-          onChangeText={setNewUserName}
-          placeholder="Nombre del nuevo usuario"
-          autoCapitalize="none"
-          style={styles.input2}
-        />
-      )}
-
-      <TouchableOpacity style={styles.buttonAdd} onPress={showAddUser ? addUserToGroup : handleAddUserPress}>
-        <Text style={styles.buttonText}>{showAddUser ? 'Confirmar Añadir Usuario' : 'Añadir Usuario'}</Text>
-      </TouchableOpacity>
-
-      <View style={styles.fixToText}>
-        <TouchableOpacity style={styles.buttonSalir} onPress={() => salirdelGrupo(idGrupo)}>
-          <Text style={styles.buttonText}>Salir del Grupo</Text>
+        <TouchableOpacity style={styles.button} onPress={showAddUser ? addUserToGroup : handleAddUserPress}>
+          <Text style={styles.buttonText}>{showAddUser ? 'Confirmar Añadir Usuario' : 'Añadir Usuario'}</Text>
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.buttonEliminar} onPress={() => eliminargrupo(idGrupo)} disabled={user.id !== admin}>
-          <Text style={styles.buttonText}>{user.id === admin ? 'Eliminar Grupo' : 'No eres Admin'}</Text>
-        </TouchableOpacity>
-      </View>
+        <View style={styles.buttonContainer}>
+          <TouchableOpacity style={[styles.button, styles.leaveButton]} onPress={() => salirdelGrupo(idGrupo)}>
+            <Text style={styles.buttonText}>Salir del Grupo</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={[styles.button, styles.deleteButton, user.id !== admin && styles.disabledButton]} 
+            onPress={() => eliminargrupo(idGrupo)} 
+            disabled={user.id !== admin}
+          >
+            <Text style={styles.buttonText}>{user.id === admin ? 'Eliminar Grupo' : 'No eres Admin'}</Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  contenedorPrincipal: {
+  container: {
     flex: 1,
-    alignItems: 'center',
     backgroundColor: '#f7f7f7',
+  },
+  scrollView: {
     padding: 20,
   },
-  container: {
+  header: {
     alignItems: 'center',
-    width: '100%',
     marginBottom: 20,
   },
-  contenedorNombre: {
+  headerText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  card: {
+    backgroundColor: '#fff',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  groupName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  input: {
+    fontSize: 18,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    color: '#333',
+    flex: 1,
+  },
+  editButton: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+  },
+  sectionTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#333',
+  },
+  memberItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 10,
-    width: '100%',
     padding: 10,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 5,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f0f0f0',
   },
-  label: {
-    fontWeight: 'bold',
-    fontSize: 18,
-  },
-  nombregrupo: {
-    fontSize: 18,
-    color: '#333',
+  memberName: {
     marginLeft: 10,
-  },
-  nombreUsuario: {
     fontSize: 16,
-    color: '#666',
+    color: '#333',
   },
-  inputNombre: {
-    flex: 1,
-    borderBottomWidth: 1,
-    borderColor: 'gray',
-    padding: 5,
-    fontSize: 18,
-  },
-  input2: {
-    borderBottomWidth: 1,
-    borderColor: 'gray',
-    width: '100%',
-    padding: 10,
-    marginBottom: 20,
-    backgroundColor: 'white',
-    borderRadius: 10,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 2,
-    elevation: 5,
-  },
-  buttonEdit: {
+  button: {
     backgroundColor: '#4A90E2',
     padding: 15,
     borderRadius: 10,
-    width: '80%',
     alignItems: 'center',
-    marginTop: 10,
-    elevation: 5,
-  },
-  buttonAdd: {
-    backgroundColor: '#4A90E2',
-    padding: 15,
-    borderRadius: 10,
-    width: '80%',
-    alignItems: 'center',
-    marginBottom: 20,
-    elevation: 5,
+    marginBottom: 10,
   },
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
   },
-  fixToText: {
+  buttonContainer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    width: '100%',
-    marginTop: 20,
   },
-  buttonSalir: {
-    backgroundColor: 'red',
-    padding: 15,
-    borderRadius: 10,
-    width: '48%',
-    alignItems: 'center',
-    elevation: 5,
+  leaveButton: {
+    backgroundColor: '#FF6347',
+    flex: 1,
+    marginRight: 5,
   },
-  buttonEliminar: {
-    backgroundColor: '#FF6347', 
-    padding: 15,
-    borderRadius: 10,
-    width: '48%',
+  deleteButton: {
+    backgroundColor: '#FF4500',
+    flex: 1,
+    marginLeft: 5,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  addUserContainer: {
+    flexDirection: 'row',
     alignItems: 'center',
-    elevation: 5,
+    marginBottom: 10,
+  },
+  cancelButton: {
+    marginLeft: 10,
   },
 });
 

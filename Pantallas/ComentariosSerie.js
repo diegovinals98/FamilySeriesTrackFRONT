@@ -1,7 +1,7 @@
 // Importaciones de React, React Native y otras librerías.
 import React, { useEffect, useRef, useState } from 'react';
 
-
+// Importaciones de componentes y APIs de React Native
 import { 
   View, 
   Text, 
@@ -19,31 +19,40 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
+
+// Importaciones de React Navigation
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { useUser } from '../userContext.js'; // Importa el contexto del usuario.
+
+// Importación del contexto de usuario
+import { useUser } from '../userContext.js';
+
+// Importaciones de Expo
 import { StatusBar } from 'expo-status-bar';
-import { globalStyles } from '../estilosGlobales.js'; // Importa estilos globales.
+
+// Importaciones de estilos y componentes personalizados
+import { globalStyles } from '../estilosGlobales.js';
+
+// Importaciones de componentes de terceros
 import { SelectCountry, Dropdown } from 'react-native-element-dropdown';
 import AntDesign from '@expo/vector-icons/AntDesign';
 import { useFocusEffect } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { head } from 'lodash';
+
+// Importación y configuración de moment para manejar fechas
 import moment from 'moment';
 import 'moment/locale/es';  
 moment.locale('es');  // Configura globalmente moment en español
+
+// Importación de componentes de gesture handler
 import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
-
-
-
-
-
-
 
 // Obtiene las dimensiones de la ventana del dispositivo.
 const windowHeigh = Dimensions.get('window').height;
 
 // TODO Implementar un sistema de mensajería en tiempo real, similar a Whatsapp, para que los usuarios puedan comunicarse dentro de la plataforma.
 const ComentariosSerie = () => {
+    // Referencias y estados
     const scrollViewRef = useRef();
     const route = useRoute()
     const { user } = useUser();
@@ -58,8 +67,9 @@ const ComentariosSerie = () => {
     const [refrescar, setRefrescar] = useState(false);
     const [cambio, setCambio] = useState(false);
     const comentariosRef = useRef(comentarios);
-    const [comentarioAResponder, setComentarioAResponder] = useState(null); // Almacena el comentario seleccionado para responder
+    const [comentarioAResponder, setComentarioAResponder] = useState(null);
 
+    // Actualiza la referencia de comentarios cuando cambia el estado
     useEffect(() => {
       comentariosRef.current = comentarios;
     }, [comentarios]);
@@ -70,6 +80,7 @@ const ComentariosSerie = () => {
       console.log("id a responder: ", idComentario);
     };
 
+    // Función para enviar un comentario
     async function enviarComentario(userId) {
       if (!comentarioaEnviar) return;
     
@@ -94,7 +105,6 @@ const ComentariosSerie = () => {
       console.log("↩️ Respuesta a:", datosAEnviar.respuestaA);
       console.log("✅-----------------------------------------------------------------------");
       
-    
       try {
         let response = await fetch(url, {
           method: 'POST',
@@ -116,7 +126,7 @@ const ComentariosSerie = () => {
       }
     }
     
-
+    // Efecto para obtener y cargar datos
     useEffect(() => {
         // Función para obtener el ID del grupo y cargar los datos
         const obtenerYcargarDatos = async () => {
@@ -152,13 +162,8 @@ const ComentariosSerie = () => {
               setCambio(prev => !prev);
               console.log('Los comentarios SI han cambiado');
             } else {
-              
               console.log('Los comentarios no han cambiado, no se actualiza el estado.');
             }
-
-            //console.log(nuevosComentarios);
-            
-      
           } catch (error) {
             console.error('Error:', error);
           }
@@ -166,15 +171,13 @@ const ComentariosSerie = () => {
       
         obtenerYcargarDatos();
         const intervalId = setInterval(obtenerYcargarDatos, 5000);
-        //scrollViewRef.current.scrollToEnd({ });
       
-        // Opcionalmente, define una función de limpieza si es necesario realizar alguna acción cuando el componente se desmonta o antes de que el efecto se vuelva a ejecutar.
+        // Función de limpieza
         return () => clearInterval(intervalId);
-      }, [nombreGrupo, idSerie, parar, refrescar]); // Incluye parar en las dependencias para reaccionar a sus cambios
+    }, [nombreGrupo, idSerie, parar, refrescar]);
 
-
-      useEffect(() => {
-        // Cuando el teclado se muestra, se hace scroll al final del ScrollView
+    // Efecto para manejar el scroll cuando se muestra el teclado
+    useEffect(() => {
         const keyboardDidShowListener = Keyboard.addListener(
           'keyboardDidShow',
           () => scrollViewRef.current?.scrollToEnd({ animated: true })
@@ -184,30 +187,28 @@ const ComentariosSerie = () => {
         scrollViewRef.current?.scrollToEnd({ animated: false });
     
         return () => {
-          // Limpieza del listener cuando el componente se desmonte
           keyboardDidShowListener.remove();
         };
-      }, []); // Las dependencias vacías aseguran que el efecto solo se ejecute al montar y desmontar
+    }, []);
 
-      useEffect(() => {
+    // Efecto para manejar el scroll cuando cambian los comentarios
+    useEffect(() => {
       console.log('ENTRADO EN USE EFFECT CAMBIO')
       const timer = setTimeout(() => {
           if (comentarios.length > 0) {
             scrollViewRef.current?.scrollToEnd({ animated: true });
           }
-        }, 100); // 1000 milisegundos = 1 segundo
+        }, 100);
     
-        // Limpiar el temporizador al desmontar el componente o cambiar las dependencias
         return () => clearTimeout(timer);
-      }, [cambio, enviarComentario]);
+    }, [cambio, enviarComentario]);
     
-      
-
-      return (
+    // Renderizado del componente
+    return (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
           style={styles.keyboardView}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 40 : 40}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
           
             <View style={styles.container}>
@@ -221,9 +222,19 @@ const ComentariosSerie = () => {
               style={styles.scrollView}>
               {comentarios.map((comentario, index) => (
                 <View key={index} style={comentario.idUsuario === user.id ? styles.comentarioDerecha : styles.comentarioIzquierda}>
-                  <Text style={styles.autor}>{comentario.nombreCompleto}</Text>
-                  <Text>{comentario.comentario}</Text>
-                  <Text style={styles.fecha}>{moment.utc(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}</Text>
+                  <Text style={[styles.autor, comentario.idUsuario === user.id ? styles.autorDerecha : styles.autorIzquierda]}>{comentario.nombreCompleto}</Text>
+                  <Text style={[
+                    styles.comentariotexto,
+                    comentario.idUsuario === user.id ? styles.comentariotextoDerecha : styles.comentariotextoIzquierda
+                  ]}>
+                    {comentario.comentario}
+                  </Text>
+                  <Text style={[
+                    styles.fecha,
+                    comentario.idUsuario === user.id ? styles.fechaDerecha : styles.fechaIzquierda
+                  ]}>
+                    {moment(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}
+                  </Text>
                   
                   {/* Botón para responder 
                   <TouchableOpacity onPress={() => seleccionarComentarioAResponder(comentario.id)}> 
@@ -267,9 +278,10 @@ const ComentariosSerie = () => {
             </View>
          
         </KeyboardAvoidingView>
-      );
-    };
+    );
+};
     
+// Estilos del componente
 const styles = StyleSheet.create({
   keyboardView: {
     flex: 1,
@@ -283,23 +295,24 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: '#4A90E2',
     backgroundColor: 'white',
-    paddingVertical: 15,
-    paddingHorizontal: 20,
+    paddingVertical: '4%',
+    paddingHorizontal: '5%',
     textAlign: 'center',
     borderWidth: 2,
     borderColor: 'black',
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: 15,
-    paddingTop: 10,
+    paddingHorizontal: '4%',
+    paddingTop: '3%',
+    paddingBottom: '3%',
   },
   commentBox: {
     backgroundColor: 'white',
     borderTopWidth: 1,
     borderTopColor: '#E0E0E0',
     paddingVertical: '3%',
-    paddingHorizontal: '5%',
+    paddingHorizontal: '5%'
   },
   inputRow: {
     flexDirection: 'row',
@@ -310,17 +323,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#E0E0E0',
     borderRadius: 20,
-    paddingHorizontal: 15,
-    paddingVertical: 10,
-    marginRight: 10,
+    paddingHorizontal: '4%',
+    paddingVertical: '3%',
+    marginRight: '3%',
     fontSize: 16,
     backgroundColor: '#F8F8F8',
   },
   button: {
     backgroundColor: '#4A90E2',
     borderRadius: 20,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
+    paddingVertical: '3%',
+    paddingHorizontal: '5%',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -333,9 +346,8 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-end',
     backgroundColor: '#DCF8C6',
     borderRadius: 15,
-    padding: 12,
-    marginVertical: 5,
-    maxWidth: '80%',
+    padding: '3%',
+    maxWidth: '100%',
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -344,13 +356,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.22,
     shadowRadius: 2.22,
     elevation: 3,
+    marginBottom: '3%',
   },
   comentarioIzquierda: {
     alignSelf: 'flex-start',
     backgroundColor: '#FFFFFF',
     borderRadius: 15,
-    padding: 12,
-    marginVertical: 5,
+    padding: '3%',
     maxWidth: '80%',
     shadowColor: "#000",
     shadowOffset: {
@@ -360,19 +372,58 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.18,
     shadowRadius: 1.00,
     elevation: 1,
+    marginBottom: '3%',
   },
-  autor: {
+  autorDerecha: {
+    textAlign: 'right',
     fontWeight: 'bold',
     fontSize: 14,
     color: '#4A4A4A',
-    marginBottom: 3,
+    marginBottom: '1%',
+  },
+  autorIzquierda: {
+    textAlign: 'left',
+    fontWeight: 'bold',
+    fontSize: 14,
+    color: '#4A4A4A',
+    marginBottom: '1%',
   },
   fecha: {
     fontSize: 11,
     color: '#888',
-    marginTop: 4,
+    marginTop: '1%',
     alignSelf: 'flex-end',
   },
+  fechaDerecha:{
+    fontSize: 11,
+    color: '#888',
+    marginTop: '1%',
+    alignSelf: 'flex-end',
+  },
+  fechaIzquierda:{
+    fontSize: 11,
+    color: '#888',
+    marginTop: '1%',
+    alignSelf: 'flex-start',
+  },
+  comentarioRespuesta: {
+    textAlign: 'right',
+    backgroundColor: 'red',
+  },
+
+  comentariotextoDerecha: {
+    textAlign: 'right',
+    ontSize: 16,
+    color: '#333',
+    marginBottom: '2%',
+  },
+  comentariotextoIzquierda: {
+    textAlign: 'left',
+    ontSize: 16,
+    color: '#333',
+    marginBottom: '2%',
+  },
+  
 });
 
 export default ComentariosSerie;

@@ -264,7 +264,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
 
       <View style={styles.buttonContainer}>
         <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarSerie(idSerie, user.id)}>
-          <Text style={styles.buttonText}>Eliminar Serie</Text>
+          <Text style={styles.buttonText}>Eliminar</Text>
         </TouchableOpacity>
         <TouchableOpacity style={styles.chatButton} onPress={() => irComentaros(idSerie, NombreGrupo)}>
           <Text style={styles.buttonText}>Chat</Text>
@@ -331,6 +331,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#4A90E2',
     borderRadius: 5,
     justifyContent: 'center',
+    padding: '2%',
   },
   overviewText: {
     color: 'grey',

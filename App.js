@@ -1,12 +1,7 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react';
-import { Platform, ActivityIndicator, View } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { UserProvider } from './userContext.js';
-import * as Application from 'expo-application';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-
 import WelcomeScreen from './Pantallas/Welcome/WelcomeScreen.js';
 import LogInScreen from './Pantallas/LogInScreen.js';
 import HomeScreen from './Pantallas/Home Screen/HomeScreen.js';
@@ -81,3 +76,4 @@ function App() {
 }
 
 export default App;
+

@@ -1,28 +1,33 @@
 import React, { useEffect, useState } from 'react';
 import { 
-  View, 
-  Text, 
-  TouchableOpacity, 
-  Dimensions, 
-  Image,
-  TextInput, 
-  TouchableWithoutFeedback,
-  FlatList,
+  ActivityIndicator,
   Alert,
-  ScrollView,
+  Dimensions,
+  FlatList,
+  Image,
+  Platform,
   RefreshControl,
   SafeAreaView,
-  Platform,
-  ActivityIndicator
+  ScrollView,
+  StatusBar,
+  Text, 
+  TextInput, 
+  TouchableOpacity, 
+  TouchableWithoutFeedback,
+  StyleSheet,
+  View, 
 } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import { useUser } from '../../userContext.js';
-import { StatusBar } from 'expo-status-bar';
-import { globalStyles } from '../../estilosGlobales.js';
 import { Dropdown } from 'react-native-element-dropdown';
-import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { styles } from './HomeScreenStyles.js';
+import { useUser } from '../../userContext.js';
+import { globalStyles } from '../../estilosGlobales.js';
+
+import groupIcon from '../../assets/people-group-solid.svg';
+// homeScreenStyles.js
+
+
+
 
 const windowHeight = Dimensions.get('window').height;
 
@@ -32,17 +37,26 @@ const HomeScreen = () => {
   const { user } = useUser();
   const iniciales = user?.nombre ? `${user?.nombre.charAt(0)}${user?.apellidos.charAt(0)}` : '';
 
-  const [seriesDetalles, setSeriesDetalles] = useState([]);
-  const [idelegido, setIdElegido] = useState();
+  const [cargando, setCargando] = useState(true);
+  const [filtro, setFiltro] = useState('Todas');
   const [grupoInicialSeleccionado, setGrupoInicialSeleccionado] = useState(false);
-  const [TodosGrupos, setTodosGrupos] = useState([]);
-  const [value, setValue] = useState(null);
+  const [idelegido, setIdElegido] = useState();
   const [isFocus, setIsFocus] = useState(false);
+  const [query, setQuery] = useState('');
   const [refrescar, setRefrescar] = useState(false);
   const [refrescando, setRefrescando] = useState(false);
-  const [cargando, setCargando] = useState(true);
-  const [query, setQuery] = useState('');
   const [series, setSeries] = useState([]);
+  const [seriesDetalles, setSeriesDetalles] = useState([]);
+  const [TodosGrupos, setTodosGrupos] = useState([]);
+  const [value, setValue] = useState(null);
+
+  const opcionesFiltro = [
+    { label: 'Todas', value: 'Todas' },
+    { label: 'Favoritas', value: 'Favoritas' },
+    { label: 'Viendo', value: 'Viendo' },
+    { label: 'Acabadas', value: 'Acabadas' },
+    { label: 'Pendientes', value: 'Pendientes' }
+  ];
 
   useFocusEffect(
     React.useCallback(() => {
@@ -56,7 +70,7 @@ const HomeScreen = () => {
     if (idelegido) {
       obtenerSeries();
     }
-  }, [idelegido]);
+  }, [idelegido, filtro]);
 
   useEffect(() => {
     llamarAGrupos();
@@ -69,7 +83,7 @@ const HomeScreen = () => {
     setRefrescar(prev => !prev);
     obtenerSeries();
     setRefrescando(false);
-  }, [value, idelegido]);
+  }, [value, idelegido, filtro]);
 
   const llamarAGrupos = async () => {
     try {
@@ -120,7 +134,11 @@ const HomeScreen = () => {
         fetch(`https://api.themoviedb.org/3/tv/${serieID}?api_key=c51082efa7d62553e4c05812ebf6040e&language=es-ES`)
           .then(response => response.json())
       )).then(seriesDetalles => {
-        setSeriesDetalles(seriesDetalles);
+        let seriesFiltradas = seriesDetalles;
+        if (filtro !== 'Todas') {
+          seriesFiltradas = seriesDetalles.filter(serie => serie.estado === filtro);
+        }
+        setSeriesDetalles(seriesFiltradas);
         setCargando(false);
       }).catch(error => {
         console.error('Error:', error);
@@ -253,8 +271,8 @@ const HomeScreen = () => {
               style={[styles.buttonGroup, isFocus && { borderColor: 'blue' }]}
               placeholderStyle={styles.buttonText}
               selectedTextStyle={styles.selectedTextStyle}
-              backgroundColor='blur'
-              containerStyle={{ backgroundColor: '#6666ff', borderRadius: 15 }}
+              blurRadius={10}
+              containerStyle={{ backgroundColor: '#f0f0f0', borderRadius: 15, borderWidth: 1, borderColor: '#6666ff' }}
               iconStyle={styles.iconStyle}
               data={TodosGrupos}
               labelField="Nombre_grupo"
@@ -262,7 +280,7 @@ const HomeScreen = () => {
               placeholder={value}
               value={value}
               maxHeight={500}
-              itemTextStyle={{ textAlign: 'left', color: 'white' }}
+              itemTextStyle={{ textAlign: 'left', }}
               onFocus={() => setIsFocus(true)}
               onBlur={() => setIsFocus(false)}
               onChange={item => {
@@ -273,7 +291,10 @@ const HomeScreen = () => {
                 onRefresh();
               }}
               renderLeftIcon={() => (
-                <Text style={styles.buttonText}>{value}</Text>
+                <>
+                  {/* <Image source={groupIcon} style={styles.dropdownIcon} alt='Grupo'/> */}
+                  <Text style={styles.buttonText}>{value}</Text>
+                </>
               )}
             />
 
@@ -283,16 +304,31 @@ const HomeScreen = () => {
           </View>
 
           <View style={styles.searchContainer}>
-            <View style={{ flexDirection: 'row' }}>
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TextInput
                 value={query}
                 onChangeText={handleTextChange}
                 placeholder="Buscar series..."
-                style={styles.searchInput}
+                style={[styles.searchInput, { flex: 3, marginRight: 10 , alignSelf: 'center'}]}
+              />
+              <Dropdown
+                style={[styles.filterDropdown, { width: '30%', flex: 1 }]}
+                data={opcionesFiltro}
+                labelField="label"
+                valueField="value"
+                placeholder="Filtrar"
+                value={filtro}
+                onChange={item => {
+                  setFiltro(item.value);
+                }}
+                selectedTextStyle={styles.selectedTextStyle}
+                itemTextStyle={styles.itemTextStyle}
+                containerStyle={styles.dropdownContainerStyle}
+                activeColor="#E8F0FE"
+                iconStyle={styles.iconStyle}
               />
             </View>
 
-      
             {series.length > 0 ? (
               <FlatList
                 data={series}
@@ -376,3 +412,201 @@ const HomeScreen = () => {
 };
 
 export default HomeScreen;
+
+
+export const styles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    flex: 1
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    padding: '2%',
+  },
+  circle: {
+    aspectRatio: 1,
+    borderRadius: 1000,
+    backgroundColor: '#4A90E2',
+    alignItems: 'center',
+    marginRight: '1%',
+    marginLeft: '1%',
+    flex: 1,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  initials: {
+    fontSize: 28,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  buttonGroup: {
+    height: '100%',
+    flexDirection: 'row',
+    backgroundColor: '#f0f0f0',
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 4,
+    justifyContent: 'center',
+    padding: 5,
+    borderColor: '#4A90E2',
+    borderWidth: 1,
+  },
+  buttonText: {
+    color: '#3A7AC2',
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginRight: 5,
+  },
+  dropdownIcon: {
+    color: '#4A90E2',
+    fontSize: 18,
+  },
+  item: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  itemText: {
+    textAlign: 'center',
+    fontSize: 16,
+  },
+  serieTitle: {
+    marginTop: '5%',
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#4A90E2',
+    marginBottom: '1%',
+    textAlign: 'center',
+    paddingHorizontal: 10,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+    color: '#aaa',
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+    textAlign: 'center',
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  poster: {
+    height: windowHeight * 0.20,
+    resizeMode: 'contain',
+    borderRadius: 10,
+  },
+  serieDetailContainer: {
+    width: '33%',
+    padding: 10,
+    flexDirection: 'column',
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    padding: '4%',
+    borderRadius: 8,
+    fontSize: 16,
+    backgroundColor: '#fff',
+  },
+  searchContainer: {
+    width: '90%',
+    flexDirection: 'column',
+    marginTop: '2%',
+  },
+  flatList: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    backgroundColor: 'white'
+  },
+  textoBuscadas: {
+    margin: '5%',
+    textAlign: 'center',
+    fontSize: 14,
+  },
+  editarGrupoBoton: {
+    backgroundColor: '#4A90E2',
+    padding: '2%',
+    margin: '2%',
+    alignItems: 'center',
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: '0.5%' },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: '1.25%',
+  },
+  editarGrupoTexto: {
+    color: 'white',
+  }, 
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F4F6F8',
+    marginTop: '10%',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#333',
+    marginTop: 10,
+  },
+  dropdownIcon: {
+    paddingRight: '3%',
+    width: 30,
+    height: 30,
+    resizeMode: 'contain', 
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 20,
+    padding: 5,
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 15,
+  },
+  filterButtonActive: {
+    backgroundColor: '#4A90E2',
+  },
+  filterButtonText: {
+    color: '#333',
+    fontWeight: 'bold',
+  },
+  filterButtonTextActive: {
+    color: 'white',
+  },
+  filterDropdown: {
+    backgroundColor: 'white',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+  },
+  itemTextStyle: {
+    fontSize: 16,
+    textAlign: 'left',
+  },
+  dropdownContainerStyle: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    width: '40%',
+  }
+});

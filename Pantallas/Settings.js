@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -11,7 +11,9 @@ import {
   Platform,
   Button,
   Alert,
-  Dimensions
+  Dimensions,
+  ScrollView,
+  Animated
 } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
@@ -19,8 +21,11 @@ import { globalStyles } from '../estilosGlobales.js';
 import { useUser } from '../userContext.js';
 import * as Crypto from 'expo-crypto';
 import * as Application from 'expo-application';
+import { LinearGradient } from 'expo-linear-gradient';
+import { Ionicons } from '@expo/vector-icons';
 
 const windowHeight = Dimensions.get('window').height;
+const windowWidth = Dimensions.get('window').width;
 
 const Settings = () => {
 
@@ -34,6 +39,49 @@ const Settings = () => {
   const [contrasena, setContrasena] = useState('');
   const [contrasena2, setContrasena2] = useState('');
   const iniciales = user?.nombre ? `${user?.nombre.charAt(0)}${user?.apellidos.charAt(0)}` : '';
+
+  const scrollViewRef = useRef();
+  const [focusedInput, setFocusedInput] = useState(null);
+  const animatedValue = useRef(new Animated.Value(0)).current;
+  const [isInputFocused, setIsInputFocused] = useState(false); // Nueva variable de estado
+
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener(
+      'keyboardDidShow',
+      () => {
+        Animated.timing(animatedValue, {
+          toValue: 1,
+          duration: 50, // Animación más rápida
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+    const keyboardDidHideListener = Keyboard.addListener(
+      'keyboardDidHide',
+      () => {
+        Animated.timing(animatedValue, {
+          toValue: 0,
+          duration: 50, // Animación más rápida
+          useNativeDriver: false,
+        }).start();
+      }
+    );
+
+    return () => {
+      keyboardDidHideListener.remove();
+      keyboardDidShowListener.remove();
+    };
+  }, []);
+
+  const backgroundOpacity = animatedValue.interpolate({
+    inputRange: [1, 1],
+    outputRange: [0, 0.8],
+  });
+
+  const inputTranslateY = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0, -windowHeight / 4],
+  });
 
   function validarContraseña(contraseña) {
     const longitudValida = contraseña.length >= 8;
@@ -132,7 +180,6 @@ const Settings = () => {
         body: JSON.stringify({ userId: user.id, deviceId }),
       });
 
-      // Verificar si la respuesta es correcta
       if (!response.ok) {
         const errorMessage = await response.text();
         throw new Error(`Error al cerrar sesión: ${errorMessage}`);
@@ -145,80 +192,88 @@ const Settings = () => {
     }
   };
 
+  const renderInput = (icon, placeholder, value, onChangeText, secureTextEntry = false) => (
+    <Animated.View 
+      style={[
+        styles.inputGroup,
+        focusedInput === placeholder && {
+          transform: [{ translateY: inputTranslateY }],
+          zIndex: 1,
+          backgroundColor: 'rgba(255,255,255,1)', // Fondo blanco y opaco
+        },
+      ]}
+    >
+      <Ionicons name={icon} size={24} color={focusedInput === placeholder ? "#3b5998" : "#fff"} style={styles.icon} />
+      <TextInput 
+        style={[styles.input, focusedInput === placeholder && { color: '#000' }]} // Texto negro cuando está enfocado
+        onChangeText={onChangeText}
+        value={value}
+        placeholder={placeholder}
+        placeholderTextColor={focusedInput === placeholder ? "#999" : "#ccc"}
+        secureTextEntry={secureTextEntry}
+        onFocus={() => {
+          setFocusedInput(placeholder);
+          setIsInputFocused(true); // Establecer el estado a verdadero
+        }}
+        onBlur={() => {
+          setFocusedInput(null);
+          setIsInputFocused(false); // Establecer el estado a falso
+        }}
+      />
+    </Animated.View>
+  );
+
   return (
-    <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} style={{ flex: 1 }}>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === "ios" ? "padding" : "height"} 
+      style={{ flex: 1 }}
+      keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+    >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <View style={[globalStyles.container, styles.container]}>
-          <View style={styles.circle}>
-            <Text style={styles.initials}>{iniciales}</Text>
-          </View>
+        <LinearGradient
+          colors={['#4c669f', '#3b5998', '#192f6a']}
+          style={styles.container}
+        >
+          {isInputFocused && ( // Mostrar el fondo borroso si el input está enfocado
+            <Animated.View style={styles.blurBackground} />
+          )}
+          <ScrollView 
+            contentContainerStyle={styles.scrollViewContent}
+            ref={scrollViewRef}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View style={styles.headerContainer}>
+              <View style={styles.circle}>
+                <Text style={styles.initials}>{iniciales}</Text>
+              </View>
+              <Text style={styles.headerText}>Ajustes de Cuenta</Text>
+            </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nombre</Text>
-            <TextInput 
-              style={styles.input}
-              onChangeText={setNombre}
-              value={nombre}
-              placeholder="Nombre"
-            />
-          </View>
+            <View style={styles.formContainer}>
+              {renderInput("person-outline", "Nombre", nombre, setNombre)}
+              {renderInput("people-outline", "Apellidos", apellidos, setApellidos)}
+              {renderInput("at-outline", "Nombre de Usuario", usuario, setUsuario)}
+              {renderInput("lock-closed-outline", "Nueva Contraseña", contrasena, setContrasena, true)}
+              {renderInput("lock-closed-outline", "Repite Nueva Contraseña", contrasena2, setContrasena2, true)}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Apellidos</Text>
-            <TextInput 
-              style={styles.input}
-              onChangeText={setApellidos}
-              value={apellidos}
-              placeholder="Apellidos"
-            />
-          </View>
+              {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nombre de Usuario</Text>
-            <TextInput 
-              style={styles.input}
-              onChangeText={setUsuario}
-              value={usuario}
-              autoCapitalize="none"
-            />
-          </View>
+              <View style={styles.buttonRow}>
+                <TouchableOpacity style={[styles.button, styles.halfButton]} onPress={guardarCambios}>
+                  <Text style={styles.buttonText}>Guardar Cambios</Text>
+                </TouchableOpacity>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Nueva Contraseña</Text>
-            <TextInput 
-              style={styles.input}
-              onChangeText={setContrasena}
-              value={contrasena}
-              placeholder="Nueva Contraseña"
-              secureTextEntry
-            />
-          </View>
+                <TouchableOpacity style={[styles.button, styles.buttonOutline, styles.halfButton]} onPress={cerrarSesion}>
+                  <Text style={styles.buttonOutlineText}>Cerrar Sesión</Text>
+                </TouchableOpacity>
+              </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Repite Nueva Contraseña</Text>
-            <TextInput 
-              style={styles.input}
-              onChangeText={setContrasena2}
-              value={contrasena2}
-              placeholder="Repite Nueva Contraseña"
-              secureTextEntry
-            />
-          </View>
-
-          {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
-
-          <TouchableOpacity style={globalStyles.button} onPress={guardarCambios}>
-            <Text style={globalStyles.buttonText}>Guardar Cambios</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={[globalStyles.button, globalStyles.buttonOutline]} onPress={cerrarSesion}>
-            <Text style={globalStyles.buttonText}>Cerrar Sesión</Text>
-          </TouchableOpacity>
-
-          <View style={styles.eliminar}>
-            <Button title='Eliminar Cuenta' color='white' onPress={() => eliminarCuenta(user.id)}></Button>  
-          </View>
-        </View>
+              <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarCuenta(user.id)}>
+                <Text style={styles.deleteButtonText}>Eliminar Cuenta</Text>
+              </TouchableOpacity>
+            </View>
+          </ScrollView>
+        </LinearGradient>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -227,25 +282,35 @@ const Settings = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f7f7f7',
   },
-  eliminar: {
-    backgroundColor: 'red',
-    borderRadius: 10,
-    width: '80%',
-    margin: '2%',
-    justifyContent: 'center',
+  overlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'black',
+  },
+  scrollViewContent: {
+    flexGrow: 1,
     alignItems: 'center',
-    padding: 10,
+    justifyContent: 'center',
+    paddingVertical: '10%',
+  },
+  headerContainer: {
+    alignItems: 'center',
+    marginBottom: '7%',
+  },
+  headerText: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#fff',
+    marginTop: '2%',
+  },
+  formContainer: {
+    width: '85%',
   },
   circle: {
-    marginBottom: '5%',
-    width: windowHeight * 0.1,
-    height: windowHeight * 0.1,
+    width: windowHeight * 0.15,
+    height: windowHeight * 0.15,
     borderRadius: 1000,
-    backgroundColor: '#4A90E2',
+    backgroundColor: 'rgba(255,255,255,0.3)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -254,32 +319,75 @@ const styles = StyleSheet.create({
     fontSize: 40,
     fontWeight: 'bold',
   },
-  input: {
-    width: '100%',
-    borderWidth: 1,
-    borderColor: '#ddd',
-    padding: windowHeight * 0.015,
-    borderRadius: 10,
-    marginBottom: '3%',
-    fontSize: 16,
-    backgroundColor: '#fff',
-  },
   inputGroup: {
-    width: '80%',
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
+    marginBottom: '5%',
+    borderBottomWidth: 1,
+    borderBottomColor: '#fff',
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    borderRadius: 10,
+    padding: '2.5%',
   },
-  label: {
-    marginBottom: '1%',
+  icon: {
+    marginRight: '2.5%',
+  },
+  input: {
+    flex: 1,
+    color: '#fff',
     fontSize: 16,
+    paddingVertical: '2.5%',
+  },
+  button: {
+    backgroundColor: '#fff',
+    paddingVertical: '3%',
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: '3.75%',
+  },
+  buttonText: {
+    color: '#3b5998',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  buttonOutline: {
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#fff',
+  },
+  buttonOutlineText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  deleteButton: {
+    backgroundColor: '#ff6b6b',
+    paddingVertical: '3%',
+    borderRadius: 10,
+    alignItems: 'center',
+  },
+  deleteButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   errorText: {
-    color: 'red',
-    width: '80%',
-    justifyContent: 'center',
+    color: '#ff6b6b',
     textAlign: 'center',
-    marginBottom: 10,
+    marginBottom: '3.75%',
+  },
+  blurBackground: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo borroso
+    zIndex: 0,
+  },
+  buttonRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  halfButton: {
+    flex: 1,
+    marginHorizontal: '1.25%',
   },
 });
 

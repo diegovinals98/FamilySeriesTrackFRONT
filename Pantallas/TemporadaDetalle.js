@@ -40,6 +40,33 @@ const DetallesDeTemporada = ({ route }) => {
     }, [idSerie, numeroTemporada, actualizarVisto])
   );
 
+  const enviarNotificacion = async (mensaje) => {
+    console.log('Enviando notificación:', mensaje);
+    try {
+      // Obtener los miembros del grupo
+      const response = await fetch(`https://apitfg.lapspartbox.com/miembros-grupo/${nombreGrupo}`);
+      const data = await response.json();
+      const miembros = data.members;
+
+      // Enviar notificación a cada miembro del grupo
+      for (const miembro of miembros) {
+        if (miembro.id !== user.id) { // No enviar notificación al usuario actual
+          await Notifications.scheduleNotificationAsync({
+            content: {
+              title: 'Actualización de serie',
+              body: mensaje,
+            },
+            trigger: null,
+            identifier: `notification-${miembro.id}-${Date.now()}`, // Identificador único
+          });
+        }
+      }
+      console.log('Notificación enviada con éxito');
+    } catch (error) {
+      console.error('Error al enviar notificación:', error);
+    }
+  };
+
   const marcarVisto = async (idSerie, capituloId, Name, Episode_number, season_number, userid) => {
     try {
       const response = await fetch('https://apitfg.lapspartbox.com/agregar-visualizacion', {
@@ -54,6 +81,10 @@ const DetallesDeTemporada = ({ route }) => {
 
       // Actualiza el estado para refrescar la lista de capítulos vistos
       setActualizarVisto(actual => !actual);
+
+      // Envía notificación
+      const mensaje = `${user.nombre} ha visto el capítulo ${Episode_number} de la temporada ${season_number} de ${nombreSerie}`;
+      await enviarNotificacion(mensaje);
     } catch (error) {
       console.error('Error al agregar capitulo:', error);
     }
