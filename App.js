@@ -26,7 +26,7 @@ function App() {
     
     <UserProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="Welcome">
+        <Stack.Navigator initialRouteName="welcome">
           <Stack.Screen name="Welcome" options={{ headerShown: false }} component={WelcomeScreen} />
           <Stack.Screen name="LogInScreen" options={{ headerShown: false }} component={LogInScreen} />
           <Stack.Screen

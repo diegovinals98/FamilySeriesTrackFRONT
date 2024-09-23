@@ -22,6 +22,7 @@ import {
 
 // Importaciones de React Navigation
 import { useNavigation, useRoute } from '@react-navigation/native';
+import { sendPushNotification } from '../Pantallas/notificaciones';
 
 // Importación del contexto de usuario
 import { useUser } from '../userContext.js';
@@ -52,6 +53,7 @@ const windowHeigh = Dimensions.get('window').height;
 
 // TODO Implementar un sistema de mensajería en tiempo real, similar a Whatsapp, para que los usuarios puedan comunicarse dentro de la plataforma.
 const ComentariosSerie = () => {
+    console.log('Iniciando componente ComentariosSerie');
     // Referencias y estados
     const scrollViewRef = useRef();
     const route = useRoute()
@@ -68,20 +70,37 @@ const ComentariosSerie = () => {
     const [cambio, setCambio] = useState(false);
     const comentariosRef = useRef(comentarios);
     const [comentarioAResponder, setComentarioAResponder] = useState(null);
+    const [miembrosGrupo, setMiembrosGrupo] = useState([]);
 
     // Actualiza la referencia de comentarios cuando cambia el estado
     useEffect(() => {
+      console.log('Actualizando referencia de comentarios');
       comentariosRef.current = comentarios;
     }, [comentarios]);
       
     // Función que permite seleccionar un comentario para responder
     const seleccionarComentarioAResponder = (idComentario) => {
+      console.log('Seleccionando comentario para responder');
       setComentarioAResponder(idComentario);
-      console.log("id a responder: ", idComentario);
+    };
+
+    const obtenerMiembrosGrupo = async () => {
+      console.log('Obteniendo miembros del grupo');
+      try {
+        const response = await fetch('https://apitfg.lapspartbox.com/miembros-grupo/' + nombreGrupo, {
+          method: 'GET',
+          headers: { 'Content-Type': 'application/json' },
+        });
+        const data = await response.json();
+        setMiembrosGrupo(data.members);
+      } catch (error) {
+        console.error('Error al obtener miembros del grupo: ', error);
+      }
     };
 
     // Función para enviar un comentario
     async function enviarComentario(userId) {
+      console.log('Enviando comentario');
       if (!comentarioaEnviar) return;
     
       const url = `https://apitfg.lapspartbox.com/anadir_comentario_a_serie`;
@@ -95,16 +114,7 @@ const ComentariosSerie = () => {
         respuestaA: comentarioAResponder, // Añadimos el comentario padre si existe
       };
       
-      // Log para ver los datos que se van a enviar
-      console.log("✅-----------------------------------------------------------------------");
-      console.log("📤 Enviando datos al servidor:");
-      console.log("🆔 Usuario:", datosAEnviar.idUsuario);
-      console.log("🔢 Grupo:", datosAEnviar.idGrupo);
-      console.log("📺 Serie:", datosAEnviar.idSerie);
-      console.log("💬 Comentario:", datosAEnviar.comentario);
-      console.log("↩️ Respuesta a:", datosAEnviar.respuestaA);
-      console.log("✅-----------------------------------------------------------------------");
-      
+      // Intentamos enviar el comentario al servidor
       try {
         let response = await fetch(url, {
           method: 'POST',
@@ -114,13 +124,41 @@ const ComentariosSerie = () => {
           body: JSON.stringify(datosAEnviar), // Datos que se envían al servidor
         });
     
+        // Verificamos si la respuesta del servidor es exitosa
         if (!response.ok) {
           throw new Error('Error al enviar el comentario');
         }
+        console.log("Miembros del grupo: ", miembrosGrupo);
+        // Enviamos notificaciones a los miembros del grupo
+        for (const miembro of miembrosGrupo) {
+          console.log('Miembro del grupo: ' + miembro.Nombre + " con id: " + miembro.id);
+          if (miembro.id !== userId) {
+            try {
+              // Obtenemos el token del miembro para enviar la notificación
+              const response = await fetch(`https://apitfg.lapspartbox.com/obtener-token/${miembro.id}`, {
+                method: 'GET',
+                headers: { 'Content-Type': 'application/json' },
+              });
+  
+              if (!response.ok) {
+                throw new Error('Error al obtener el token del miembro');
+              }
+              const data = await response.json();
+              const token = data.token;
+              
+              // Enviamos la notificación push
+              sendPushNotification(token, 'Nuevo Comentario!', user.nombre + ': ' + comentarioaEnviar, nombreSerie + " en " + nombreGrupo, true);
+            } catch (error) {
+              console.error(`Error al obtener el token del miembro ${miembro.id}:`, error);
+            }
+          }
+        }
     
+        // Limpiamos el estado después de enviar el comentario
         setComentarioaEnviar('');
         setComentarioAResponder(null); // Reseteamos el comentario padre
-        setRefrescar(prev => !prev);
+        setRefrescar(prev => !prev); // Actualizamos para refrescar la lista de comentarios
+
       } catch (error) {
         console.error('Error:', error);
       }
@@ -128,6 +166,7 @@ const ComentariosSerie = () => {
     
     // Efecto para obtener y cargar datos
     useEffect(() => {
+        console.log('Iniciando efecto para obtener y cargar datos');
         // Función para obtener el ID del grupo y cargar los datos
         const obtenerYcargarDatos = async () => {
          if (parar) return; // Detiene la ejecución si parar es true
@@ -139,7 +178,6 @@ const ComentariosSerie = () => {
               throw new Error('Grupo no encontrado');
             }
             const dataGrupo = await responseGrupo.json();
-            console.log('ID del Grupo:', dataGrupo.idGrupo);
             setIdGrupo(dataGrupo.idGrupo);
       
             // Asegúrate de que idGrupo esté definido antes de continuar
@@ -158,11 +196,10 @@ const ComentariosSerie = () => {
             // Comprobar si los nuevos comentarios son diferentes a los actuales antes de actualizar
             if (JSON.stringify(comentariosRef.current) !== JSON.stringify(nuevosComentarios)) {
               setComentarios(nuevosComentarios);
-              console.log(nuevosComentarios);
               setCambio(prev => !prev);
-              console.log('Los comentarios SI han cambiado');
+              console.log('Los comentarios han sido actualizados');
             } else {
-              console.log('Los comentarios no han cambiado, no se actualiza el estado.');
+              console.log('Los comentarios no han cambiado');
             }
           } catch (error) {
             console.error('Error:', error);
@@ -178,6 +215,8 @@ const ComentariosSerie = () => {
 
     // Efecto para manejar el scroll cuando se muestra el teclado
     useEffect(() => {
+      console.log('Configurando efecto para manejar el scroll con el teclado');
+      obtenerMiembrosGrupo();
         const keyboardDidShowListener = Keyboard.addListener(
           'keyboardDidShow',
           () => scrollViewRef.current?.scrollToEnd({ animated: true })
@@ -189,11 +228,13 @@ const ComentariosSerie = () => {
         return () => {
           keyboardDidShowListener.remove();
         };
+
+        
     }, []);
 
     // Efecto para manejar el scroll cuando cambian los comentarios
     useEffect(() => {
-      console.log('ENTRADO EN USE EFFECT CAMBIO')
+      console.log('Manejando scroll después de cambios en comentarios');
       const timer = setTimeout(() => {
           if (comentarios.length > 0) {
             scrollViewRef.current?.scrollToEnd({ animated: true });

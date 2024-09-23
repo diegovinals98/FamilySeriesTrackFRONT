@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'rea
 import { useUser } from '../userContext.js'; // Importa el contexto del usuario.
 import { useFocusEffect } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
+import { sendPushNotification } from '../Pantallas/notificaciones.js';
 
 const DetallesDeTemporada = ({ route }) => {
   const [idSerie, setidSerie] = useState(route.params.idSerie);
@@ -12,8 +13,10 @@ const DetallesDeTemporada = ({ route }) => {
   const [detallesTemporada, setDetallesTemporada] = useState(null);
   const [capitulosVistos, setCapitulosVistos] = useState([]);
   const [actualizarVisto, setActualizarVisto] = useState(false);
-
+  const [miembrosGrupo, setMiembrosGrupo] = useState([]);
   const { user } = useUser();
+
+  
 
   const obtenerCapitulosVistos = async () => {
     try {
@@ -34,38 +37,29 @@ const DetallesDeTemporada = ({ route }) => {
     }
   };
 
+  const obtenerMiembrosGrupo = async () => {
+    try {
+      const response = await fetch('https://apitfg.lapspartbox.com/miembros-grupo/' + nombreGrupo, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await response.json();
+      setMiembrosGrupo(data);
+      console.log('Miembros del grupo: ', data);
+    } catch (error) {
+      console.error('Error al obtener miembros del grupo: ', error);
+    }
+  };
+
+
   useFocusEffect(
     useCallback(() => {
       obtenerCapitulosVistos();
+      obtenerMiembrosGrupo();
     }, [idSerie, numeroTemporada, actualizarVisto])
   );
 
-  const enviarNotificacion = async (mensaje) => {
-    console.log('Enviando notificación:', mensaje);
-    try {
-      // Obtener los miembros del grupo
-      const response = await fetch(`https://apitfg.lapspartbox.com/miembros-grupo/${nombreGrupo}`);
-      const data = await response.json();
-      const miembros = data.members;
-
-      // Enviar notificación a cada miembro del grupo
-      for (const miembro of miembros) {
-        if (miembro.id !== user.id) { // No enviar notificación al usuario actual
-          await Notifications.scheduleNotificationAsync({
-            content: {
-              title: 'Actualización de serie',
-              body: mensaje,
-            },
-            trigger: null,
-            identifier: `notification-${miembro.id}-${Date.now()}`, // Identificador único
-          });
-        }
-      }
-      console.log('Notificación enviada con éxito');
-    } catch (error) {
-      console.error('Error al enviar notificación:', error);
-    }
-  };
+  
 
   const marcarVisto = async (idSerie, capituloId, Name, Episode_number, season_number, userid) => {
     try {
@@ -81,10 +75,28 @@ const DetallesDeTemporada = ({ route }) => {
 
       // Actualiza el estado para refrescar la lista de capítulos vistos
       setActualizarVisto(actual => !actual);
+     
+      // Obtener el ID de cada miembro del grupo y hacer una llamada para obtener el token
+      for (const miembro of miembrosGrupo.members) {
+        if (miembro.id !== user.id) {
+          try {
+            const response = await fetch(`https://apitfg.lapspartbox.com/obtener-token/${miembro.id}`, {
+              method: 'GET',
+              headers: { 'Content-Type': 'application/json' },
+            });
 
-      // Envía notificación
-      const mensaje = `${user.nombre} ha visto el capítulo ${Episode_number} de la temporada ${season_number} de ${nombreSerie}`;
-      await enviarNotificacion(mensaje);
+            if (!response.ok) {
+              throw new Error('Error al obtener el token del miembro');
+            }
+            const data = await response.json();
+            const token = data.token;
+            console.log(`Token del miembro ${miembro.id}: ${token}`);
+            sendPushNotification(token, 'Capitulo visto!', user.nombre + ' ha visto el capítulo ' + Episode_number + ' de la temporada ' + season_number, nombreSerie);
+          } catch (error) {
+            console.error(`Error al obtener el token del miembro ${miembro.id}:`, error);
+          }
+        }
+      }
     } catch (error) {
       console.error('Error al agregar capitulo:', error);
     }

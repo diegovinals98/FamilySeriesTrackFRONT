@@ -22,7 +22,10 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '../../userContext.js';
 import { globalStyles } from '../../estilosGlobales.js';
-
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
+import { sendPushNotification } from '../notificaciones.js';
 import groupIcon from '../../assets/people-group-solid.svg';
 // homeScreenStyles.js
 
@@ -49,6 +52,7 @@ const HomeScreen = () => {
   const [seriesDetalles, setSeriesDetalles] = useState([]);
   const [TodosGrupos, setTodosGrupos] = useState([]);
   const [value, setValue] = useState(null);
+  const [expoPushToken, setExpoPushToken] = useState('');
 
   const opcionesFiltro = [
     { label: 'Todas', value: 'Todas' },
@@ -75,7 +79,13 @@ const HomeScreen = () => {
   useEffect(() => {
     llamarAGrupos();
     obtenerSeries();
+    
   }, [refrescar]);
+
+  useEffect(() => {
+    registerForPushNotificationsAsync();
+    //sendPushNotification(expoPushToken, 'Titulo de la notificacion', 'Cuerpo de la notificacion');
+  }, []);
 
   const onRefresh = React.useCallback(() => {
     setRefrescando(true);
@@ -102,6 +112,93 @@ const HomeScreen = () => {
       console.error('Error al obtener los grupos:', error);
     }
   };
+
+  function handleRegistrationError(errorMessage) {
+    alert(errorMessage);
+    throw new Error(errorMessage);
+  }
+
+  async function registerForPushNotificationsAsync() {
+    console.log('Iniciando registerForPushNotificationsAsync');
+    
+    if (Platform.OS === 'android') {
+      console.log('Configurando canal de notificación para Android');
+      await Notifications.setNotificationChannelAsync('default', {
+        name: 'default',
+        importance: Notifications.AndroidImportance.MAX,
+        vibrationPattern: [0, 250, 250, 250],
+        lightColor: '#FF231F7C',
+      });
+    }
+  
+    if (Device.isDevice) {
+      console.log('Dispositivo físico detectado');
+      const { status: existingStatus } = await Notifications.getPermissionsAsync();
+      console.log('Estado de permisos existente:', existingStatus);
+      let finalStatus = existingStatus;
+      if (existingStatus !== 'granted') {
+        console.log('Solicitando permisos de notificación');
+        const { status } = await Notifications.requestPermissionsAsync();
+        finalStatus = status;
+        console.log('Nuevo estado de permisos:', finalStatus);
+      }
+      if (finalStatus !== 'granted') {
+        console.error('Permiso no concedido para notificaciones push');
+        handleRegistrationError('Permission not granted to get push token for push notification!');
+        return;
+      }
+      const projectId =
+        Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+      if (!projectId) {
+        console.error('ID del proyecto no encontrado');
+        handleRegistrationError('Project ID not found');
+      }
+      console.log('ID del proyecto:', projectId);
+      try {
+        console.log('Obteniendo token de push...');
+        const pushTokenString = (
+          await Notifications.getExpoPushTokenAsync({
+            projectId,
+          })
+        ).data;
+        console.log('Token de push obtenido:', pushTokenString);
+        setExpoPushToken(pushTokenString);
+        console.log('Para el usuario :', user.id);
+        // TODO: Guardar el token en el servidor, junto con el ID del usuario
+        // Añadir en el backend en la tabla de tokens el token, el ID del usuario
+        try {
+          const response = await fetch('https://apitfg.lapspartbox.com/registrar-token-notificacion', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              userId: user.id,
+              token: pushTokenString
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error('Error al registrar el token en el servidor');
+          }
+
+          console.log('Token registrado exitosamente en el servidor');
+        } catch (error) {
+          console.error('Error al registrar el token:', error);
+        }
+        
+        return pushTokenString;
+      } catch (e) {
+        console.error('Error al obtener el token de push:', e);
+        handleRegistrationError(`${e}`);
+      }
+    } else {
+      console.error('No es un dispositivo físico');
+      handleRegistrationError('Must use physical device for push notifications');
+    }
+
+    console.log('Saliendo de registerForPushNotificationsAsync');
+  }
 
   const obtenerSeriesDelUsuario = async (userId, idgrupo) => {
     try {
@@ -257,6 +354,7 @@ const HomeScreen = () => {
     navigation.navigate('Estadisticas', { idUsuario });
   };
 
+
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
       <StatusBar />
@@ -402,6 +500,33 @@ const HomeScreen = () => {
               <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => estadisticas(user.id)}>
                 <Text style={styles.editarGrupoTexto}>Estadisticas</Text>
               </TouchableOpacity>
+            }
+
+            {
+              // value !== 'Grupos' &&
+              // <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => {
+              //   sendPushNotification(expoPushToken, "Notificación", "Cuerpo de la notificación");
+              //   try {
+              //     response = fetch('https://apitfg.lapspartbox.com/enviar-soporte', {
+              //       method: 'POST',
+              //       headers: {
+              //         'Content-Type': 'application/json',
+              //       },
+              //       body: JSON.stringify({
+              //         nombre: 'Nombre del usuario',
+              //         email: 'email@example.com',
+              //         mensaje: expoPushToken,
+              //       }),
+              //     });
+              //   } catch (error) {
+              //     console.error(error);
+              //   }
+              //   //sendPushNotification("ExponentPushToken[jek2eWF_QadVeox9Jg-Glul]", "Notificación", "Cuerpo de la notificación");
+              //   //sendPushNotification("ExponentPushToken[ner7Z2Ft7BjiUBMiyjZ2bz]", "Notificación", "Cuerpo de la notificación");
+        
+              // }}>
+              //   <Text style={styles.editarGrupoTexto}>Notificar</Text>
+              // </TouchableOpacity>
             }
           </View>
 

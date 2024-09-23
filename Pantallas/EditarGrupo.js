@@ -4,16 +4,17 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  Dimensions,
   TextInput,
   FlatList,
   Alert,
-  ScrollView,
+  Dimensions,
+  SafeAreaView,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
 import { Ionicons } from '@expo/vector-icons';
 
+const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 const EditarGrupo = ({ route }) => {
@@ -104,23 +105,23 @@ const EditarGrupo = ({ route }) => {
       });
 
       if (response.ok) {
-        alert('Nombre del grupo actualizado correctamente.');
+        Alert.alert('Éxito', 'Nombre del grupo actualizado correctamente.');
         setNombregrupo(editedNombreGrupo);
         setRefrescar((prev) => !prev);
         navigation.setParams({ nombreGrupo: editedNombreGrupo });
       } else {
-        alert('Error al actualizar el nombre del grupo.');
+        Alert.alert('Error', 'Error al actualizar el nombre del grupo.');
       }
     } catch (error) {
       console.error('Error al conectar con el servidor:', error);
-      alert('Error al conectar con el servidor.');
+      Alert.alert('Error', 'Error al conectar con el servidor.');
     }
   };
 
   const salirdelGrupo = async (idGrupo) => {
     Alert.alert(
       'Confirmación',
-      `¿Estás seguro de que quieres salir el grupo: ${nombreGrupo}?`,
+      `¿Estás seguro de que quieres salir del grupo: ${nombreGrupo}?`,
       [
         {
           text: 'Sí',
@@ -132,10 +133,10 @@ const EditarGrupo = ({ route }) => {
               if (response.ok) {
                 navigation.navigate('Home');
               } else {
-                alert('Error al eliminar el grupo.');
+                Alert.alert('Error', 'Error al salir del grupo.');
               }
             } catch (error) {
-              alert('Error al conectar con el servidor.');
+              Alert.alert('Error', 'Error al conectar con el servidor.');
             }
           },
         },
@@ -160,10 +161,10 @@ const EditarGrupo = ({ route }) => {
               if (response.ok) {
                 navigation.navigate('Home');
               } else {
-                alert('Error al eliminar el grupo.');
+                Alert.alert('Error', 'Error al eliminar el grupo.');
               }
             } catch (error) {
-              alert('Error al conectar con el servidor.');
+              Alert.alert('Error', 'Error al conectar con el servidor.');
             }
           },
         },
@@ -173,77 +174,80 @@ const EditarGrupo = ({ route }) => {
     );
   };
 
-  return (
-    <View style={styles.container}>
-      <ScrollView contentContainerStyle={styles.scrollView}>
-       
+  const renderHeader = () => (
+    <View style={styles.headerContainer}>
+      <View style={styles.card}>
+        {isEditing ? (
+          <TextInput
+            value={editedNombreGrupo}
+            onChangeText={setEditedNombreGrupo}
+            autoFocus={true}
+            onBlur={handleSave}
+            style={styles.input}
+          />
+        ) : (
+          <Text style={styles.groupName}>{nombreGrupo}</Text>
+        )}
+        <TouchableOpacity onPress={isEditing ? handleSave : handleEdit} style={styles.editButton}>
+          <Ionicons name={isEditing ? "checkmark-circle" : "create-outline"} size={24} color="#4A90E2" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
-        <View style={styles.card}>
-          {isEditing ? (
-            <TextInput
-              value={editedNombreGrupo}
-              onChangeText={setEditedNombreGrupo}
-              autoFocus={true}
-              onBlur={handleSave}
-              style={styles.input}
-            />
-          ) : (
-            <Text style={styles.groupName}>{nombreGrupo}</Text>
-          )}
-          <TouchableOpacity onPress={isEditing ? handleSave : handleEdit} style={styles.editButton}>
-            <Ionicons name={isEditing ? "checkmark-circle" : "create-outline"} size={24} color="#4A90E2" />
+  const renderFooter = () => (
+    <View style={styles.footerContainer}>
+      {showAddUser && (
+        <View style={styles.addUserContainer}>
+          <TextInput
+            value={newUserName}
+            onChangeText={setNewUserName}
+            placeholder="Nombre del nuevo usuario"
+            placeholderTextColor="#999"
+            autoCapitalize="none"
+            style={styles.addUserInput}
+          />
+          <TouchableOpacity onPress={() => setShowAddUser(false)} style={styles.cancelButton}>
+            <Ionicons name="close-circle" size={24} color="#FF6347" />
           </TouchableOpacity>
         </View>
+      )}
+      
+      <TouchableOpacity style={styles.button} onPress={showAddUser ? addUserToGroup : handleAddUserPress}>
+        <Text style={styles.buttonText}>{showAddUser ? 'Confirmar Añadir Usuario' : 'Añadir Usuario'}</Text>
+      </TouchableOpacity>
 
-        <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Miembros</Text>
-          <FlatList
-            data={miembros}
-            keyExtractor={(item) => item.id.toString()}
-            renderItem={({ item }) => (
-              <View style={styles.memberItem}>
-                <Ionicons name="person-circle-outline" size={24} color="#4A90E2" />
-                <Text style={styles.memberName}>{item.Nombre} {item.Apellidos}</Text>
-              </View>
-            )}
-          />
-        </View>
-
-        {showAddUser && (
-          <View style={styles.addUserContainer}>
-            <TextInput
-              value={newUserName}
-              onChangeText={setNewUserName}
-              placeholder="Nombre del nuevo usuario"
-              placeholderTextColor="#999"
-              autoCapitalize="none"
-              style={styles.input}
-            />
-            <TouchableOpacity onPress={() => setShowAddUser(false)} style={styles.cancelButton}>
-              <Ionicons name="close-circle" size={24} color="#FF6347" />
-            </TouchableOpacity>
-          </View>
-        )}
-
-        <TouchableOpacity style={styles.button} onPress={showAddUser ? addUserToGroup : handleAddUserPress}>
-          <Text style={styles.buttonText}>{showAddUser ? 'Confirmar Añadir Usuario' : 'Añadir Usuario'}</Text>
+      <View style={styles.buttonContainer}>
+        <TouchableOpacity style={[styles.button, styles.leaveButton]} onPress={() => salirdelGrupo(idGrupo)}>
+          <Text style={styles.buttonText}>Salir del Grupo</Text>
         </TouchableOpacity>
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={[styles.button, styles.leaveButton]} onPress={() => salirdelGrupo(idGrupo)}>
-            <Text style={styles.buttonText}>Salir del Grupo</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={[styles.button, styles.deleteButton, user.id !== admin && styles.disabledButton]} 
-            onPress={() => eliminargrupo(idGrupo)} 
-            disabled={user.id !== admin}
-          >
-            <Text style={styles.buttonText}>{user.id === admin ? 'Eliminar Grupo' : 'No eres Admin'}</Text>
-          </TouchableOpacity>
-        </View>
-      </ScrollView>
+        <TouchableOpacity
+          style={[styles.button, styles.deleteButton, user.id !== admin && styles.disabledButton]}
+          onPress={() => eliminargrupo(idGrupo)}
+          disabled={user.id !== admin}
+        >
+          <Text style={styles.buttonText}>{user.id === admin ? 'Eliminar Grupo' : 'No eres Admin'}</Text>
+        </TouchableOpacity>
+      </View>
     </View>
+  );
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <FlatList
+        data={miembros}
+        keyExtractor={(item) => item.id.toString()}
+        ListHeaderComponent={renderHeader}
+        ListFooterComponent={renderFooter}
+        renderItem={({ item }) => (
+          <View style={styles.memberItem}>
+            <Ionicons name="person-circle-outline" size={24} color="#4A90E2" />
+            <Text style={styles.memberName}>{item.Nombre} {item.Apellidos}</Text>
+          </View>
+        )}
+      />
+    </SafeAreaView>
   );
 };
 
@@ -252,17 +256,11 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#f7f7f7',
   },
-  scrollView: {
+  headerContainer: {
     padding: 20,
   },
-  header: {
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  headerText: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#333',
+  footerContainer: {
+    padding: 20,
   },
   card: {
     backgroundColor: '#fff',
@@ -289,25 +287,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     borderRadius: 5,
     color: '#333',
-    flex: 1,
+    marginBottom: 10,
   },
   editButton: {
     position: 'absolute',
     right: 10,
     top: 10,
   },
-  sectionTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    marginBottom: 10,
-    color: '#333',
-  },
   memberItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
+    padding: 15,
+    backgroundColor: '#fff',
+    marginHorizontal: 20,
+    marginBottom: 10,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
   },
   memberName: {
     marginLeft: 10,
@@ -347,6 +349,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 10,
+    width: '80%',
+    alignSelf: 'center',
+  },
+  addUserInput: {
+    flex: 1,
+    fontSize: 16,
+    padding: 10,
+    backgroundColor: '#f0f0f0',
+    borderRadius: 5,
+    color: '#333',
   },
   cancelButton: {
     marginLeft: 10,

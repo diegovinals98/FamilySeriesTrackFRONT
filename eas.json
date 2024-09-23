@@ -10,7 +10,8 @@
     "preview": {
       "distribution": "internal"
     },
-    "production": {},
+    "production": {
+    },
     "ios": {
       "distribution": "store",
       "node": "22.7.0"
@@ -22,7 +23,6 @@
      
     },
     "development": {
-      
     }
   }
 }
