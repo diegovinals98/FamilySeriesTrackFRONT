@@ -1,11 +1,10 @@
 // Con esta funcion se pueden enviar notificaciones push a los dispositivos
-async function sendPushNotification(expoPushToken, titulo, body, subtitulo = '', subirBadge = false) {
+async function sendPushNotification(expoPushToken, titulo, body, subtitulo = '', subirBadge = false, data = null) {
     const message = {
       to: expoPushToken,
       sound: 'default',
       title: titulo,
       body: body,
-      data: { someData: 'goes here' },
     };
 
     if (subtitulo) {
@@ -14,6 +13,10 @@ async function sendPushNotification(expoPushToken, titulo, body, subtitulo = '',
 
     if (subirBadge) {
       message.badge = 1;
+    }
+
+    if (data) {
+      message.data = data;
     }
   
     await fetch('https://exp.host/--/api/v2/push/send', {

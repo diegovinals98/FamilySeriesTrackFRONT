@@ -29,6 +29,7 @@ import { useUser } from '../userContext.js';
 
 // Importaciones de Expo
 import { StatusBar } from 'expo-status-bar';
+import * as Notifications from 'expo-notifications';
 
 // Importaciones de estilos y componentes personalizados
 import { globalStyles } from '../estilosGlobales.js';
@@ -57,6 +58,7 @@ const ComentariosSerie = () => {
     // Referencias y estados
     const scrollViewRef = useRef();
     const route = useRoute()
+    const navigation = useNavigation();
     const { user } = useUser();
     const [nombreGrupo,setNombregrupo ] = useState(route.params.NombreGrupo)
     const [idSerie, setIdSerie ] = useState(route.params.idSerie)
@@ -107,8 +109,11 @@ const ComentariosSerie = () => {
     
       // Datos que se enviarán al servidor
       const datosAEnviar = {
+        tipo: 'comentario',
         idUsuario: userId,
         idGrupo: idGrupo,
+        nombreGrupo: nombreGrupo,
+        nombreSerie: nombreSerie,
         idSerie: idSerie,
         comentario: comentarioaEnviar,
         respuestaA: comentarioAResponder, // Añadimos el comentario padre si existe
@@ -147,7 +152,7 @@ const ComentariosSerie = () => {
               const token = data.token;
               
               // Enviamos la notificación push
-              sendPushNotification(token, 'Nuevo Comentario!', user.nombre + ': ' + comentarioaEnviar, nombreSerie + " en " + nombreGrupo, true);
+              sendPushNotification(token, 'Nuevo Comentario!', user.nombre + ': ' + comentarioaEnviar, nombreSerie + " en " + nombreGrupo, true, datosAEnviar);
             } catch (error) {
               console.error(`Error al obtener el token del miembro ${miembro.id}:`, error);
             }
@@ -243,6 +248,8 @@ const ComentariosSerie = () => {
     
         return () => clearTimeout(timer);
     }, [cambio, enviarComentario]);
+
+   
     
     // Renderizado del componente
     return (

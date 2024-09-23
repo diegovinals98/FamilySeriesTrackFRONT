@@ -70,6 +70,27 @@ const HomeScreen = () => {
     }, [grupoInicialSeleccionado])
   );
 
+   // Efecto para manejar la navegación cuando se recibe una notificación
+   useEffect(() => {
+    const subscription = Notifications.addNotificationResponseReceivedListener(response => {
+      console.log('Notification response data:', response.notification.request.content.data);
+      const tipo  = response.notification.request.content.data.tipo;
+      if (tipo === 'comentario') {
+        const { nombreGrupo, idSerie, nombreSerie } = response.notification.request.content.data;
+        navigation.navigate('Comentarios Serie', { NombreGrupo: nombreGrupo, idSerie: idSerie, nombreSerie: nombreSerie });
+      } else if (tipo === 'visualizacion') {
+        const { nombreGrupo, idSerie } = response.notification.request.content.data;
+        navigation.navigate('Detalles Serie', { idSerie: idSerie, NombreGrupo: nombreGrupo });
+      }
+    });
+
+
+
+    return () => {
+      subscription.remove();
+    };
+  }, []);
+
   useEffect(() => {
     if (idelegido) {
       obtenerSeries();
