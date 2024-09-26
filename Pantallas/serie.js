@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, Image, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, Image, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 
 const Serie = () => {
@@ -12,6 +12,10 @@ const Serie = () => {
 
   const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
   const baseImageUrl = 'https://image.tmdb.org/t/p/w500';
+
+  let colorScheme = useColorScheme();
+  colorScheme = 'dark';
+  const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   useEffect(() => {
     fetchSerieData();
@@ -178,7 +182,7 @@ const Serie = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F4F6F8',
@@ -311,7 +315,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     paddingHorizontal: 8,
     paddingVertical: 4,
-  },returningSeriesStatus: {
+  },
+  returningSeriesStatus: {
     color: '#FFFFFF',
     backgroundColor: 'green',
     borderRadius: 10,
@@ -349,6 +354,188 @@ const styles = StyleSheet.create({
   seasonDate: {
     fontSize: 12,
     color: '#999',
+    marginTop: 5,
+  },
+  episodeCount: {
+    fontSize: 14,
+    color: '#4A90E2',
+    fontWeight: 'bold',
+    marginTop: 5,
+  }
+});
+
+const darkStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#E0E0E0',
+    marginTop: 10,
+  },
+  errorContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  errorText: {
+    fontSize: 18,
+    color: '#FF6347',
+    textAlign: 'center',
+  },
+  poster: {
+    width: '100%',
+    height: 400,
+    resizeMode: 'cover',
+  },
+  infoContainer: {
+    padding: 20,
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#E0E0E0',
+    marginBottom: 15,
+  },
+  overview: {
+    fontSize: 16,
+    color: '#B0B0B0',
+    marginBottom: 20,
+    lineHeight: 24,
+  },
+  detailsContainer: {
+    backgroundColor: '#1E1E1E',
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  detailText: {
+    fontSize: 18,
+    color: '#E0E0E0',
+    marginBottom: 12,
+    fontWeight: '500',
+    lineHeight: 24,
+    letterSpacing: 0.5,
+  },
+  sectionTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#E0E0E0',
+    marginBottom: 15,
+    marginTop: 20,
+  },
+  genresContainer: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    marginBottom: 20,
+  },
+  genreText: {
+    fontSize: 14,
+    color: '#121212',
+    backgroundColor: '#4A90E2',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 10,
+    marginRight: 10,
+    marginBottom: 10,
+    overflow: 'hidden',
+  },
+  creatorText: {
+    fontSize: 16,
+    color: '#E0E0E0',
+    marginBottom: 8,
+  },
+  creditsContainer: {
+    backgroundColor: '#1E1E1E',
+    padding: 20,
+    borderRadius: 15,
+    marginBottom: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  creditText: {
+    fontSize: 14,
+    color: '#E0E0E0',
+    marginBottom: 8,
+  },
+  button: {
+    backgroundColor: '#4A90E2',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginTop: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  buttonText: {
+    color: '#121212',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  canceledStatus: {
+    color: '#121212',
+    backgroundColor: '#FF0000',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  returningSeriesStatus: {
+    color: '#121212',
+    backgroundColor: 'green',
+    borderRadius: 10,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  seasonTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#E0E0E0',
+    marginBottom: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  seasonInfo: {
+    fontSize: 16,
+    color: '#B0B0B0',
+    marginBottom: 5,
+    fontStyle: 'italic',
+  },
+  seasonOverview: {
+    fontSize: 14,
+    color: '#A0A0A0',
+    marginBottom: 10,
+    lineHeight: 20,
+  },
+  seasonItem: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 15,
+    borderLeftWidth: 4,
+    borderLeftColor: '#4A90E2', 
+  },
+  seasonDate: {
+    fontSize: 12,
+    color: '#808080',
     marginTop: 5,
   },
   episodeCount: {

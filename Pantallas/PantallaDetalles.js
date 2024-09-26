@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Linking, Share } from 'react-native';
+import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Linking, Share, useColorScheme } from 'react-native';
 import { useUser } from '../userContext.js'; 
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -14,6 +14,9 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   const [isFavorite, setIsFavorite] = useState(false);
 
   const { user } = useUser();
+  const colorScheme = useColorScheme();
+  // cambiar el primer dark a colorScheme
+  const styles = "dark" === 'dark' ? darkStyles : lightStyles;
 
   const obtenerDetallesSerie = (idSerie) => {
     const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
@@ -181,7 +184,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   if (!detallesSerie) {
     return (
       <View style={styles.container}>
-        <Text>Cargando...</Text>
+        <Text style={styles.loadingText}>Cargando...</Text>
       </View>
     );
   }
@@ -222,7 +225,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
           {UsuariosSerie.map((usuario, index) => (
             <View key={index} style={[
               styles.tableRow,
-              { backgroundColor: index % 2 === 0 ? '#e6e6e6' : '#f9f9f9' }
+              { backgroundColor: index % 2 === 0 ? (colorScheme === 'dark' ? '#2c2c2c' : '#e6e6e6') : (colorScheme === 'dark' ? '#3a3a3a' : '#f9f9f9') }
             ]}>
               <Text style={styles.tableCell}>{usuario.Nombre}</Text>
               <Text style={styles.tableCell}>{usuario.Temporada_Mas_Alta}</Text>
@@ -254,10 +257,10 @@ const PantallaDeDetalles = ({ route, navigation }) => {
         </View>
         <View style={styles.actionContainer}>
           <TouchableOpacity onPress={toggleFavorite} style={styles.actionButton}>
-            <Icon name={isFavorite ? 'heart' : 'heart-o'} size={24} color={isFavorite ? 'red' : 'black'} />
+            <Icon name={isFavorite ? 'heart' : 'heart-o'} size={24} color={isFavorite ? 'red' : (colorScheme === 'dark' ? 'white' : 'black')} />
           </TouchableOpacity>
           <TouchableOpacity onPress={compartirSerie} style={styles.actionButton}>
-            <Icon name="share" size={24} color="black" />
+            <Icon name="share" size={24} color={colorScheme === 'dark' ? 'white' : 'black'} />
           </TouchableOpacity>
         </View>
       </ScrollView>
@@ -277,7 +280,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   actionButton: {
     padding: 10,
   },
@@ -309,6 +312,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     padding: '2%',
+    backgroundColor: 'white',
   },
   deleteButton: {
     alignItems: 'center',
@@ -332,6 +336,9 @@ const styles = StyleSheet.create({
     borderRadius: 5,
     justifyContent: 'center',
     padding: '2%',
+  },
+  loadingText: {
+    color: 'black',
   },
   overviewText: {
     color: 'grey',
@@ -376,6 +383,7 @@ const styles = StyleSheet.create({
     marginTop: 5,
     fontSize: 12,
     textAlign: 'center',
+    color: 'black',
   },
   ratingContainer: {
     paddingVertical: 10,
@@ -402,6 +410,7 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 10,
     textAlign: 'center',
+    color: 'black',
   },
   tableContainer: {
     borderColor: '#ddd',
@@ -421,7 +430,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
   },
   titleText: {
-    backgroundColor: '#f0f0f0',
+    
     borderRadius: 10,
     color: '#4A90E2',
     elevation: 5,
@@ -431,6 +440,35 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     textAlign: 'center',
     width: '100%',
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  ...lightStyles,
+  container: {
+    ...lightStyles.container,
+    backgroundColor: '#121212',
+  },
+  loadingText: {
+    color: 'white',
+  },
+  overviewText: {
+    ...lightStyles.overviewText,
+    color: '#a9a9a9',
+  },
+  providerName: {
+    ...lightStyles.providerName,
+    color: 'white',
+  },
+  tableCell: {
+    ...lightStyles.tableCell,
+    color: 'white',
+    backgroundColor: '#2c2c2c',
+  },
+  titleText: {
+    ...lightStyles.titleText,
+    backgroundColor: '#2c2c2c',
+    color: '#4A90E2',
   },
 });
 

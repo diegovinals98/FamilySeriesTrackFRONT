@@ -9,6 +9,7 @@ import {
   Alert,
   Dimensions,
   SafeAreaView,
+  useColorScheme,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
@@ -29,6 +30,10 @@ const EditarGrupo = ({ route }) => {
   const [admin, setAdmin] = useState(0);
   const [showAddUser, setShowAddUser] = useState(false);
   const [newUserName, setNewUserName] = useState('');
+
+  let colorScheme = useColorScheme();
+  colorScheme = 'dark';
+  const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   useEffect(() => {
     const fetchMiembrosGrupo = async () => {
@@ -203,7 +208,7 @@ const EditarGrupo = ({ route }) => {
             value={newUserName}
             onChangeText={setNewUserName}
             placeholder="Nombre del nuevo usuario"
-            placeholderTextColor="#999"
+            placeholderTextColor={colorScheme === 'dark' ? '#999' : '#999'}
             autoCapitalize="none"
             style={styles.addUserInput}
           />
@@ -251,7 +256,7 @@ const EditarGrupo = ({ route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f7f7f7',
@@ -359,6 +364,120 @@ const styles = StyleSheet.create({
     backgroundColor: '#f0f0f0',
     borderRadius: 5,
     color: '#333',
+  },
+  cancelButton: {
+    marginLeft: 10,
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  headerContainer: {
+    padding: 20,
+  },
+  footerContainer: {
+    padding: 20,
+  },
+  card: {
+    backgroundColor: '#1E1E1E',
+    borderRadius: 10,
+    padding: 15,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.23,
+    shadowRadius: 2.62,
+    elevation: 4,
+  },
+  groupName: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#E0E0E0',
+  },
+  input: {
+    fontSize: 18,
+    padding: 10,
+    backgroundColor: '#2C2C2C',
+    borderRadius: 5,
+    color: '#E0E0E0',
+    marginBottom: 10,
+  },
+  editButton: {
+    position: 'absolute',
+    right: 10,
+    top: 10,
+  },
+  memberItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 15,
+    backgroundColor: '#1E1E1E',
+    marginHorizontal: 20,
+    marginBottom: 10,
+    borderRadius: 10,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 1,
+    },
+    shadowOpacity: 0.22,
+    shadowRadius: 2.22,
+    elevation: 3,
+  },
+  memberName: {
+    marginLeft: 10,
+    fontSize: 16,
+    color: '#E0E0E0',
+  },
+  button: {
+    backgroundColor: '#4A90E2',
+    padding: 15,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginBottom: 10,
+  },
+  buttonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  buttonContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
+  leaveButton: {
+    backgroundColor: '#FF6347',
+    flex: 1,
+    marginRight: 5,
+  },
+  deleteButton: {
+    backgroundColor: '#FF4500',
+    flex: 1,
+    marginLeft: 5,
+  },
+  disabledButton: {
+    opacity: 0.5,
+  },
+  addUserContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 10,
+    width: '80%',
+    alignSelf: 'center',
+  },
+  addUserInput: {
+    flex: 1,
+    fontSize: 16,
+    padding: 10,
+    backgroundColor: '#2C2C2C',
+    borderRadius: 5,
+    color: '#E0E0E0',
   },
   cancelButton: {
     marginLeft: 10,

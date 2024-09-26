@@ -9,6 +9,7 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
+  useColorScheme,
 } from 'react-native';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
@@ -24,6 +25,9 @@ const AnadirGrupo = () => {
   const [nombreGrupo, setnombreGrupo] = useState('');
   const [inputsUsuarios, setInputsUsuarios] = useState([{ key: 0, value: '' }]);
   const { user } = useUser();
+  let colorScheme = useColorScheme();
+  colorScheme = 'dark';
+  const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   useEffect(() => {
     if (user?.nombre) {
@@ -115,10 +119,6 @@ const AnadirGrupo = () => {
         }
       };
 
-
-      // TODO: Ahora mimsmo inputs usuarios solo tiene el nombe del usuario
-      // hay que sacar el id de ese usuario
-      // ese id es el que se le pasa a obetenerTokenUsuario()
       console.log(inputsUsuarios);
       const userIds = inputsUsuarios.map(input => input.value);
       const tokens = await Promise.all(userIds.map(userId => obtenerTokenUsuario(userId)));
@@ -147,6 +147,7 @@ const AnadirGrupo = () => {
               style={styles.input}
               onChangeText={(text) => setnombreGrupo(text)}
               placeholder="Nombre del grupo"
+              placeholderTextColor={colorScheme === 'dark' ? '#999' : '#666'}
             />
           </View>
 
@@ -158,6 +159,7 @@ const AnadirGrupo = () => {
                 onChangeText={(text) => actualizarUsuario(index, text)}
                 placeholder="Usuario a añadir"
                 value={input.value}
+                placeholderTextColor={colorScheme === 'dark' ? '#999' : '#666'}
               />
             </View>
           ))}
@@ -177,7 +179,7 @@ const AnadirGrupo = () => {
   );
 };
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
   },
@@ -213,6 +215,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     fontSize: 16,
     backgroundColor: '#fff',
+    color: '#000',
   },
   usuarios: {
     flexDirection: 'row',
@@ -242,6 +245,75 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontWeight: 'bold',
     color: 'black',
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  scrollContainer: {
+    flexGrow: 1,
+  },
+  container: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    padding: 20,
+    backgroundColor: '#121212',
+  },
+  titulo: {
+    fontSize: 32,
+    fontWeight: 'bold',
+    color: '#4da6ff',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
+  inputGroup: {
+    width: '100%',
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#4da6ff',
+    marginBottom: 8,
+  },
+  input: {
+    width: '100%',
+    borderWidth: 1,
+    borderColor: '#444',
+    padding: 15,
+    borderRadius: 8,
+    fontSize: 16,
+    backgroundColor: '#333',
+    color: '#fff',
+  },
+  usuarios: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    width: '100%',
+  },
+  botonUsuario: {
+    flex: 1,
+    backgroundColor: '#0056b3',
+    paddingVertical: 15,
+    marginRight: 10,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  botonAgregar: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderWidth: 2,
+    borderColor: '#0056b3',
+    paddingVertical: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  textoBoton: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: 'white',
   },
 });
 

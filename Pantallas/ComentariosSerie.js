@@ -17,7 +17,8 @@ import {
   ScrollView,
   RefreshControl,
   KeyboardAvoidingView,
-  Platform
+  Platform,
+  useColorScheme
 } from 'react-native';
 
 // Importaciones de React Navigation
@@ -73,6 +74,8 @@ const ComentariosSerie = () => {
     const comentariosRef = useRef(comentarios);
     const [comentarioAResponder, setComentarioAResponder] = useState(null);
     const [miembrosGrupo, setMiembrosGrupo] = useState([]);
+    let colorScheme = useColorScheme();
+    colorScheme = "dark"
 
     // Actualiza la referencia de comentarios cuando cambia el estado
     useEffect(() => {
@@ -257,47 +260,47 @@ const ComentariosSerie = () => {
     return (
         <KeyboardAvoidingView
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          style={styles.keyboardView}
+          style={styles(colorScheme).keyboardView}
           keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
           
-            <View style={styles.container}>
-              <Text style={styles.title}>{nombreSerie}</Text>
+            <View style={styles(colorScheme).container}>
+              <Text style={styles(colorScheme).title}>{nombreSerie}</Text>
               {/* ScrollView para los comentarios */}
               <ScrollView 
               ref={scrollViewRef}
               keyboardDismissMode= 'on-drag' 
               keyboardShouldPersistTaps= 'never' 
               
-              style={styles.scrollView}>
+              style={styles(colorScheme).scrollView}>
               {comentarios.map((comentario, index) => (
-                <View key={index} style={comentario.idUsuario === user.id ? styles.comentarioDerecha : styles.comentarioIzquierda}>
-                  <Text style={[styles.autor, comentario.idUsuario === user.id ? styles.autorDerecha : styles.autorIzquierda]}>{comentario.nombreCompleto}</Text>
+                <View key={index} style={comentario.idUsuario === user.id ? styles(colorScheme).comentarioDerecha : styles(colorScheme).comentarioIzquierda}>
+                  <Text style={[styles(colorScheme).autor, comentario.idUsuario === user.id ? styles(colorScheme).autorDerecha : styles(colorScheme).autorIzquierda]}>{comentario.nombreCompleto}</Text>
                   <Text style={[
-                    styles.comentariotexto,
-                    comentario.idUsuario === user.id ? styles.comentariotextoDerecha : styles.comentariotextoIzquierda
+                    styles(colorScheme).comentariotexto,
+                    comentario.idUsuario === user.id ? styles(colorScheme).comentariotextoDerecha : styles(colorScheme).comentariotextoIzquierda
                   ]}>
                     {comentario.comentario}
                   </Text>
                   <Text style={[
-                    styles.fecha,
-                    comentario.idUsuario === user.id ? styles.fechaDerecha : styles.fechaIzquierda
+                    styles(colorScheme).fecha,
+                    comentario.idUsuario === user.id ? styles(colorScheme).fechaDerecha : styles(colorScheme).fechaIzquierda
                   ]}>
                     {moment(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}
                   </Text>
                   
                   {/* Botón para responder 
                   <TouchableOpacity onPress={() => seleccionarComentarioAResponder(comentario.id)}> 
-                    <Text style={styles.responderText}>Responder</Text>
+                    <Text style={styles(colorScheme).responderText}>Responder</Text>
                   </TouchableOpacity>
                   *
                   }
 
                   {/* Si el comentario tiene respuestas */}
                   {comentario.respuestas && comentario.respuestas.length > 0 && (
-                    <View style={styles.respuestasContainer}>
+                    <View style={styles(colorScheme).respuestasContainer}>
                       {comentario.respuestas.map((respuesta, i) => (
-                        <View key={i} style={styles.comentarioRespuesta}>
+                        <View key={i} style={styles(colorScheme).comentarioRespuesta}>
                           <Text>{respuesta.comentario}</Text>
                         </View>
                       ))}
@@ -308,10 +311,10 @@ const ComentariosSerie = () => {
             
                 </ScrollView>
               {/* Área para introducir comentarios */}
-              <View style={styles.commentBox}>
-                <View style={styles.inputRow}>
+              <View style={styles(colorScheme).commentBox}>
+                <View style={styles(colorScheme).inputRow}>
                     <TextInput
-                    style={styles.input}
+                    style={styles(colorScheme).input}
                     onChangeText={newText => setComentarioaEnviar(newText)}
                     autoCapitalize="sentences"
                     placeholder="Escribe un comentario"
@@ -319,12 +322,12 @@ const ComentariosSerie = () => {
                     multiline={true} 
                     numberOfLines={1} // Número inicial de líneas
                     />
-                    <TouchableOpacity style={styles.button} onPress={() => enviarComentario(user.id)}>
-                    <Text style={styles.buttonText}>Enviar</Text>
+                    <TouchableOpacity style={styles(colorScheme).button} onPress={() => enviarComentario(user.id)}>
+                    <Text style={styles(colorScheme).buttonText}>Enviar</Text>
                     </TouchableOpacity>
                 </View>
                 </View>
-
+ 
             </View>
          
         </KeyboardAvoidingView>
@@ -332,24 +335,25 @@ const ComentariosSerie = () => {
 };
     
 // Estilos del componente
-const styles = StyleSheet.create({
+const styles = (colorScheme) => StyleSheet.create({
   keyboardView: {
     flex: 1,
+    backgroundColor: colorScheme === 'dark' ? '#121212' : '#F0F2F5',
   },
   container: {
     flex: 1,
-    backgroundColor: '#F0F2F5',
+    backgroundColor: colorScheme === 'dark' ? '#121212' : '#F0F2F5',
   },
   title: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: '#4A90E2',
-    backgroundColor: 'white',
+    color: colorScheme === 'dark' ? '#4A90E2' : '#4A90E2',
+    backgroundColor: colorScheme === 'dark' ? '#1E1E1E' : 'white',
     paddingVertical: '4%',
     paddingHorizontal: '5%',
     textAlign: 'center',
     borderWidth: 2,
-    borderColor: 'black',
+    borderColor: colorScheme === 'dark' ? '#333' : 'black',
   },
   scrollView: {
     flex: 1,
@@ -358,9 +362,9 @@ const styles = StyleSheet.create({
     paddingBottom: '3%',
   },
   commentBox: {
-    backgroundColor: 'white',
+    backgroundColor: colorScheme === 'dark' ? '#1E1E1E' : 'white',
     borderTopWidth: 1,
-    borderTopColor: '#E0E0E0',
+    borderTopColor: colorScheme === 'dark' ? '#333' : '#E0E0E0',
     paddingVertical: '3%',
     paddingHorizontal: '5%'
   },
@@ -371,13 +375,14 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     borderWidth: 1,
-    borderColor: '#E0E0E0',
+    borderColor: colorScheme === 'dark' ? '#333' : '#E0E0E0',
     borderRadius: 20,
     paddingHorizontal: '4%',
     paddingVertical: '3%',
     marginRight: '3%',
     fontSize: 16,
-    backgroundColor: '#F8F8F8',
+    backgroundColor: colorScheme === 'dark' ? '#2C2C2C' : '#F8F8F8',
+    color: colorScheme === 'dark' ? '#E0E0E0' : '#000',
   },
   button: {
     backgroundColor: '#4A90E2',
@@ -394,11 +399,11 @@ const styles = StyleSheet.create({
   },
   comentarioDerecha: {
     alignSelf: 'flex-end',
-    backgroundColor: '#DCF8C6',
+    backgroundColor: colorScheme === 'dark' ? '#0B3D91' : '#DCF8C6',
     borderRadius: 15,
     padding: '3%',
     maxWidth: '100%',
-    shadowColor: "#000",
+    shadowColor: colorScheme === 'dark' ? "#FFF" : "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -410,11 +415,11 @@ const styles = StyleSheet.create({
   },
   comentarioIzquierda: {
     alignSelf: 'flex-start',
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colorScheme === 'dark' ? '#2C2C2C' : '#FFFFFF',
     borderRadius: 15,
     padding: '3%',
     maxWidth: '80%',
-    shadowColor: "#000",
+    shadowColor: colorScheme === 'dark' ? "#FFF" : "#000",
     shadowOffset: {
       width: 0,
       height: 1,
@@ -428,49 +433,49 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontWeight: 'bold',
     fontSize: 14,
-    color: '#4A4A4A',
+    color: colorScheme === 'dark' ? '#E0E0E0' : '#4A4A4A',
     marginBottom: '1%',
   },
   autorIzquierda: {
     textAlign: 'left',
     fontWeight: 'bold',
     fontSize: 14,
-    color: '#4A4A4A',
+    color: colorScheme === 'dark' ? '#E0E0E0' : '#4A4A4A',
     marginBottom: '1%',
   },
   fecha: {
     fontSize: 11,
-    color: '#888',
+    color: colorScheme === 'dark' ? '#888' : '#888',
     marginTop: '1%',
     alignSelf: 'flex-end',
   },
   fechaDerecha:{
     fontSize: 11,
-    color: '#888',
+    color: colorScheme === 'dark' ? '#888' : '#888',
     marginTop: '1%',
     alignSelf: 'flex-end',
   },
   fechaIzquierda:{
     fontSize: 11,
-    color: '#888',
+    color: colorScheme === 'dark' ? '#888' : '#888',
     marginTop: '1%',
     alignSelf: 'flex-start',
   },
   comentarioRespuesta: {
     textAlign: 'right',
-    backgroundColor: 'red',
+    backgroundColor: colorScheme === 'dark' ? '#1E1E1E' : 'red',
   },
 
   comentariotextoDerecha: {
     textAlign: 'right',
-    ontSize: 16,
-    color: '#333',
+    fontSize: 16,
+    color: colorScheme === 'dark' ? '#E0E0E0' : '#333',
     marginBottom: '2%',
   },
   comentariotextoIzquierda: {
     textAlign: 'left',
-    ontSize: 16,
-    color: '#333',
+    fontSize: 16,
+    color: colorScheme === 'dark' ? '#E0E0E0' : '#333',
     marginBottom: '2%',
   },
   

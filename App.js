@@ -16,17 +16,27 @@ import ComentariosSerie from './Pantallas/ComentariosSerie.js';
 import Estadisticas from './Pantallas/Estadisticas.js';
 import Not from './Pantallas/pruebsNotf.tsx';
 import Serie from './Pantallas/serie.js';
+import { useColorScheme } from 'react-native';
 
 const Stack = createNativeStackNavigator();
 
-
 function App() {
+  let colorScheme = useColorScheme();
+  colorScheme = 'dark'; // qutar esta linea cuando este todo listo
 
   return (
-    
     <UserProvider>
       <NavigationContainer>
-        <Stack.Navigator initialRouteName="welcome">
+        <Stack.Navigator 
+          initialRouteName="welcome"
+          screenOptions={{
+            headerStyle: {
+              backgroundColor: colorScheme === 'dark' ? '#121212' : '#f7f7f7',
+            },
+            headerTintColor: colorScheme === 'dark' ? '#ffffff' : '#000000',
+            
+          }}
+        >
           <Stack.Screen name="Welcome" options={{ headerShown: false }} component={WelcomeScreen} />
           <Stack.Screen name="LogInScreen" options={{ headerShown: false }} component={LogInScreen} />
           <Stack.Screen
@@ -35,9 +45,6 @@ function App() {
             options={{
               headerShown: false,
               title: '',
-              headerStyle: {
-                backgroundColor: '#f7f7f7',
-              }
             }}
           />
           <Stack.Screen name="notificacoines" options={{ headerShown: false }} component={Not} />
@@ -76,4 +83,3 @@ function App() {
 }
 
 export default App;
-

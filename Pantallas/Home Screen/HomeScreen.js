@@ -16,6 +16,7 @@ import {
   TouchableWithoutFeedback,
   StyleSheet,
   View, 
+  Appearance
 } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
@@ -28,8 +29,6 @@ import Constants from 'expo-constants';
 import { sendPushNotification } from '../notificaciones.js';
 import groupIcon from '../../assets/people-group-solid.svg';
 // homeScreenStyles.js
-
-
 
 
 const windowHeight = Dimensions.get('window').height;
@@ -52,7 +51,7 @@ const HomeScreen = () => {
   const [seriesDetalles, setSeriesDetalles] = useState([]);
   const [TodosGrupos, setTodosGrupos] = useState([]);
   const [value, setValue] = useState(null);
-
+  const [colorScheme, setColorScheme] = useState("dark");
   const opcionesFiltro = [
     { label: 'Todas', value: 'Todas' },
     { label: 'Favoritas', value: 'Favoritas' },
@@ -104,8 +103,19 @@ const HomeScreen = () => {
   }, [refrescar]);
 
   useEffect(() => {
+
+    comprobarApariencia();
     registerForPushNotificationsAsync();
   }, []);
+
+  const comprobarApariencia = () => {
+    //setColorScheme(Appearance.getColorScheme());
+    if (colorScheme === 'dark') {
+      console.log("El dispositivo es oscuro");
+    } else {
+      console.log("El dispositivo es claro");
+    }
+  }
 
   const onRefresh = React.useCallback(() => {
     setRefrescando(true);
@@ -135,8 +145,10 @@ const HomeScreen = () => {
 
   function handleRegistrationError(errorMessage) {
     alert(errorMessage);
-    throw new Error(errorMessage);
+    //throw new Error(errorMessage);
   }
+
+
 
   async function registerForPushNotificationsAsync() {
     console.log('Iniciando registerForPushNotificationsAsync');
@@ -375,29 +387,29 @@ const HomeScreen = () => {
 
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#121212' : '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
       <StatusBar />
       <TouchableWithoutFeedback onPress={() => resetearBusqueda()}>
-        <View style={[globalStyles.container, styles.container]}>
-          <View style={styles.row}>
-            <TouchableOpacity style={styles.circle} onPress={() => handleSettings()}>
-              <Text style={styles.initials}>{iniciales}</Text>
+        <View style={[globalStyles.container, colorScheme === 'dark' ? darkStyles.container : styles.container]}>
+          <View style={colorScheme === 'dark' ? darkStyles.row : styles.row}>
+            <TouchableOpacity style={colorScheme === 'dark' ? darkStyles.circle : styles.circle} onPress={() => handleSettings()}>
+              <Text style={colorScheme === 'dark' ? darkStyles.initials : styles.initials}>{iniciales}</Text>
             </TouchableOpacity>
 
             <Dropdown
-              style={[styles.buttonGroup, isFocus && { borderColor: 'blue' }]}
-              placeholderStyle={styles.buttonText}
-              selectedTextStyle={styles.selectedTextStyle}
+              style={[colorScheme === 'dark' ? darkStyles.buttonGroup : styles.buttonGroup, isFocus && { borderColor: 'blue' }]}
+              placeholderStyle={colorScheme === 'dark' ? darkStyles.buttonText : styles.buttonText}
+              selectedTextStyle={colorScheme === 'dark' ? darkStyles.selectedTextStyle : styles.selectedTextStyle}
               blurRadius={10}
-              containerStyle={{ backgroundColor: '#f0f0f0', borderRadius: 15, borderWidth: 1, borderColor: '#6666ff' }}
-              iconStyle={styles.iconStyle}
+              containerStyle={{ backgroundColor: colorScheme === 'dark' ? '#333' : '#f0f0f0', borderRadius: 15, borderWidth: 1, borderColor: '#6666ff' }}
+              iconStyle={colorScheme === 'dark' ? darkStyles.iconStyle : styles.iconStyle}
               data={TodosGrupos}
               labelField="Nombre_grupo"
               valueField={value}
               placeholder={value}
               value={value}
               maxHeight={500}
-              itemTextStyle={{ textAlign: 'left', }}
+              itemTextStyle={{ textAlign: 'left', color: colorScheme === 'dark' ? '#fff' : '#000' }}
               onFocus={() => setIsFocus(true)}
               onBlur={() => setIsFocus(false)}
               onChange={item => {
@@ -409,27 +421,27 @@ const HomeScreen = () => {
               }}
               renderLeftIcon={() => (
                 <>
-                  {/* <Image source={groupIcon} style={styles.dropdownIcon} alt='Grupo'/> */}
-                  <Text style={styles.buttonText}>{value}</Text>
+                  <Text style={colorScheme === 'dark' ? darkStyles.buttonText : styles.buttonText}>{value}</Text>
                 </>
               )}
             />
 
-            <TouchableOpacity style={styles.circle} onPress={() => anadirGrupo()}>
-              <Text style={styles.initials}>+</Text>
+            <TouchableOpacity style={colorScheme === 'dark' ? darkStyles.circle : styles.circle} onPress={() => anadirGrupo()}>
+              <Text style={colorScheme === 'dark' ? darkStyles.initials : styles.initials}>+</Text>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.searchContainer}>
+          <View style={colorScheme === 'dark' ? darkStyles.searchContainer : styles.searchContainer}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
               <TextInput
                 value={query}
                 onChangeText={handleTextChange}
                 placeholder="Buscar series..."
-                style={[styles.searchInput, { flex: 3, marginRight: 10 , alignSelf: 'center'}]}
+                style={[colorScheme === 'dark' ? darkStyles.searchInput : styles.searchInput, { flex: 3, marginRight: 10 , alignSelf: 'center'}]}
+                placeholderTextColor={colorScheme === 'dark' ? '#999' : '#666'}
               />
               <Dropdown
-                style={[styles.filterDropdown, { width: '30%', flex: 1 }]}
+                style={[colorScheme === 'dark' ? darkStyles.filterDropdown : styles.filterDropdown, { width: '30%', flex: 1 }]}
                 data={opcionesFiltro}
                 labelField="label"
                 valueField="value"
@@ -438,11 +450,11 @@ const HomeScreen = () => {
                 onChange={item => {
                   setFiltro(item.value);
                 }}
-                selectedTextStyle={styles.selectedTextStyle}
-                itemTextStyle={styles.itemTextStyle}
-                containerStyle={styles.dropdownContainerStyle}
-                activeColor="#E8F0FE"
-                iconStyle={styles.iconStyle}
+                selectedTextStyle={colorScheme === 'dark' ? darkStyles.selectedTextStyle : styles.selectedTextStyle}
+                itemTextStyle={colorScheme === 'dark' ? darkStyles.itemTextStyle : styles.itemTextStyle}
+                containerStyle={colorScheme === 'dark' ? darkStyles.dropdownContainerStyle : styles.dropdownContainerStyle}
+                activeColor={colorScheme === 'dark' ? '#2C2C2C' : '#E8F0FE'}
+                iconStyle={colorScheme === 'dark' ? darkStyles.iconStyle : styles.iconStyle}
               />
             </View>
 
@@ -451,12 +463,12 @@ const HomeScreen = () => {
                 data={series}
                 keyExtractor={(item) => item.id.toString()}
                 renderItem={({ item }) => (
-                  <TouchableOpacity style={{ borderColor: 'black', borderBottomWidth: 2 }} onPress={() => seleccionSerie(item.name, item.id)}>
+                  <TouchableOpacity style={{ borderColor: colorScheme === 'dark' ? '#666' : 'black', borderBottomWidth: 2 }} onPress={() => seleccionSerie(item.name, item.id)}>
                     <Image source={{ uri: item.posterURL }} style={{ height: windowHeight * 0.20 }} />
-                    <Text style={styles.textoBuscadas}>{item.name}</Text>
+                    <Text style={colorScheme === 'dark' ? darkStyles.textoBuscadas : styles.textoBuscadas}>{item.name}</Text>
                   </TouchableOpacity>
                 )}
-                style={styles.flatList}
+                style={colorScheme === 'dark' ? darkStyles.flatList : styles.flatList}
               />
             ) : null}
           </View>
@@ -467,9 +479,9 @@ const HomeScreen = () => {
                 refreshing={refrescando}
                 onRefresh={onRefresh}
                 style={styles.refreshContainer}
-                tintColor="#6666ff"
+                tintColor={colorScheme === 'dark' ? '#4A90E2' : '#6666ff'}
                 title="Cargando series..."
-                titleColor="#6666ff"
+                titleColor={colorScheme === 'dark' ? '#4A90E2' : '#6666ff'}
               />
             }>
               {seriesDetalles.length > 0 ? (
@@ -477,23 +489,23 @@ const HomeScreen = () => {
                   {seriesDetalles.map((detalle, index) => (
                     <TouchableOpacity
                       key={index}
-                      style={styles.serieDetailContainer}
+                      style={colorScheme === 'dark' ? darkStyles.serieDetailContainer : styles.serieDetailContainer}
                       onPress={() => navegarADetalles(detalle.id)}
                     >
                       <View style={{ flex: 1 }}>
                         {poster(detalle.poster_path)}
                       </View>
                       <View style={{ flex: 5, marginBottom: '2%' }}>
-                        <Text style={styles.serieTitle}>{detalle.name}</Text>
+                        <Text style={colorScheme === 'dark' ? darkStyles.serieTitle : styles.serieTitle}>{detalle.name}</Text>
                       </View>
                     </TouchableOpacity>
                   ))}
                 </View>
               ) : (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color="#4A90E2" />
-                  <Text style={styles.loadingText}>Cargando series...</Text>
-                  <Text style={styles.loadingText}>Por favor, espere un momento</Text>
+                <View style={colorScheme === 'dark' ? darkStyles.loadingContainer : styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={colorScheme === 'dark' ? '#4A90E2' : '#4A90E2'} />
+                  <Text style={colorScheme === 'dark' ? darkStyles.loadingText : styles.loadingText}>Cargando series...</Text>
+                  <Text style={colorScheme === 'dark' ? darkStyles.loadingText : styles.loadingText}>Por favor, espere un momento</Text>
                 </View>
               )}
             </ScrollView>
@@ -502,22 +514,22 @@ const HomeScreen = () => {
           <View style={{ flexDirection: 'row', textAlign: 'center' }}>
             {
               value !== 'Grupos' &&
-              <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => editarGrupo(value)}>
-                <Text style={styles.editarGrupoTexto}>Editar Grupo: {value}</Text>
+              <TouchableOpacity style={colorScheme === 'dark' ? darkStyles.editarGrupoBoton : styles.editarGrupoBoton} onPress={() => editarGrupo(value)}>
+                <Text style={colorScheme === 'dark' ? darkStyles.editarGrupoTexto : styles.editarGrupoTexto}>Editar Grupo: {value}</Text>
               </TouchableOpacity>
             }
             
             {
               value !== 'Grupos' &&
-              <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => verCalendario(value)}>
-                <Text style={styles.editarGrupoTexto}>Calendario</Text>
+              <TouchableOpacity style={colorScheme === 'dark' ? darkStyles.editarGrupoBoton : styles.editarGrupoBoton} onPress={() => verCalendario(value)}>
+                <Text style={colorScheme === 'dark' ? darkStyles.editarGrupoTexto : styles.editarGrupoTexto}>Calendario</Text>
               </TouchableOpacity>
             }
 
             {
               value !== 'Grupos' &&
-              <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => estadisticas(user.id)}>
-                <Text style={styles.editarGrupoTexto}>Estadisticas</Text>
+              <TouchableOpacity style={colorScheme === 'dark' ? darkStyles.editarGrupoBoton : styles.editarGrupoBoton} onPress={() => estadisticas(user.id)}>
+                <Text style={colorScheme === 'dark' ? darkStyles.editarGrupoTexto : styles.editarGrupoTexto}>Estadisticas</Text>
               </TouchableOpacity>
             }
 
@@ -726,5 +738,210 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     width: '40%',
+  }
+});
+
+export const darkStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#121212',
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    padding: '2%',
+  },
+  circle: {
+    aspectRatio: 1,
+    borderRadius: 1000,
+    backgroundColor: '#4A90E2',
+    alignItems: 'center',
+    marginRight: '1%',
+    marginLeft: '1%',
+    flex: 1,
+    justifyContent: 'center',
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  initials: {
+    fontSize: 28,
+    color: 'white',
+    fontWeight: 'bold',
+  },
+  buttonGroup: {
+    height: '100%',
+    flexDirection: 'row',
+    backgroundColor: '#333',
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 4,
+    justifyContent: 'center',
+    padding: 5,
+    borderColor: '#4A90E2',
+    borderWidth: 1,
+  },
+  buttonText: {
+    color: '#4A90E2',
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginRight: 5,
+  },
+  dropdownIcon: {
+    color: '#4A90E2',
+    fontSize: 18,
+  },
+  item: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#444',
+  },
+  itemText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#fff',
+  },
+  serieTitle: {
+    marginTop: '5%',
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#4A90E2',
+    marginBottom: '1%',
+    textAlign: 'center',
+    paddingHorizontal: 10,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+    color: '#888',
+  },
+  selectedTextStyle: {
+    fontSize: 16,
+    textAlign: 'center',
+    color: '#fff',
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  poster: {
+    height: windowHeight * 0.20,
+    resizeMode: 'contain',
+    borderRadius: 10,
+  },
+  serieDetailContainer: {
+    width: '33%',
+    padding: 10,
+    flexDirection: 'column',
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#444',
+    padding: '4%',
+    borderRadius: 8,
+    fontSize: 16,
+    backgroundColor: '#333',
+    color: '#fff',
+  },
+  searchContainer: {
+    width: '90%',
+    flexDirection: 'column',
+    marginTop: '2%',
+  },
+  flatList: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#444',
+    backgroundColor: '#222'
+  },
+  textoBuscadas: {
+    margin: '5%',
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#fff',
+  },
+  editarGrupoBoton: {
+    backgroundColor: '#4A90E2',
+    padding: '2%',
+    margin: '2%',
+    alignItems: 'center',
+    borderRadius: 10,
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: '0.5%' },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: '1.25%',
+  },
+  editarGrupoTexto: {
+    color: 'white',
+  }, 
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+    marginTop: '10%',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#fff',
+    marginTop: 10,
+  },
+  dropdownIcon: {
+    paddingRight: '3%',
+    width: 30,
+    height: 30,
+    resizeMode: 'contain', 
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+    backgroundColor: '#333',
+    borderRadius: 20,
+    padding: 5,
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 15,
+    backgroundColor: '#222',
+  },
+  filterButtonActive: {
+    backgroundColor: '#4A90E2',
+  },
+  filterButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  filterButtonTextActive: {
+    color: '#fff',
+  },
+  filterDropdown: {
+    backgroundColor: '#222',
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#444',
+  },
+  itemTextStyle: {
+    fontSize: 16,
+    textAlign: 'left',
+    color: '#fff',
+  },
+  dropdownContainerStyle: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#444',
+    width: '40%',
+    backgroundColor: '#222',
   }
 });

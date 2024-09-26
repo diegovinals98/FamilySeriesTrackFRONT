@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator, TouchableOpacity } from 'react-native';
+import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator, TouchableOpacity, useColorScheme } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
 
 const Estadisticas = () => {
@@ -15,6 +15,9 @@ const Estadisticas = () => {
   const [loading, setLoading] = useState(true);
   const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
   const baseImageUrl = 'https://image.tmdb.org/t/p/w92';
+  let colorScheme = useColorScheme();
+  colorScheme = 'dark';
+  const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   useEffect(() => {
     obtenerCapitulosVistos();
@@ -166,7 +169,7 @@ const Estadisticas = () => {
 
 export default Estadisticas;
 
-const styles = StyleSheet.create({
+const lightStyles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 15,
@@ -237,6 +240,81 @@ const styles = StyleSheet.create({
   loadingText: {
     fontSize: 18,
     color: '#333',
+    marginTop: 10,
+  },
+});
+
+const darkStyles = StyleSheet.create({
+  container: {
+    flex: 1,
+    padding: 15,
+    backgroundColor: '#121212',
+  },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#fff',
+    textAlign: 'center',
+    marginVertical: 20,
+  },
+  section: {
+    marginVertical: 20,
+    backgroundColor: '#1E1E1E',
+    padding: 15,
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 5,
+    elevation: 3,
+  },
+  sectionTitle: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 10,
+    color: '#fff',
+  },
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#333',
+  },
+  poster: {
+    width: 50,
+    height: 75,
+    marginRight: 15,
+    borderRadius: 8,
+  },
+  seriesName: {
+    fontSize: 16,
+    color: '#fff',
+    flex: 1,
+    marginRight: 10,
+  },
+  seriesStat: {
+    fontSize: 16,
+    fontWeight: '500',
+    color: '#4DA6FF',
+  },
+  totalStat: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#4DA6FF',
+    textAlign: 'center',
+    marginVertical: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#121212',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#fff',
     marginTop: 10,
   },
 });

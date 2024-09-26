@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity } from 'react-native';
-import { useUser } from '../userContext.js'; // Importa el contexto del usuario.
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, useColorScheme } from 'react-native';
+import { useUser } from '../userContext.js';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { sendPushNotification } from '../Pantallas/notificaciones.js';
@@ -15,8 +15,8 @@ const DetallesDeTemporada = ({ route }) => {
   const [actualizarVisto, setActualizarVisto] = useState(false);
   const [miembrosGrupo, setMiembrosGrupo] = useState([]);
   const { user } = useUser();
-
-  
+  let colorScheme = useColorScheme();
+  colorScheme = 'dark';
 
   const obtenerCapitulosVistos = async () => {
     try {
@@ -51,15 +51,12 @@ const DetallesDeTemporada = ({ route }) => {
     }
   };
 
-
   useFocusEffect(
     useCallback(() => {
       obtenerCapitulosVistos();
       obtenerMiembrosGrupo();
     }, [idSerie, numeroTemporada, actualizarVisto])
   );
-
-  
 
   const marcarVisto = async (idSerie, capituloId, Name, Episode_number, season_number, userid) => {
     try {
@@ -73,10 +70,8 @@ const DetallesDeTemporada = ({ route }) => {
         throw new Error('Error al agregar capitulo');
       }
 
-      // Actualiza el estado para refrescar la lista de capítulos vistos
       setActualizarVisto(actual => !actual);
      
-      // Obtener el ID de cada miembro del grupo y hacer una llamada para obtener el token
       for (const miembro of miembrosGrupo.members) {
         if (miembro.id !== user.id) {
           try {
@@ -122,36 +117,42 @@ const DetallesDeTemporada = ({ route }) => {
         throw new Error('Error al eliminar visualización');
       }
 
-      // Actualiza el estado para refrescar la lista de capítulos no vistos
       setActualizarVisto(actual => !actual);
     } catch (error) {
       console.error('Error al eliminar visualización:', error);
     }
   };
 
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    return date.toLocaleDateString('es-ES', options).replace(/^\w/, (c) => c.toUpperCase());
+  };
+
   if (!detallesTemporada) {
     return (
-      <View style={styles.container}>
-        <Text>Cargando detalles de la temporada...</Text>
+      <View style={[styles.container, colorScheme === 'dark' && styles.darkContainer]}>
+        <Text style={colorScheme === 'dark' ? styles.darkText : styles.lightText}>Cargando detalles de la temporada...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{detallesTemporada.name.toUpperCase()}</Text>
+    <View style={[styles.container, colorScheme === 'dark' && styles.darkContainer]}>
+      <Text style={[styles.title, colorScheme === 'dark' && styles.darkTitle]}>{detallesTemporada.name.toUpperCase()}</Text>
       <ScrollView style={styles.scrollView}>
         <View style={styles.episodesContainer}>
           {detallesTemporada.episodes && detallesTemporada.episodes.map((capitulo, index) => (
-            <View key={capitulo.id} style={styles.capituloContainer}>
+            <View key={capitulo.id} style={[styles.capituloContainer, colorScheme === 'dark' && styles.darkCapituloContainer]}>
               {capitulo.still_path && (
                 <Image
                   source={{ uri: `https://image.tmdb.org/t/p/w500${capitulo.still_path}` }}
                   style={styles.capituloImage}
                 />
               )}
-              <Text style={styles.capituloTitle}>Capítulo {capitulo.episode_number}: {capitulo.name}</Text>
-              <Text style={styles.capituloDescription}>{capitulo.overview}</Text>
+              <Text style={[styles.capituloTitle, colorScheme === 'dark' && styles.darkText]}>Capítulo {capitulo.episode_number}: {capitulo.name}</Text>
+              <Text style={[styles.capituloDate, colorScheme === 'dark' && styles.darkText]}>{formatDate(capitulo.air_date)}</Text>
+              <Text style={[styles.capituloDescription, colorScheme === 'dark' && styles.darkText]}>{capitulo.overview}</Text>
               {(capitulosVistos || []).includes(capitulo.id) ? (
                 <TouchableOpacity
                   style={[styles.boton, styles.botonVisto]}
@@ -181,6 +182,9 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     paddingBottom: '10%',
   },
+  darkContainer: {
+    backgroundColor: '#121212',
+  },
   scrollView: {
     height: '100%',
   },
@@ -197,6 +201,9 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     elevation: 5,
   },
+  darkTitle: {
+    backgroundColor: '#1E3A5F',
+  },
   episodesContainer: {
     paddingHorizontal: '5%',
   },
@@ -205,6 +212,9 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginBottom: 15,
     elevation: 5,
+  },
+  darkCapituloContainer: {
+    backgroundColor: '#2C2C2C',
   },
   capituloImage: {
     width: '100%',
@@ -216,6 +226,11 @@ const styles = StyleSheet.create({
   capituloTitle: {
     fontSize: 18,
     fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  capituloDate: {
+    fontSize: 14,
+    color: '#888',
     marginBottom: 10,
   },
   capituloDescription: {
@@ -239,6 +254,12 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: 'bold',
     fontSize: 16,
+  },
+  lightText: {
+    color: '#000',
+  },
+  darkText: {
+    color: '#fff',
   },
 });
 
