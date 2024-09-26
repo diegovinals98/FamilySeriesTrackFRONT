@@ -27,7 +27,7 @@ const DetallesDeTemporada = ({ route }) => {
       const data = await response.json();
       setDetallesTemporada(data);
 
-      const url2 = `https://apitfg.lapspartbox.com/temporada-vista/${user.id}/${idSerie}/${data.season_number}`;
+      const url2 = `https://backendapi.familyseriestrack.com/temporada-vista/${user.id}/${idSerie}/${data.season_number}`;
       const response2 = await fetch(url2);
       const data2 = await response2.json();
 
@@ -39,7 +39,7 @@ const DetallesDeTemporada = ({ route }) => {
 
   const obtenerMiembrosGrupo = async () => {
     try {
-      const response = await fetch('https://apitfg.lapspartbox.com/miembros-grupo/' + nombreGrupo, {
+      const response = await fetch('https://backendapi.familyseriestrack.com/miembros-grupo/' + nombreGrupo, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -63,7 +63,7 @@ const DetallesDeTemporada = ({ route }) => {
 
   const marcarVisto = async (idSerie, capituloId, Name, Episode_number, season_number, userid) => {
     try {
-      const response = await fetch('https://apitfg.lapspartbox.com/agregar-visualizacion', {
+      const response = await fetch('https://backendapi.familyseriestrack.com/agregar-visualizacion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idSerie, capituloId, Name, Episode_number, season_number, userid }),
@@ -80,26 +80,28 @@ const DetallesDeTemporada = ({ route }) => {
       for (const miembro of miembrosGrupo.members) {
         if (miembro.id !== user.id) {
           try {
-            const response = await fetch(`https://apitfg.lapspartbox.com/obtener-token/${miembro.id}`, {
+            const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${miembro.id}`, {
               method: 'GET',
               headers: { 'Content-Type': 'application/json' },
             });
 
             if (!response.ok) {
-              throw new Error('Error al obtener el token del miembro');
+              throw new Error('Error al obtener los tokens del miembro');
             }
             const data = await response.json();
-            const token = data.token;
-            console.log(`Token del miembro ${miembro.id}: ${token}`);
+            const tokens = data.tokens;
+            console.log(`Tokens del miembro ${miembro.id}: ${tokens}`);
             datosAEnviar = {
               tipo: 'visualizacion',
               idSerie: idSerie,
               nombreGrupo: nombreGrupo,
               nombreSerie: nombreSerie,
             }
-            sendPushNotification(token, 'Capitulo visto!', user.nombre + ' ha visto el capítulo ' + Episode_number + ' de la temporada ' + season_number, nombreSerie, false, datosAEnviar);
+            tokens.forEach(token => {
+              sendPushNotification(token, 'Capitulo visto!', user.nombre + ' ha visto el capítulo ' + Episode_number + ' de la temporada ' + season_number, nombreSerie, true, datosAEnviar);
+            });
           } catch (error) {
-            console.error(`Error al obtener el token del miembro ${miembro.id}:`, error);
+            console.error(`Error al obtener los tokens del miembro ${miembro.id}:`, error);
           }
         }
       }
@@ -110,7 +112,7 @@ const DetallesDeTemporada = ({ route }) => {
 
   const eliminarVisto = async (capituloId, userid) => {
     try {
-      const response = await fetch('https://apitfg.lapspartbox.com/eliminar-visualizacion', {
+      const response = await fetch('https://backendapi.familyseriestrack.com/eliminar-visualizacion', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ capituloId, userid }),

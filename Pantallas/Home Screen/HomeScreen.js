@@ -52,7 +52,6 @@ const HomeScreen = () => {
   const [seriesDetalles, setSeriesDetalles] = useState([]);
   const [TodosGrupos, setTodosGrupos] = useState([]);
   const [value, setValue] = useState(null);
-  const [expoPushToken, setExpoPushToken] = useState('');
 
   const opcionesFiltro = [
     { label: 'Todas', value: 'Todas' },
@@ -77,15 +76,16 @@ const HomeScreen = () => {
       const tipo  = response.notification.request.content.data.tipo;
       if (tipo === 'comentario') {
         const { nombreGrupo, idSerie, nombreSerie } = response.notification.request.content.data;
+        // Reset badge number
+        Notifications.setBadgeCountAsync(0);
         navigation.navigate('Comentarios Serie', { NombreGrupo: nombreGrupo, idSerie: idSerie, nombreSerie: nombreSerie });
       } else if (tipo === 'visualizacion') {
         const { nombreGrupo, idSerie } = response.notification.request.content.data;
+        Notifications.setBadgeCountAsync(0);
         navigation.navigate('Detalles Serie', { idSerie: idSerie, NombreGrupo: nombreGrupo });
       }
+      
     });
-
-
-
     return () => {
       subscription.remove();
     };
@@ -105,7 +105,6 @@ const HomeScreen = () => {
 
   useEffect(() => {
     registerForPushNotificationsAsync();
-    //sendPushNotification(expoPushToken, 'Titulo de la notificacion', 'Cuerpo de la notificacion');
   }, []);
 
   const onRefresh = React.useCallback(() => {
@@ -118,7 +117,7 @@ const HomeScreen = () => {
 
   const llamarAGrupos = async () => {
     try {
-      const response = await fetch(`https://apitfg.lapspartbox.com/grupos/${user?.id}`);
+      const response = await fetch(`https://backendapi.familyseriestrack.com/grupos/${user?.id}`);
       const json = await response.json();
       setTodosGrupos(json);
 
@@ -182,13 +181,12 @@ const HomeScreen = () => {
             projectId,
           })
         ).data;
-        console.log('Token de push obtenido:', pushTokenString);
-        setExpoPushToken(pushTokenString);
+        console.log('Token de push obtenido:', pushTokenString);;
         console.log('Para el usuario :', user.id);
         // TODO: Guardar el token en el servidor, junto con el ID del usuario
         // Añadir en el backend en la tabla de tokens el token, el ID del usuario
         try {
-          const response = await fetch('https://apitfg.lapspartbox.com/registrar-token-notificacion', {
+          const response = await fetch('https://backendapi.familyseriestrack.com/registrar-token-notificacion', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -223,7 +221,7 @@ const HomeScreen = () => {
 
   const obtenerSeriesDelUsuario = async (userId, idgrupo) => {
     try {
-      const url = new URL(`https://apitfg.lapspartbox.com/series-ids-usuario/${userId}/${idgrupo}`);
+      const url = new URL(`https://backendapi.familyseriestrack.com/series-ids-usuario/${userId}/${idgrupo}`);
       const respuesta = await fetch(url);
       if (!respuesta.ok) {
         throw new Error('Respuesta de red no fue ok.');
@@ -309,7 +307,7 @@ const HomeScreen = () => {
 
   const agregarSerieAUsuario = async (userId, idSerie, idGrupo) => {
     try {
-      let response = await fetch('https://apitfg.lapspartbox.com/agregar-serie-usuario', {
+      let response = await fetch('https://backendapi.familyseriestrack.com/agregar-serie-usuario', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -523,32 +521,6 @@ const HomeScreen = () => {
               </TouchableOpacity>
             }
 
-            {
-              // value !== 'Grupos' &&
-              // <TouchableOpacity style={styles.editarGrupoBoton} onPress={() => {
-              //   sendPushNotification(expoPushToken, "Notificación", "Cuerpo de la notificación");
-              //   try {
-              //     response = fetch('https://apitfg.lapspartbox.com/enviar-soporte', {
-              //       method: 'POST',
-              //       headers: {
-              //         'Content-Type': 'application/json',
-              //       },
-              //       body: JSON.stringify({
-              //         nombre: 'Nombre del usuario',
-              //         email: 'email@example.com',
-              //         mensaje: expoPushToken,
-              //       }),
-              //     });
-              //   } catch (error) {
-              //     console.error(error);
-              //   }
-              //   //sendPushNotification("ExponentPushToken[jek2eWF_QadVeox9Jg-Glul]", "Notificación", "Cuerpo de la notificación");
-              //   //sendPushNotification("ExponentPushToken[ner7Z2Ft7BjiUBMiyjZ2bz]", "Notificación", "Cuerpo de la notificación");
-        
-              // }}>
-              //   <Text style={styles.editarGrupoTexto}>Notificar</Text>
-              // </TouchableOpacity>
-            }
           </View>
 
         </View>

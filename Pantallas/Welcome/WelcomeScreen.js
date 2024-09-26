@@ -42,7 +42,7 @@ export default function WelcomeScreen({ navigation }) {
 
   const checkDeviceIdInDB = async (deviceId) => {
     try {
-      const response = await fetch(`https://apitfg.lapspartbox.com/check-device-id/${deviceId}`, {
+      const response = await fetch(`https://backendapi.familyseriestrack.com/check-device-id/${deviceId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -57,7 +57,7 @@ export default function WelcomeScreen({ navigation }) {
 
       if (data.length !== 0 && data.IdUsuario) {
         const userId = data.IdUsuario;
-        const userResponse = await fetch(`https://apitfg.lapspartbox.com/get-user/${userId}`, {
+        const userResponse = await fetch(`https://backendapi.familyseriestrack.com/get-user/${userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',

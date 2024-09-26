@@ -100,7 +100,7 @@ const Settings = () => {
     } else {
       const newContrasenaHash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA512, contrasena);
       try {
-        let response = await fetch(`https://apitfg.lapspartbox.com/usuario/${userId}`, {
+        let response = await fetch(`https://backendapi.familyseriestrack.com/usuario/${userId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -135,7 +135,7 @@ const Settings = () => {
           text: 'Sí',
           onPress: async () => {
             try {
-              const response = await fetch(`https://apitfg.lapspartbox.com/eliminar-cuenta/${idUser}`, {
+              const response = await fetch(`https://backendapi.familyseriestrack.com/eliminar-cuenta/${idUser}`, {
                 method: 'DELETE',
               });
               if (response.ok) {
@@ -174,7 +174,7 @@ const Settings = () => {
         deviceId = await Application.getAndroidId();
       }
       console.log('Device ID: ', deviceId);
-      const response = await fetch('https://apitfg.lapspartbox.com/delete-device-id', {
+      const response = await fetch('https://backendapi.familyseriestrack.com/delete-device-id', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, deviceId }),

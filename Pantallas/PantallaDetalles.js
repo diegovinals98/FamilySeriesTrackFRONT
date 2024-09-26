@@ -45,7 +45,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
 
   const obtenerUsuariosViendoSerie = async (nombreGrupo, idSerie) => {
     try {
-      const response = await fetch(`https://apitfg.lapspartbox.com/usuarios-viendo-serie/${nombreGrupo}/${idSerie}`);
+      const response = await fetch(`https://backendapi.familyseriestrack.com/usuarios-viendo-serie/${nombreGrupo}/${idSerie}`);
       if (!response.ok) {
         throw new Error('Respuesta de red no fue ok.');
       }
@@ -89,7 +89,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
           text: 'Sí',
           onPress: async () => {
             try {
-              const response = await fetch('https://apitfg.lapspartbox.com/eliminar-serie-usuario', {
+              const response = await fetch('https://backendapi.familyseriestrack.com/eliminar-serie-usuario', {
                 method: 'DELETE',
                 headers: {
                   'Content-Type': 'application/json',

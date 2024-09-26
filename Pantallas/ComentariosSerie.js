@@ -89,7 +89,7 @@ const ComentariosSerie = () => {
     const obtenerMiembrosGrupo = async () => {
       console.log('Obteniendo miembros del grupo');
       try {
-        const response = await fetch('https://apitfg.lapspartbox.com/miembros-grupo/' + nombreGrupo, {
+        const response = await fetch('https://backendapi.familyseriestrack.com/miembros-grupo/' + nombreGrupo, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -105,7 +105,7 @@ const ComentariosSerie = () => {
       console.log('Enviando comentario');
       if (!comentarioaEnviar) return;
     
-      const url = `https://apitfg.lapspartbox.com/anadir_comentario_a_serie`;
+      const url = `https://backendapi.familyseriestrack.com/anadir_comentario_a_serie`;
     
       // Datos que se enviarán al servidor
       const datosAEnviar = {
@@ -139,22 +139,24 @@ const ComentariosSerie = () => {
           console.log('Miembro del grupo: ' + miembro.Nombre + " con id: " + miembro.id);
           if (miembro.id !== userId) {
             try {
-              // Obtenemos el token del miembro para enviar la notificación
-              const response = await fetch(`https://apitfg.lapspartbox.com/obtener-token/${miembro.id}`, {
+              // Obtenemos los tokens del miembro para enviar la notificación
+              const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${miembro.id}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
               });
   
               if (!response.ok) {
-                throw new Error('Error al obtener el token del miembro');
+                throw new Error('Error al obtener los tokens del miembro');
               }
               const data = await response.json();
-              const token = data.token;
+              const tokens = data.tokens;
               
-              // Enviamos la notificación push
-              sendPushNotification(token, 'Nuevo Comentario!', user.nombre + ': ' + comentarioaEnviar, nombreSerie + " en " + nombreGrupo, true, datosAEnviar);
+              // Enviamos la notificación push a todos los tokens
+              tokens.forEach(token => {
+                sendPushNotification(token, 'Nuevo Comentario!', user.nombre + ': ' + comentarioaEnviar, nombreSerie + " en " + nombreGrupo, true, datosAEnviar);
+              });
             } catch (error) {
-              console.error(`Error al obtener el token del miembro ${miembro.id}:`, error);
+              console.error(`Error al obtener los tokens del miembro ${miembro.id}:`, error);
             }
           }
         }
@@ -178,7 +180,7 @@ const ComentariosSerie = () => {
       
           try {
             // Lógica para obtener el ID del grupo
-            const responseGrupo = await fetch(`https://apitfg.lapspartbox.com/grupo_por_nombre/${nombreGrupo}`);
+            const responseGrupo = await fetch(`https://backendapi.familyseriestrack.com/grupo_por_nombre/${nombreGrupo}`);
             if (!responseGrupo.ok) {
               throw new Error('Grupo no encontrado');
             }
@@ -192,7 +194,7 @@ const ComentariosSerie = () => {
             }
       
             // Lógica para cargar los datos con el ID del grupo obtenido
-            const responseComentarios = await fetch(`https://apitfg.lapspartbox.com/comentarios_por_grupo_serie/${dataGrupo.idGrupo}/${idSerie}`);
+            const responseComentarios = await fetch(`https://backendapi.familyseriestrack.com/comentarios_por_grupo_serie/${dataGrupo.idGrupo}/${idSerie}`);
             if (!responseComentarios.ok) {
               throw new Error('Respuesta de red no fue ok');
             }

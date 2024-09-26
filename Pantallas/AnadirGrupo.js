@@ -14,6 +14,8 @@ import { useNavigation, useRoute } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
 import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
+import * as Notifications from 'expo-notifications';
+import { sendPushNotification } from './notificaciones.js';
 
 const windowHeight = Dimensions.get('window').height;
 
@@ -70,7 +72,7 @@ const AnadirGrupo = () => {
     };
 
     try {
-      const response = await fetch('https://apitfg.lapspartbox.com/crear-grupo-y-asociar-usuarios', {
+      const response = await fetch('https://backendapi.familyseriestrack.com/crear-grupo-y-asociar-usuarios', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,6 +94,40 @@ const AnadirGrupo = () => {
         });
       }
       alert('Datos del grupo actualizados correctamente.');
+      const obtenerTokenUsuario = async (userId) => {
+        try {
+          const response = await fetch('https://backendapi.familyseriestrack.com/obtener-tokens-usuarios/' + userId, {
+            method: 'GET',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+          });
+
+          if (!response.ok) {
+            throw new Error('Error al obtener el token del usuario');
+          }
+
+          const data = await response.json();
+          return data.token;
+        } catch (error) {
+          console.error('Error al obtener el token del usuario:', error);
+          return null;
+        }
+      };
+
+
+      // TODO: Ahora mimsmo inputs usuarios solo tiene el nombe del usuario
+      // hay que sacar el id de ese usuario
+      // ese id es el que se le pasa a obetenerTokenUsuario()
+      console.log(inputsUsuarios);
+      const userIds = inputsUsuarios.map(input => input.value);
+      const tokens = await Promise.all(userIds.map(userId => obtenerTokenUsuario(userId)));
+
+      tokens.forEach(token => {
+        if (token) {
+          sendPushNotification(token, 'Te han añadido a un grupo!', user.nombre + " te ha añadido al grupo " + nombreGrupo);
+        }
+      });
       navigation.navigate('Home');
     } catch (error) {
       console.error('Error al agregar datos a la BBDD:', error);

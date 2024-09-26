@@ -33,7 +33,7 @@ const Calendario = () => {
 
   const obtenerSeriesDelUsuario = async (userId, idgrupo) => {
     try {
-      const url = new URL(`https://apitfg.lapspartbox.com/series-ids-usuario/${userId}/${idgrupo}`);
+      const url = new URL(`https://backendapi.familyseriestrack.com/series-ids-usuario/${userId}/${idgrupo}`);
       const respuesta = await fetch(url);
       if (!respuesta.ok) {
         throw new Error('Respuesta de red no fue ok.');

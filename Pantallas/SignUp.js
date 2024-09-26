@@ -67,7 +67,7 @@ const SignUp = ({ navigation }) => {
           Contraseña: hash
         };
 
-        let response = await fetch('https://apitfg.lapspartbox.com/usuario', {
+        let response = await fetch('https://backendapi.familyseriestrack.com/usuario', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

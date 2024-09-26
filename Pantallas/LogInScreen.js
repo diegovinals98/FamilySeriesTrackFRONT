@@ -52,7 +52,7 @@ const LogInScreen = () => {
     );
 
     try {
-      let response = await fetch('https://apitfg.lapspartbox.com/login2', {
+      let response = await fetch('https://backendapi.familyseriestrack.com/login2', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -77,7 +77,7 @@ const LogInScreen = () => {
 
         const deviceId = await getDeviceId();
         try {
-          await fetch('https://apitfg.lapspartbox.com/insert-device-id', {
+          await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
