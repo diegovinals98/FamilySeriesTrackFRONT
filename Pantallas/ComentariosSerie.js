@@ -75,7 +75,7 @@ const ComentariosSerie = () => {
     const [comentarioAResponder, setComentarioAResponder] = useState(null);
     const [miembrosGrupo, setMiembrosGrupo] = useState([]);
     let colorScheme = useColorScheme();
-    colorScheme = "dark"
+   
 
     // Actualiza la referencia de comentarios cuando cambia el estado
     useEffect(() => {

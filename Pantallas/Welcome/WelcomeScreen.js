@@ -78,6 +78,7 @@ export default function WelcomeScreen({ navigation }) {
           apellidos: userData.usuario.Apellidos,
           usuario: userData.usuario.Usuario,
           contraseña: userData.usuario.Contraseña,
+          idioma: userData.usuario.idioma,
         });
 
         navigation.reset({

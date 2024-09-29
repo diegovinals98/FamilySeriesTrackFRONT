@@ -4,7 +4,6 @@ import { useUser } from '../userContext.js';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Rating } from 'react-native-elements';
-
 const PantallaDeDetalles = ({ route, navigation }) => {
   const { idSerie, NombreGrupo } = route.params;
   const [detallesSerie, setDetallesSerie] = useState(null);
@@ -16,11 +15,11 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   const { user } = useUser();
   const colorScheme = useColorScheme();
   // cambiar el primer dark a colorScheme
-  const styles = "dark" === 'dark' ? darkStyles : lightStyles;
+  const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   const obtenerDetallesSerie = (idSerie) => {
     const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
-    const url = `https://api.themoviedb.org/3/tv/${idSerie}?api_key=${apiKey}&language=es-ES`;
+    const url = `https://api.themoviedb.org/3/tv/${idSerie}?api_key=${apiKey}&language=${user?.idioma}-ES`;
 
     fetch(url)
       .then((response) => response.json())
@@ -238,22 +237,25 @@ const PantallaDeDetalles = ({ route, navigation }) => {
 
         <View style={styles.seasonsContainer}>
           {detallesSerie.seasons &&
-            detallesSerie.seasons.map((season, index) => (
-              season.name !== 'Especiales' && (
-                <TouchableOpacity
-                  key={index}
-                  style={styles.seasonItem}
-                  onPress={() => navegarADetallesDeTemporada(idSerie, season.season_number, NombreGrupo, detallesSerie.name)}
-                >
-                  <View style={styles.seasonContent}>
-                    <Text key={index} style={styles.seasonTitle}>
-                      {season.name}
-                    </Text>
-                    {posterSeason(season.poster_path)}
-                  </View>
-                </TouchableOpacity>
-              )
-            ))}
+            detallesSerie.seasons.map((season, index) => {
+              if (season.name !== 'Especiales' && season.name !== 'Specials') {
+                return (
+                  <TouchableOpacity
+                    key={index}
+                    style={styles.seasonItem}
+                    onPress={() => navegarADetallesDeTemporada(idSerie, season.season_number, NombreGrupo, detallesSerie.name)}
+                  >
+                    <View style={styles.seasonContent}>
+                      <Text style={styles.seasonTitle}>
+                        {season.name}
+                      </Text>
+                      {posterSeason(season.poster_path)}
+                    </View>
+                  </TouchableOpacity>
+                );
+              }
+              return null; // Return null for seasons that should not be displayed
+            })}
         </View>
         <View style={styles.actionContainer}>
           <TouchableOpacity onPress={toggleFavorite} style={styles.actionButton}>

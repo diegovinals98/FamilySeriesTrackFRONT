@@ -21,24 +21,21 @@ import {
 import { Dropdown } from 'react-native-element-dropdown';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useUser } from '../../userContext.js';
-import { globalStyles } from '../../estilosGlobales.js';
+import { useUser } from '../userContext.js';
+import { globalStyles } from '../estilosGlobales.js';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
-import { sendPushNotification } from '../notificaciones.js';
-import groupIcon from '../../assets/people-group-solid.svg';
+import { sendPushNotification } from './notificaciones.js';
 // homeScreenStyles.js
-
 
 const windowHeight = Dimensions.get('window').height;
 
 const HomeScreen = () => {
   const navigation = useNavigation();
   const insets = useSafeAreaInsets();
-  const { user } = useUser();
+  const { user , setUser  } = useUser();
   const iniciales = user?.nombre ? `${user?.nombre.charAt(0)}${user?.apellidos.charAt(0)}` : '';
-
   const [cargando, setCargando] = useState(true);
   const [filtro, setFiltro] = useState('Todas');
   const [grupoInicialSeleccionado, setGrupoInicialSeleccionado] = useState(false);
@@ -51,7 +48,7 @@ const HomeScreen = () => {
   const [seriesDetalles, setSeriesDetalles] = useState([]);
   const [TodosGrupos, setTodosGrupos] = useState([]);
   const [value, setValue] = useState(null);
-  const [colorScheme, setColorScheme] = useState("dark");
+  const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme());
   const opcionesFiltro = [
     { label: 'Todas', value: 'Todas' },
     { label: 'Favoritas', value: 'Favoritas' },
@@ -59,6 +56,10 @@ const HomeScreen = () => {
     { label: 'Acabadas', value: 'Acabadas' },
     { label: 'Pendientes', value: 'Pendientes' }
   ];
+
+  
+console.log(user.idioma);  
+
 
   useFocusEffect(
     React.useCallback(() => {
@@ -68,8 +69,8 @@ const HomeScreen = () => {
     }, [grupoInicialSeleccionado])
   );
 
-   // Efecto para manejar la navegación cuando se recibe una notificación
-   useEffect(() => {
+  // Efecto para manejar la navegación cuando se recibe una notificación
+  useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('Notification response data:', response.notification.request.content.data);
       const tipo  = response.notification.request.content.data.tipo;
@@ -99,17 +100,17 @@ const HomeScreen = () => {
   useEffect(() => {
     llamarAGrupos();
     obtenerSeries();
-    
+    obtenerIdioma();
   }, [refrescar]);
 
   useEffect(() => {
-
     comprobarApariencia();
     registerForPushNotificationsAsync();
+    obtenerIdioma();
   }, []);
 
   const comprobarApariencia = () => {
-    //setColorScheme(Appearance.getColorScheme());
+    setColorScheme(Appearance.getColorScheme());
     if (colorScheme === 'dark') {
       console.log("El dispositivo es oscuro");
     } else {
@@ -122,6 +123,7 @@ const HomeScreen = () => {
     resetearBusqueda();
     setRefrescar(prev => !prev);
     obtenerSeries();
+    obtenerIdioma();
     setRefrescando(false);
   }, [value, idelegido, filtro]);
 
@@ -143,12 +145,19 @@ const HomeScreen = () => {
     }
   };
 
+  const obtenerIdioma = async () => {
+    try {
+      const response = await fetch(`https://backendapi.familyseriestrack.com/get-user/${user.id}`);
+      const json = await response.json();
+      setUser({ ...user, idioma: json.usuario.idioma });
+    } catch (error) {
+      console.error('Error al obtener el idioma:', error);
+    }
+  };
+
   function handleRegistrationError(errorMessage) {
     alert(errorMessage);
-    //throw new Error(errorMessage);
   }
-
-
 
   async function registerForPushNotificationsAsync() {
     console.log('Iniciando registerForPushNotificationsAsync');
@@ -193,10 +202,8 @@ const HomeScreen = () => {
             projectId,
           })
         ).data;
-        console.log('Token de push obtenido:', pushTokenString);;
+        console.log('Token de push obtenido:', pushTokenString);
         console.log('Para el usuario :', user.id);
-        // TODO: Guardar el token en el servidor, junto con el ID del usuario
-        // Añadir en el backend en la tabla de tokens el token, el ID del usuario
         try {
           const response = await fetch('https://backendapi.familyseriestrack.com/registrar-token-notificacion', {
             method: 'POST',
@@ -259,7 +266,7 @@ const HomeScreen = () => {
         return;
       }
       Promise.all(seriesIds.map(serieID =>
-        fetch(`https://api.themoviedb.org/3/tv/${serieID}?api_key=c51082efa7d62553e4c05812ebf6040e&language=es-ES`)
+        fetch(`https://api.themoviedb.org/3/tv/${serieID}?api_key=c51082efa7d62553e4c05812ebf6040e&language=${user.idioma}`)
           .then(response => response.json())
       )).then(seriesDetalles => {
         let seriesFiltradas = seriesDetalles;
@@ -302,7 +309,7 @@ const HomeScreen = () => {
   };
 
   const buscarSeries = async () => {
-    const apiURL = `https://api.themoviedb.org/3/search/tv?api_key=c51082efa7d62553e4c05812ebf6040e&language=es-ES&page=1&query=${query}&include_adult=false`;
+    const apiURL = `https://api.themoviedb.org/3/search/tv?api_key=c51082efa7d62553e4c05812ebf6040e&language=${user.idioma}&page=1&query=${query}&include_adult=false`;
 
     try {
       const response = await fetch(apiURL);
@@ -385,6 +392,7 @@ const HomeScreen = () => {
     navigation.navigate('Estadisticas', { idUsuario });
   };
 
+ 
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#121212' : '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
@@ -400,12 +408,12 @@ const HomeScreen = () => {
               style={[colorScheme === 'dark' ? darkStyles.buttonGroup : styles.buttonGroup, isFocus && { borderColor: 'blue' }]}
               placeholderStyle={colorScheme === 'dark' ? darkStyles.buttonText : styles.buttonText}
               selectedTextStyle={colorScheme === 'dark' ? darkStyles.selectedTextStyle : styles.selectedTextStyle}
-              blurRadius={10}
+              blurRadius={15}
               containerStyle={{ backgroundColor: colorScheme === 'dark' ? '#333' : '#f0f0f0', borderRadius: 15, borderWidth: 1, borderColor: '#6666ff' }}
               iconStyle={colorScheme === 'dark' ? darkStyles.iconStyle : styles.iconStyle}
               data={TodosGrupos}
               labelField="Nombre_grupo"
-              valueField={value}
+              valueField="Nombre_grupo"
               placeholder={value}
               value={value}
               maxHeight={500}
@@ -419,17 +427,14 @@ const HomeScreen = () => {
                 setIsFocus(false);
                 onRefresh();
               }}
-              renderLeftIcon={() => (
-                <>
-                  <Text style={colorScheme === 'dark' ? darkStyles.buttonText : styles.buttonText}>{value}</Text>
-                </>
-              )}
             />
 
             <TouchableOpacity style={colorScheme === 'dark' ? darkStyles.circle : styles.circle} onPress={() => anadirGrupo()}>
               <Text style={colorScheme === 'dark' ? darkStyles.initials : styles.initials}>+</Text>
             </TouchableOpacity>
           </View>
+
+     
 
           <View style={colorScheme === 'dark' ? darkStyles.searchContainer : styles.searchContainer}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -595,6 +600,18 @@ export const styles = StyleSheet.create({
     fontSize: 18,
     marginRight: 5,
   },
+  recommendButton: {
+    backgroundColor: '#4A90E2',
+    padding: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  recommendButtonText: {
+    color: 'white',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
   dropdownIcon: {
     color: '#4A90E2',
     fontSize: 18,
@@ -738,210 +755,5 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     width: '40%',
-  }
-});
-
-export const darkStyles = StyleSheet.create({
-  container: {
-    alignItems: 'center',
-    flex: 1,
-    backgroundColor: '#121212',
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    width: '100%',
-    padding: '2%',
-  },
-  circle: {
-    aspectRatio: 1,
-    borderRadius: 1000,
-    backgroundColor: '#4A90E2',
-    alignItems: 'center',
-    marginRight: '1%',
-    marginLeft: '1%',
-    flex: 1,
-    justifyContent: 'center',
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  initials: {
-    fontSize: 28,
-    color: 'white',
-    fontWeight: 'bold',
-  },
-  buttonGroup: {
-    height: '100%',
-    flexDirection: 'row',
-    backgroundColor: '#333',
-    borderRadius: 50,
-    justifyContent: 'center',
-    alignItems: 'center',
-    flex: 4,
-    justifyContent: 'center',
-    padding: 5,
-    borderColor: '#4A90E2',
-    borderWidth: 1,
-  },
-  buttonText: {
-    color: '#4A90E2',
-    fontWeight: 'bold',
-    fontSize: 18,
-    marginRight: 5,
-  },
-  dropdownIcon: {
-    color: '#4A90E2',
-    fontSize: 18,
-  },
-  item: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#444',
-  },
-  itemText: {
-    textAlign: 'center',
-    fontSize: 16,
-    color: '#fff',
-  },
-  serieTitle: {
-    marginTop: '5%',
-    fontSize: 14,
-    fontWeight: 'bold',
-    color: '#4A90E2',
-    marginBottom: '1%',
-    textAlign: 'center',
-    paddingHorizontal: 10,
-  },
-  icon: {
-    marginRight: 5,
-  },
-  placeholderStyle: {
-    fontSize: 16,
-    color: '#888',
-  },
-  selectedTextStyle: {
-    fontSize: 16,
-    textAlign: 'center',
-    color: '#fff',
-  },
-  iconStyle: {
-    width: 20,
-    height: 20,
-  },
-  poster: {
-    height: windowHeight * 0.20,
-    resizeMode: 'contain',
-    borderRadius: 10,
-  },
-  serieDetailContainer: {
-    width: '33%',
-    padding: 10,
-    flexDirection: 'column',
-  },
-  searchInput: {
-    flex: 1,
-    borderWidth: 1,
-    borderColor: '#444',
-    padding: '4%',
-    borderRadius: 8,
-    fontSize: 16,
-    backgroundColor: '#333',
-    color: '#fff',
-  },
-  searchContainer: {
-    width: '90%',
-    flexDirection: 'column',
-    marginTop: '2%',
-  },
-  flatList: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#444',
-    backgroundColor: '#222'
-  },
-  textoBuscadas: {
-    margin: '5%',
-    textAlign: 'center',
-    fontSize: 14,
-    color: '#fff',
-  },
-  editarGrupoBoton: {
-    backgroundColor: '#4A90E2',
-    padding: '2%',
-    margin: '2%',
-    alignItems: 'center',
-    borderRadius: 10,
-    shadowColor: '#fff',
-    shadowOffset: { width: 0, height: '0.5%' },
-    shadowOpacity: 0.25,
-    shadowRadius: 10,
-    elevation: '1.25%',
-  },
-  editarGrupoTexto: {
-    color: 'white',
-  }, 
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#121212',
-    marginTop: '10%',
-  },
-  loadingText: {
-    fontSize: 18,
-    color: '#fff',
-    marginTop: 10,
-  },
-  dropdownIcon: {
-    paddingRight: '3%',
-    width: 30,
-    height: 30,
-    resizeMode: 'contain', 
-  },
-  filterContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    marginBottom: 10,
-    backgroundColor: '#333',
-    borderRadius: 20,
-    padding: 5,
-  },
-  filterButton: {
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 15,
-    backgroundColor: '#222',
-  },
-  filterButtonActive: {
-    backgroundColor: '#4A90E2',
-  },
-  filterButtonText: {
-    color: '#fff',
-    fontWeight: 'bold',
-  },
-  filterButtonTextActive: {
-    color: '#fff',
-  },
-  filterDropdown: {
-    backgroundColor: '#222',
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#444',
-  },
-  itemTextStyle: {
-    fontSize: 16,
-    textAlign: 'left',
-    color: '#fff',
-  },
-  dropdownContainerStyle: {
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: '#444',
-    width: '40%',
-    backgroundColor: '#222',
   }
 });

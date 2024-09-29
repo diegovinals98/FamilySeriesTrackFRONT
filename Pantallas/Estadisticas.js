@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, ScrollView, StyleSheet, Image, ActivityIndicator, TouchableOpacity, useColorScheme } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useUser } from '../userContext.js';
 
 const Estadisticas = () => {
   const route = useRoute();
@@ -16,7 +17,7 @@ const Estadisticas = () => {
   const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
   const baseImageUrl = 'https://image.tmdb.org/t/p/w92';
   let colorScheme = useColorScheme();
-  colorScheme = 'dark';
+  const { user } = useUser();
   const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -65,7 +66,7 @@ const Estadisticas = () => {
 
   const obtenerSerieData = async (serieId) => {
     try {
-      const response = await fetch(`https://api.themoviedb.org/3/tv/${serieId}?api_key=${apiKey}&language=es-ES`);
+      const response = await fetch(`https://api.themoviedb.org/3/tv/${serieId}?api_key=${apiKey}&language=${user?.idioma}`);
       const data = await response.json();
       return { id: serieId, name: data.name, posterPath: data.poster_path };
     } catch (error) {

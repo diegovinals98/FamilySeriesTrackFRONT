@@ -26,7 +26,7 @@ const AnadirGrupo = () => {
   const [inputsUsuarios, setInputsUsuarios] = useState([{ key: 0, value: '' }]);
   const { user } = useUser();
   let colorScheme = useColorScheme();
-  colorScheme = 'dark';
+  
   const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   useEffect(() => {

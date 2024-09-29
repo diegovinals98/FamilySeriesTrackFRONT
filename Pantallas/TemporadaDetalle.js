@@ -4,7 +4,6 @@ import { useUser } from '../userContext.js';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { sendPushNotification } from '../Pantallas/notificaciones.js';
-
 const DetallesDeTemporada = ({ route }) => {
   const [idSerie, setidSerie] = useState(route.params.idSerie);
   const [numeroTemporada, setnumeroTemporada] = useState(route.params.NumeroTemporada);
@@ -16,12 +15,12 @@ const DetallesDeTemporada = ({ route }) => {
   const [miembrosGrupo, setMiembrosGrupo] = useState([]);
   const { user } = useUser();
   let colorScheme = useColorScheme();
-  colorScheme = 'dark';
+
 
   const obtenerCapitulosVistos = async () => {
     try {
       const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
-      const url = `https://api.themoviedb.org/3/tv/${idSerie}/season/${numeroTemporada}?api_key=${apiKey}&language=es-ES`;
+      const url = `https://api.themoviedb.org/3/tv/${idSerie}/season/${numeroTemporada}?api_key=${apiKey}&language=${user.idioma}`;
 
       const response = await fetch(url);
       const data = await response.json();

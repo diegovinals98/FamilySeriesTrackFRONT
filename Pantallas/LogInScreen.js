@@ -65,7 +65,7 @@ const LogInScreen = () => {
 
       let json = await response.json();
       const storedHashedPassword = json.hashPassword;
-
+      console.log("Json del login", json.usuario);
       if (storedHashedPassword === hashedPassword) {
         setUser({
           id: json.usuario.Id,
@@ -73,6 +73,7 @@ const LogInScreen = () => {
           apellidos: json.usuario.Apellidos,
           usuario: json.usuario.Usuario,
           contraseña: json.usuario.Contraseña,
+          idioma: json.usuario.idioma,
         });
 
         const deviceId = await getDeviceId();
@@ -199,6 +200,14 @@ const LogInScreen = () => {
             disabled={isInputFocused}
           >
             <Text style={[styles.buttonText, styles.buttonOutlineText]}>Volver</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.button, styles.buttonOutline, isInputFocused && { opacity: 0.3 }]}
+            onPress={() => navigation.navigate('Recuperar Contrasena')}
+            disabled={isInputFocused}
+          >
+            <Text style={[styles.buttonText, styles.buttonOutlineText]}>Recuperar Contraseña</Text>
           </TouchableOpacity>
         </View>
       </TouchableWithoutFeedback>

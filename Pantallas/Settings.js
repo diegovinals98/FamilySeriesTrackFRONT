@@ -211,6 +211,7 @@ const Settings = () => {
         placeholder={placeholder}
         placeholderTextColor={focusedInput === placeholder ? "#999" : "#ccc"}
         secureTextEntry={secureTextEntry}
+        autoCapitalize="none"
         onFocus={() => {
           setFocusedInput(placeholder);
           setIsInputFocused(true); // Establecer el estado a verdadero

@@ -77,7 +77,7 @@ const Calendario = () => {
         }
 
         Promise.all(seriesIds.map(serieID => 
-          fetch(`https://api.themoviedb.org/3/tv/${serieID}?api_key=c51082efa7d62553e4c05812ebf6040e&language=es-ES&append_to_response=season/1,season/2,season/3,season/4,season/5`)
+          fetch(`https://api.themoviedb.org/3/tv/${serieID}?api_key=c51082efa7d62553e4c05812ebf6040e&language=${user?.idioma}&append_to_response=season/1,season/2,season/3,season/4,season/5`)
             .then(response => response.json())
         )).then(seriesDetalles => {
           // Procesar y ordenar los episodios futuros

@@ -32,7 +32,7 @@ const EditarGrupo = ({ route }) => {
   const [newUserName, setNewUserName] = useState('');
 
   let colorScheme = useColorScheme();
-  colorScheme = 'dark';
+  
   const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   useEffect(() => {

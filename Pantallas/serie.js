@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, Image, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity, useColorScheme } from 'react-native';
 import { useRoute, useNavigation } from '@react-navigation/native';
+import { useUser } from '../userContext.js';
 
 const Serie = () => {
   const route = useRoute();
@@ -9,12 +10,12 @@ const Serie = () => {
   const [serieData, setSerieData] = useState(null);
   const [credits, setCredits] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const { user } = useUser();
   const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
   const baseImageUrl = 'https://image.tmdb.org/t/p/w500';
 
   let colorScheme = useColorScheme();
-  colorScheme = 'dark';
+  
   const styles = colorScheme === 'dark' ? darkStyles : lightStyles;
 
   useEffect(() => {
@@ -26,7 +27,7 @@ const Serie = () => {
 
   const fetchSerieData = async () => {
     try {
-      const response = await fetch(`https://api.themoviedb.org/3/tv/${serieId}?api_key=${apiKey}&language=es-ES`);
+      const response = await fetch(`https://api.themoviedb.org/3/tv/${serieId}?api_key=${apiKey}&language=${user?.idioma}`);
       const data = await response.json();
       setSerieData(data);
       setLoading(false);
@@ -41,7 +42,7 @@ const Serie = () => {
 
   const fetchCredits = async () => {
     try {
-      const response = await fetch(`https://api.themoviedb.org/3/tv/${serieId}/credits?api_key=${apiKey}&language=es-ES`);
+      const response = await fetch(`https://api.themoviedb.org/3/tv/${serieId}/credits?api_key=${apiKey}&language=${user?.idioma}`);
       const data = await response.json();
       setCredits(data);
     } catch (error) {
@@ -75,7 +76,6 @@ const Serie = () => {
       <View style={styles.infoContainer}>
         <Text style={styles.title}>{serieData.name}</Text>
         <Text style={styles.overview}>{serieData.overview}</Text>
-        
         <View style={styles.detailsContainer}>
           <Text style={styles.detailText}>Puntuación: {serieData.vote_average.toFixed(1)}/10</Text>
           <Text style={styles.detailText}>Votos totales: {serieData.vote_count}</Text>

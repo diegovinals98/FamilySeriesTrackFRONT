@@ -4,7 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { UserProvider } from './userContext.js';
 import WelcomeScreen from './Pantallas/Welcome/WelcomeScreen.js';
 import LogInScreen from './Pantallas/LogInScreen.js';
-import HomeScreen from './Pantallas/Home Screen/HomeScreen.js';
+import HomeScreen from './Pantallas/HomeScreen.js';
 import SignUp from './Pantallas/SignUp.js';
 import Settings from './Pantallas/Settings.js';
 import AnadirGrupo from './Pantallas/AnadirGrupo.js';
@@ -14,8 +14,9 @@ import EditarGrupo from './Pantallas/EditarGrupo.js';
 import Calendario from './Pantallas/Calendario.js';
 import ComentariosSerie from './Pantallas/ComentariosSerie.js';
 import Estadisticas from './Pantallas/Estadisticas.js';
-import Not from './Pantallas/pruebsNotf.tsx';
 import Serie from './Pantallas/serie.js';
+import RecuperarContrasena from './Pantallas/RecuperarContrasena.js';
+import RecuperarContrasena2 from './Pantallas/RecuperarContrasena2.js';
 import { useColorScheme } from 'react-native';
 
 const Stack = createNativeStackNavigator();
@@ -47,7 +48,6 @@ function App() {
               title: '',
             }}
           />
-          <Stack.Screen name="notificacoines" options={{ headerShown: false }} component={Not} />
           <Stack.Screen name="SignUp" options={{ headerShown: false }} component={SignUp} />
           <Stack.Screen name="Settings" options={{ title: 'Ajustes' }} component={Settings} />
           <Stack.Screen name="Añadir Grupo" options={{ title: 'Crear Grupo' }} component={AnadirGrupo} />
@@ -76,6 +76,8 @@ function App() {
               title: route.params?.serieData?.name || 'Serie',
             })}
           />
+          <Stack.Screen name="Recuperar Contrasena" component={RecuperarContrasena} options={{ headerShown: false, title: 'Recuperar Contraseña' }}/>
+          <Stack.Screen name="Recuperar Contrasena2" component={RecuperarContrasena2} options={{ headerShown: false, title: 'Recuperar Contraseña' }}/>
         </Stack.Navigator>
       </NavigationContainer>
     </UserProvider>
