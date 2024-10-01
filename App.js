@@ -23,7 +23,6 @@ const Stack = createNativeStackNavigator();
 
 function App() {
   let colorScheme = useColorScheme();
-  colorScheme = 'dark'; // qutar esta linea cuando este todo listo
 
   return (
     <UserProvider>

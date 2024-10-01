@@ -58,11 +58,26 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     }
   };
 
+  const obtenerSiEsFavorito = async (idSerie, idUsuario) => {
+    try {
+      const response = await fetch(`https://backendapi.familyseriestrack.com/existe-favorito/${idUsuario}/${idSerie}`);
+      const data = await response.json();
+      if (data.exists) {
+        setIsFavorite(true);
+      } else {
+        setIsFavorite(false);
+      }
+    } catch (error) {
+      console.error('Error al obtener si es favorito:', error);
+    }
+  };
+
   useFocusEffect(
     useCallback(() => {
       obtenerDetallesSerie(idSerie);
       obtenerUsuariosViendoSerie(NombreGrupo, idSerie);
       obtenerWatchProviders(idSerie); 
+      obtenerSiEsFavorito(idSerie, user.id);
     }, [idSerie, NombreGrupo])
   );
 
@@ -148,10 +163,42 @@ const PantallaDeDetalles = ({ route, navigation }) => {
       Alert.alert('Error', 'No hay una aplicación disponible para esta plataforma.');
     }
   };
-
-  const toggleFavorite = () => {
+  const toggleFavorite = async () => {
     setIsFavorite(!isFavorite);
-    // Aquí puedes agregar la lógica para guardar el estado de favorito en el backend
+    if (!isFavorite) {
+      try {
+        // Aquí puedes agregar la lógica para guardar el estado de favorito en el backend
+        const response = await fetch('https://backendapi.familyseriestrack.com/anadir-favorito', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ idUsuario: user.id, idSerie: idSerie }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al añadir favorito');
+        }
+      } catch (error) {
+        console.error('Error en toggleFavorite:', error);
+      }
+    } else {
+      try {
+        const response = await fetch('https://backendapi.familyseriestrack.com/eliminar-favorito', {
+          method: 'DELETE',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ idUsuario: user.id, idSerie: idSerie }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error al eliminar favorito');
+        }
+      } catch (error) {
+        console.error('Error en toggleFavorite:', error);
+      }
+    }
   };
 
   const compartirSerie = async () => {

@@ -27,7 +27,6 @@ import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
 import { sendPushNotification } from './notificaciones.js';
-// homeScreenStyles.js
 
 const windowHeight = Dimensions.get('window').height;
 
@@ -49,6 +48,7 @@ const HomeScreen = () => {
   const [TodosGrupos, setTodosGrupos] = useState([]);
   const [value, setValue] = useState(null);
   const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme());
+  const [seriesFavoritas, setSeriesFavoritas] = useState([]);
   const opcionesFiltro = [
     { label: 'Todas', value: 'Todas' },
     { label: 'Favoritas', value: 'Favoritas' },
@@ -57,9 +57,7 @@ const HomeScreen = () => {
     { label: 'Pendientes', value: 'Pendientes' }
   ];
 
-  
-console.log(user.idioma);  
-
+  console.log(user.idioma);  
 
   useFocusEffect(
     React.useCallback(() => {
@@ -69,14 +67,24 @@ console.log(user.idioma);
     }, [grupoInicialSeleccionado])
   );
 
-  // Efecto para manejar la navegación cuando se recibe una notificación
+  const obtenerSeriesFavoritas = async () => {
+    try {
+      const response = await fetch(`https://backendapi.familyseriestrack.com/series-favoritas/${user.id}`);
+      const data = await response.json();
+      setSeriesFavoritas(data);
+    } catch (error) {
+      console.error('Error al obtener las series favoritas:', error);
+    }
+
+    console.log('Series favoritas:', seriesFavoritas);
+  };
+
   useEffect(() => {
     const subscription = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('Notification response data:', response.notification.request.content.data);
       const tipo  = response.notification.request.content.data.tipo;
       if (tipo === 'comentario') {
         const { nombreGrupo, idSerie, nombreSerie } = response.notification.request.content.data;
-        // Reset badge number
         Notifications.setBadgeCountAsync(0);
         navigation.navigate('Comentarios Serie', { NombreGrupo: nombreGrupo, idSerie: idSerie, nombreSerie: nombreSerie });
       } else if (tipo === 'visualizacion') {
@@ -84,38 +92,55 @@ console.log(user.idioma);
         Notifications.setBadgeCountAsync(0);
         navigation.navigate('Detalles Serie', { idSerie: idSerie, NombreGrupo: nombreGrupo });
       }
-      
     });
     return () => {
       subscription.remove();
     };
   }, []);
 
+
+
   useEffect(() => {
-    if (idelegido) {
-      obtenerSeries();
-    }
+    const fetchData = async () => {
+      await obtenerSeriesFavoritas();
+      await new Promise(resolve => setTimeout(resolve, 10)); // Retardo de 1 segundo
+      await obtenerSeries();
+    };
+    fetchData();
   }, [idelegido, filtro]);
 
   useEffect(() => {
     llamarAGrupos();
-    obtenerSeries();
-    obtenerIdioma();
+    const fetchData = async () => {
+      await obtenerSeriesFavoritas();
+      await new Promise(resolve => setTimeout(resolve, 10)); // Retardo de 1 segundo
+      await obtenerSeries();
+    };
+    fetchData();
   }, [refrescar]);
 
   useEffect(() => {
     comprobarApariencia();
     registerForPushNotificationsAsync();
-    obtenerIdioma();
+    const fetchData = async () => {
+      await obtenerSeriesFavoritas();
+      await new Promise(resolve => setTimeout(resolve, 10)); // Retardo de 1 segundo
+      await obtenerSeries();
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      comprobarApariencia();
+    }, 100); // Check every 5 seconds
+
+    return () => clearInterval(interval); // Cleanup on unmount
   }, []);
 
   const comprobarApariencia = () => {
     setColorScheme(Appearance.getColorScheme());
-    if (colorScheme === 'dark') {
-      console.log("El dispositivo es oscuro");
-    } else {
-      console.log("El dispositivo es claro");
-    }
+    
   }
 
   const onRefresh = React.useCallback(() => {
@@ -270,7 +295,9 @@ console.log(user.idioma);
           .then(response => response.json())
       )).then(seriesDetalles => {
         let seriesFiltradas = seriesDetalles;
-        if (filtro !== 'Todas') {
+        if (filtro === 'Favoritas') {
+          seriesFiltradas = seriesDetalles.filter(serie => seriesFavoritas.seriesIds.includes(serie.id));
+        } else if (filtro !== 'Todas') {
           seriesFiltradas = seriesDetalles.filter(serie => serie.estado === filtro);
         }
         setSeriesDetalles(seriesFiltradas);
@@ -392,8 +419,6 @@ console.log(user.idioma);
     navigation.navigate('Estadisticas', { idUsuario });
   };
 
- 
-
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#121212' : '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
       <StatusBar />
@@ -411,13 +436,14 @@ console.log(user.idioma);
               blurRadius={15}
               containerStyle={{ backgroundColor: colorScheme === 'dark' ? '#333' : '#f0f0f0', borderRadius: 15, borderWidth: 1, borderColor: '#6666ff' }}
               iconStyle={colorScheme === 'dark' ? darkStyles.iconStyle : styles.iconStyle}
+              activeColor={colorScheme === 'dark' ? '#2C2C2C' : '#E8F0FE'}
               data={TodosGrupos}
               labelField="Nombre_grupo"
               valueField="Nombre_grupo"
               placeholder={value}
               value={value}
               maxHeight={500}
-              itemTextStyle={{ textAlign: 'left', color: colorScheme === 'dark' ? '#fff' : '#000' }}
+              itemTextStyle={{ textAlign: 'left', color: colorScheme === 'dark' ?  '#fff' : '#000' }}
               onFocus={() => setIsFocus(true)}
               onBlur={() => setIsFocus(false)}
               onChange={item => {
@@ -433,8 +459,6 @@ console.log(user.idioma);
               <Text style={colorScheme === 'dark' ? darkStyles.initials : styles.initials}>+</Text>
             </TouchableOpacity>
           </View>
-
-     
 
           <View style={colorScheme === 'dark' ? darkStyles.searchContainer : styles.searchContainer}>
             <View style={{ flexDirection: 'row', alignItems: 'center' }}>
@@ -478,7 +502,7 @@ console.log(user.idioma);
             ) : null}
           </View>
 
-          <View style={{ flexDirection: 'row', height: windowHeight * 0.68 }}>
+          <View style={{ flexDirection: 'row', height: windowHeight * 0.68, marginTop: '2%', borderRadius: 10 }}>
             <ScrollView refreshControl={
               <RefreshControl
                 refreshing={refrescando}
@@ -548,7 +572,6 @@ console.log(user.idioma);
 
 export default HomeScreen;
 
-
 export const styles = StyleSheet.create({
   container: {
     alignItems: 'center',
@@ -589,7 +612,6 @@ export const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     flex: 4,
-    justifyContent: 'center',
     padding: 5,
     borderColor: '#4A90E2',
     borderWidth: 1,
@@ -642,7 +664,7 @@ export const styles = StyleSheet.create({
     color: '#aaa',
   },
   selectedTextStyle: {
-    fontSize: 16,
+    fontSize: 20,
     textAlign: 'center',
   },
   iconStyle: {
@@ -653,6 +675,8 @@ export const styles = StyleSheet.create({
     height: windowHeight * 0.20,
     resizeMode: 'contain',
     borderRadius: 10,
+
+
   },
   serieDetailContainer: {
     width: '33%',
@@ -755,5 +779,221 @@ export const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: '#ddd',
     width: '40%',
-  }
+  },
+});
+
+export const darkStyles = StyleSheet.create({
+  container: {
+    alignItems: 'center',
+    flex: 1,
+    backgroundColor: '#121212', // Changed to dark background
+  },
+  row: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    width: '100%',
+    padding: '2%',
+  },
+  circle: {
+    aspectRatio: 1,
+    borderRadius: 1000,
+    backgroundColor: '#1E1E1E', // Changed to dark background
+    alignItems: 'center',
+    marginRight: '1%',
+    marginLeft: '1%',
+    flex: 1,
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    elevation: 5,
+  },
+  initials: {
+    fontSize: 28,
+    color: '#FFFFFF', // Changed to white for better contrast
+    fontWeight: 'bold',
+  },
+  buttonGroup: {
+    height: '100%',
+    flexDirection: 'row',
+    backgroundColor: '#2C2C2C', // Changed to dark background
+    borderRadius: 50,
+    justifyContent: 'center',
+    alignItems: 'center',
+    flex: 4,
+    padding: 5,
+    borderColor: '#4A90E2',
+    borderWidth: 1,
+  },
+  buttonText: {
+    color: '#FFFFFF', // Changed to white for better contrast
+    fontWeight: 'bold',
+    fontSize: 18,
+    marginRight: 5,
+  },
+  recommendButton: {
+    backgroundColor: '#4A90E2',
+    padding: 10,
+    borderRadius: 10,
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  recommendButtonText: {
+    color: '#FFFFFF', // Changed to white for better contrast
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  dropdownIcon: {
+    color: '#4A90E2',
+    fontSize: 18,
+  },
+  item: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#444', // Changed to darker color
+  },
+  itemText: {
+    textAlign: 'center',
+    fontSize: 16,
+    color: '#FFFFFF', // Changed to white for better contrast
+  },
+  serieTitle: {
+    marginTop: '5%',
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#4A90E2',
+    marginBottom: '1%',
+    textAlign: 'center',
+    paddingHorizontal: 10,
+  },
+  icon: {
+    marginRight: 5,
+  },
+  placeholderStyle: {
+    fontSize: 16,
+    color: '#FFFFFF', // Changed to white for better visibility
+  },
+  selectedTextStyle: {
+    fontSize: 20,
+    textAlign: 'center',
+    color: '#FFFFFF', // Changed to white for better visibility
+  },
+  iconStyle: {
+    width: 20,
+    height: 20,
+  },
+  poster: {
+    height: windowHeight * 0.20,
+    resizeMode: 'contain',
+    borderRadius: 10,
+  },
+  serieDetailContainer: {
+    width: '33%',
+    padding: 10,
+    flexDirection: 'column',
+  },
+  searchInput: {
+    flex: 1,
+    borderWidth: 1,
+    borderColor: '#444', // Changed to darker color
+    padding: '4%',
+    borderRadius: 8,
+    fontSize: 16,
+    backgroundColor: '#2C2C2C', // Changed to dark background
+    color: '#FFFFFF', // Changed to white for better contrast
+  },
+  searchContainer: {
+    width: '90%',
+    flexDirection: 'column',
+    marginTop: '2%',
+  },
+  flatList: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#444', // Changed to darker color
+    backgroundColor: '#1E1E1E', // Changed to dark background
+  },
+  textoBuscadas: {
+    margin: '5%',
+    textAlign: 'center',
+    fontSize: 14,
+    color: '#FFFFFF', // Changed to white for better contrast
+  },
+  editarGrupoBoton: {
+    backgroundColor: '#4A90E2',
+    padding: '3%',
+    margin: '1%',
+    alignItems: 'center',
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: '0.5%' },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: '1.25%',
+  },
+  editarGrupoTexto: {
+    color: 'white',
+  }, 
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#1E1E1E', // Changed to dark background
+    marginTop: '10%',
+  },
+  loadingText: {
+    fontSize: 18,
+    color: '#FFFFFF', // Changed to white for better contrast
+    marginTop: 10,
+  },
+  dropdownIcon: {
+    paddingRight: '3%',
+    width: 30,
+    height: 30,
+    resizeMode: 'contain', 
+  },
+  filterContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: 10,
+    backgroundColor: '#2C2C2C', // Changed to dark background
+    borderRadius: 20,
+    padding: 5,
+  },
+  filterButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 16,
+    borderRadius: 15,
+    backgroundColor: '#4A90E2', // Added background color for better visibility
+  },
+  filterButtonActive: {
+    backgroundColor: '#4A90E2',
+  },
+  filterButtonText: {
+    color: '#FFFFFF', // Changed to white for better contrast
+    fontWeight: 'bold',
+  },
+  filterButtonTextActive: {
+    color: 'white',
+  },
+  filterDropdown: {
+    backgroundColor: '#2C2C2C', // Changed to dark background
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#444', // Changed to darker color
+  },
+  itemTextStyle: {
+    fontSize: 16,
+    textAlign: 'left',
+    color: '#FFFFFF', // Changed to white for better contrast
+  },
+  dropdownContainerStyle: {
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#444', // Changed to darker color
+    width: '40%',
+    backgroundColor: '#1E1E1E', // Changed to dark background for better readability
+  },
 });
