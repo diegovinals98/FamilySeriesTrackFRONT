@@ -119,20 +119,18 @@ const ComentariosSerie = () => {
         nombreSerie: nombreSerie,
         idSerie: idSerie,
         comentario: comentarioaEnviar,
-        respuestaA: comentarioAResponder, // Añadimos el comentario padre si existe
+        respuestaA: comentarioAResponder,
       };
       
-      // Intentamos enviar el comentario al servidor
       try {
         let response = await fetch(url, {
           method: 'POST',
           headers: {
-            'Content-Type': 'application/json',
+            'Content-Type': 'application/json; charset=utf-8',
           },
-          body: JSON.stringify(datosAEnviar), // Datos que se envían al servidor
+          body: JSON.stringify(datosAEnviar),
         });
     
-        // Verificamos si la respuesta del servidor es exitosa
         if (!response.ok) {
           throw new Error('Error al enviar el comentario');
         }

@@ -21,6 +21,7 @@ import * as Application from 'expo-application';
 import logoFST from '../assets/logoFST.png';
 import { Ionicons } from '@expo/vector-icons';
 import { BlurView } from 'expo-blur';
+import * as AppleAuthentication from 'expo-apple-authentication';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -100,6 +101,88 @@ const LogInScreen = () => {
       Alert.alert('Error de Conexión', 'Error al conectarse al servidor.');
     }
   }
+
+  const handleAppleSignIn = async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+      });
+
+      console.log("credenciales de Apple", JSON.stringify(credential, null, 2));
+
+      if (!credential || !credential.identityToken) {
+        console.error("No se obtuvieron credenciales válidas de Apple");
+        Alert.alert("Error", "No se pudo obtener la información de Apple. Por favor, intente de nuevo.");
+        return;
+      }
+
+      // Extract email from identityToken
+      const payload = JSON.parse(atob(credential.identityToken.split('.')[1]));
+      console.log("Payload del token de Apple", payload);
+
+      // Make a request to the backend with the identity token and email
+      if (payload.email_verified === true) {
+        let response = await fetch('https://backendapi.familyseriestrack.com/apple-login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            userId: payload.email,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Error en la respuesta del servidor');
+        }
+
+        let jsonApple = await response.json();
+        console.log("Json del login con Apple", JSON.stringify(jsonApple.usuario, null, 2));
+        if (jsonApple.usuario) {
+          setUser({
+            id: jsonApple.usuario.Id,
+            nombre: jsonApple.usuario.Nombre,
+            apellidos: jsonApple.usuario.Apellidos,
+            usuario: jsonApple.usuario.Usuario,
+            contraseña: jsonApple.usuario.Contraseña,
+            idioma: jsonApple.usuario.idioma,
+          });
+
+        const deviceId = await getDeviceId();
+        try {
+          await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: jsonApple.usuario.Id, deviceId }),
+          });
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+            });
+          } catch (error) {
+            console.error('Error al insertar el Device ID y User ID:', error);
+          }
+        } else {
+          throw new Error('El email no está verificado');
+        }
+
+      } else {
+        Alert.alert('Error', 'No hay Apple ID asociado. Cree una cuenta con Apple.');
+      }
+
+    } catch (error) {
+      if (error.code === 'ERR_CANCELED') {
+        // El usuario canceló el inicio de sesión con Apple
+      } else {
+        Alert.alert('Error', 'No hay Apple ID asociado. Cree una cuenta con Apple.');
+      }
+    }
+  };
 
   const animateInput = (toValue) => {
     Animated.spring(animatedValue, {
@@ -194,6 +277,16 @@ const LogInScreen = () => {
             <Text style={styles.buttonText}>Iniciar Sesión</Text>
           </TouchableOpacity>
 
+          {Platform.OS === 'ios' && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_IN}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={5}
+              style={[styles.appleButton, isInputFocused && { opacity: 0.3 }]}
+              onPress={handleAppleSignIn}
+            />
+          )}
+
           <TouchableOpacity
             style={[styles.button, styles.buttonOutline, isInputFocused && { opacity: 0.3 }]}
             onPress={() => navigation.goBack()}
@@ -282,6 +375,11 @@ const styles = StyleSheet.create({
   logo: {
     width: windowHeight * 0.3,
     height: windowHeight * 0.3,
+  },
+  appleButton: {
+    width: '80%',
+    height: 50,
+    marginVertical: 10,
   },
 });
 

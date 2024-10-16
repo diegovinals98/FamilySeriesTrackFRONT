@@ -15,6 +15,7 @@ export default function WelcomeScreen({ navigation }) {
   const { setUser } = useUser();
 
   useEffect(() => {
+    console.log("------------- WELCOME SCREEN -----------------");
     const fetchDeviceIdAndCheck = async () => {
       try {
         const deviceId = await getDeviceId();
@@ -32,7 +33,7 @@ export default function WelcomeScreen({ navigation }) {
   const getDeviceId = async () => {
     let deviceId;
     if (Platform.OS === 'android') {
-      deviceId = Application.getAndroidId();
+      deviceId = await Application.getAndroidId();
     } else if (Platform.OS === 'ios') {
       deviceId = await Application.getIosIdForVendorAsync();
     }

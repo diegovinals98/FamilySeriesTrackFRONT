@@ -5,6 +5,6 @@
   "minify": false,
   "urlRandomness": null,
   "https": false,
-  "scheme": "com.edgehealth.seriesdv",
+  "scheme": null,
   "devClient": false
 }

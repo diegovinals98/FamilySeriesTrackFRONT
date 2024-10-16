@@ -139,7 +139,7 @@ const AnadirGrupo = () => {
     <TouchableWithoutFeedback onPress={Keyboard.dismiss} accessible={false}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.container}>
-          <Text style={styles.titulo}>Añadir Grupo</Text>
+          <Text style={styles.titulo}>Crear Grupo</Text>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Nombre del Grupo</Text>

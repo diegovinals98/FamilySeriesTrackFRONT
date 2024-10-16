@@ -2,7 +2,7 @@
   "expo": {
     "name": "FamilySeriesTrack",
     "slug": "TestTFG",
-    "version": "1.5.6",
+    "version": "1.6.0",
     "orientation": "portrait",
     "icon": "./assets/logoFST.png",
     "userInterfaceStyle": "automatic",
@@ -24,7 +24,7 @@
         "backgroundColor": "#ffffff"
       },
       "package": "com.edgehealth.seriesdv",
-      "versionCode": 16
+      "versionCode": 18
     },
     "web": {
       "favicon": "./assets/favicon.png"
@@ -37,13 +37,14 @@
       "eas": {
         "projectId": "286b0202-4e1a-4aa8-810d-d9f42de76efe"
       }
-      
     },
     "notification": {
       "color": "#000000",
       "androidMode": "default",
       "androidCollapsedTitle": "#{unread_notifications} new notifications"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
     }
-
   }
 }

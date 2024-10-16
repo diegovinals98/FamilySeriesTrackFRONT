@@ -231,10 +231,7 @@ const Settings = () => {
       keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <LinearGradient
-          colors={['#4c669f', '#3b5998', '#192f6a']}
-          style={styles.container}
-        >
+        <View style={styles.container}>
           {isInputFocused && ( // Mostrar el fondo borroso si el input está enfocado
             <Animated.View style={styles.blurBackground} />
           )}
@@ -274,7 +271,7 @@ const Settings = () => {
               </TouchableOpacity>
             </View>
           </ScrollView>
-        </LinearGradient>
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -283,6 +280,7 @@ const Settings = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: '#1E1E1E', // Fondo oscuro
   },
   overlay: {
     ...StyleSheet.absoluteFillObject,

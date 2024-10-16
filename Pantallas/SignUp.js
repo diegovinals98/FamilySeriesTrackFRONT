@@ -4,7 +4,7 @@ import logoFST from '../assets/logoFST.png';
 import { useUser } from '../userContext.js'; // Importa el hook useUser
 import * as Crypto from 'expo-crypto';
 import { SafeAreaView } from "react-native";
-
+import * as Application from 'expo-application';
 import {
   View,
   Text,
@@ -19,9 +19,21 @@ import {
   KeyboardAvoidingView,
   Platform
 } from 'react-native';
+import * as AppleAuthentication from 'expo-apple-authentication';
+import * as Google from 'expo-google-app-auth';
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
+
+const getDeviceId = async () => {
+    let deviceId;
+    if (Platform.OS === 'android') {
+      deviceId = await Application.getAndroidId();
+    } else if (Platform.OS === 'ios') {
+      deviceId = await Application.getIosIdForVendorAsync();
+    }
+    return deviceId;
+  };
 
 // Componente SignUp para el registro de usuarios
 const SignUp = ({ navigation }) => {
@@ -67,6 +79,8 @@ const SignUp = ({ navigation }) => {
           Contraseña: hash
         };
 
+        
+
         let response = await fetch('https://backendapi.familyseriestrack.com/usuario', {
           method: 'POST',
           headers: {
@@ -84,6 +98,19 @@ const SignUp = ({ navigation }) => {
             usuario: usuario.Usuario,
             contraseña: usuario.Contraseña,
           });
+
+          const deviceId = await getDeviceId();
+          try {
+            await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ userId: json.usuario.Id, deviceId }),
+            });
+          } catch (error) {
+            console.error('Error al insertar el Device ID y User ID:', error);
+          }
           navigation.reset({
             index: 0,
             routes: [{ name: 'Home' }],
@@ -97,7 +124,162 @@ const SignUp = ({ navigation }) => {
       }
     }
   };
-  
+
+  const handleAppleSignIn = async () => {
+    try {
+      const credential = await AppleAuthentication.signInAsync({
+        requestedScopes: [
+          AppleAuthentication.AppleAuthenticationScope.FULL_NAME,
+          AppleAuthentication.AppleAuthenticationScope.EMAIL,
+        ],
+        state: 'reset_' + Date.now()
+      });
+
+      console.log("Credenciales de Apple completas:", JSON.stringify(credential, null, 2));
+
+      // Decodificar el token de identidad
+      const [header, payload] = credential.identityToken.split('.');
+      const decodedPayload = JSON.parse(atob(payload));
+      console.log("Token decodificado:", JSON.stringify(decodedPayload, null, 2));
+
+      // Generar un ID único para el usuario
+      const userId = generarIdUnico();
+
+      // Crear un objeto de usuario con los datos de Apple
+      const usuario = {
+        Id: userId,
+        Nombre: credential.fullName?.givenName || '',
+        Apellidos: credential.fullName?.familyName || '',
+        Usuario: credential.email || `apple_${credential.user}`,
+        Contraseña: credential.identityToken, // Usamos el token como "contraseña"
+      };
+      
+      console.log("datos de usuario de Apple", JSON.stringify(usuario, null, 2));
+      
+      // Enviar los datos a tu backend
+      let response = await fetch('https://backendapi.familyseriestrack.com/usuario', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(usuario)
+      });
+
+      let respuesta = await response.json();
+      if (respuesta.success == 1) {
+        setUser({
+          id: usuario.Id,
+          nombre: usuario.Nombre,
+          apellidos: usuario.Apellidos,
+          usuario: usuario.Usuario,
+          contraseña: usuario.Contraseña,
+        });
+
+        const deviceId = await getDeviceId();
+        try {
+          await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ userId: usuario.Id, deviceId }),
+          });
+        } catch (error) {
+          console.error('Error al insertar el Device ID y User ID:', error);
+        }
+
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      } else {
+        Alert.alert('Error', respuesta.message);
+      }
+    } catch (e) {
+      if (e.code === 'ERR_CANCELED') {
+        // handle that the user canceled the sign-in flow
+      } else {
+        // handle other errors
+        console.error('Error en el inicio de sesión con Apple:', e);
+        Alert.alert('Error', 'No se pudo iniciar sesión con Apple');
+      }
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      const { type, accessToken, user } = await Google.logInAsync({
+        iosClientId: 'YOUR_IOS_CLIENT_ID',
+        androidClientId: 'YOUR_ANDROID_CLIENT_ID',
+        scopes: ['profile', 'email'],
+      });
+
+      if (type === 'success') {
+        console.log("Credenciales de Google completas:", JSON.stringify(user, null, 2));
+
+        // Generar un ID único para el usuario
+        const userId = generarIdUnico();
+
+        // Crear un objeto de usuario con los datos de Google
+        const usuario = {
+          Id: userId,
+          Nombre: user.givenName || '',
+          Apellidos: user.familyName || '',
+          Usuario: user.email || `google_${user.id}`,
+          Contraseña: accessToken, // Usamos el token como "contraseña"
+        };
+        
+        console.log("datos de usuario de Google", JSON.stringify(usuario, null, 2));
+        
+        // Enviar los datos a tu backend
+        let response = await fetch('https://backendapi.familyseriestrack.com/usuario', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(usuario)
+        });
+
+        let respuesta = await response.json();
+        if (respuesta.success == 1) {
+          setUser({
+            id: usuario.Id,
+            nombre: usuario.Nombre,
+            apellidos: usuario.Apellidos,
+            usuario: usuario.Usuario,
+            contraseña: usuario.Contraseña,
+          });
+
+          const deviceId = await getDeviceId();
+          try {
+            await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({ userId: usuario.Id, deviceId }),
+            });
+          } catch (error) {
+            console.error('Error al insertar el Device ID y User ID:', error);
+          }
+
+          navigation.reset({
+            index: 0,
+            routes: [{ name: 'Home' }],
+          });
+        } else {
+          Alert.alert('Error', respuesta.message);
+        }
+      } else {
+        // El usuario canceló el inicio de sesión
+        console.log('Google Sign In was cancelled');
+      }
+    } catch (e) {
+      console.error('Error en el inicio de sesión con Google:', e);
+      Alert.alert('Error', 'No se pudo iniciar sesión con Google');
+    }
+  };
+
   return (
     <KeyboardAvoidingView
       behavior={ "padding"} 
@@ -165,6 +347,20 @@ const SignUp = ({ navigation }) => {
           <TouchableOpacity style={[globalStyles.button, globalStyles.buttonOutline]} onPress={volver}>
             <Text style={globalStyles.buttonText}>Volver</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
+            <Text style={styles.googleButtonText}>Crear cuenta con Google</Text>
+          </TouchableOpacity>
+
+          {Platform.OS === 'ios' && (
+            <AppleAuthentication.AppleAuthenticationButton
+              buttonType={AppleAuthentication.AppleAuthenticationButtonType.SIGN_UP}
+              buttonStyle={AppleAuthentication.AppleAuthenticationButtonStyle.BLACK}
+              cornerRadius={5}
+              style={styles.appleButton}
+              onPress={handleAppleSignIn}
+            />
+          )}
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
@@ -204,5 +400,22 @@ const styles = StyleSheet.create({
     color: 'red',
     marginBottom: 10,
     width: '80%',
+  },
+  appleButton: {
+    width: '80%',
+    height: 44,
+    marginTop: 10,
+  },
+  googleButton: {
+    width: '80%',
+    backgroundColor: '#4285F4',
+    padding: 10,
+    borderRadius: 5,
+    marginTop: 10,
+    alignItems: 'center',
+  },
+  googleButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
   },
 });

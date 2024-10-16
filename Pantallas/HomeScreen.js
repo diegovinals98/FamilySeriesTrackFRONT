@@ -26,7 +26,6 @@ import { globalStyles } from '../estilosGlobales.js';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
-import { sendPushNotification } from './notificaciones.js';
 
 const windowHeight = Dimensions.get('window').height;
 
@@ -314,7 +313,7 @@ const HomeScreen = () => {
   };
 
   const anadirGrupo = () => {
-    navigation.navigate('Añadir Grupo');
+    navigation.navigate('Anadir Grupo');
   };
 
   const poster = (path) => {

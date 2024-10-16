@@ -1,3 +1,4 @@
+console.log("Iniciando App.js");
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -19,16 +20,20 @@ import RecuperarContrasena from './Pantallas/RecuperarContrasena.js';
 import RecuperarContrasena2 from './Pantallas/RecuperarContrasena2.js';
 import { useColorScheme } from 'react-native';
 
-const Stack = createNativeStackNavigator();
+console.log("Imports completados");
 
+const Stack = createNativeStackNavigator();
+console.log("------------- APP -----------------");
 function App() {
   let colorScheme = useColorScheme();
+
+  console.log("Dentro de la función App");
 
   return (
     <UserProvider>
       <NavigationContainer>
         <Stack.Navigator 
-          initialRouteName="welcome"
+          initialRouteName="Welcome"
           screenOptions={{
             headerStyle: {
               backgroundColor: colorScheme === 'dark' ? '#121212' : '#f7f7f7',
@@ -49,7 +54,7 @@ function App() {
           />
           <Stack.Screen name="SignUp" options={{ headerShown: false }} component={SignUp} />
           <Stack.Screen name="Settings" options={{ title: 'Ajustes' }} component={Settings} />
-          <Stack.Screen name="Añadir Grupo" options={{ title: 'Crear Grupo' }} component={AnadirGrupo} />
+          <Stack.Screen name="Anadir Grupo" options={{ title: 'Crear Grupo' }} component={AnadirGrupo} />
           <Stack.Screen 
             name="Detalles Serie" 
             component={PantallaDeDetalles} 
