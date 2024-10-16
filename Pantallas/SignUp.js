@@ -20,7 +20,7 @@ import {
   Platform
 } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as Google from 'expo-google-app-auth';
+
 
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
@@ -206,79 +206,7 @@ const SignUp = ({ navigation }) => {
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    try {
-      const { type, accessToken, user } = await Google.logInAsync({
-        iosClientId: 'YOUR_IOS_CLIENT_ID',
-        androidClientId: 'YOUR_ANDROID_CLIENT_ID',
-        scopes: ['profile', 'email'],
-      });
-
-      if (type === 'success') {
-        console.log("Credenciales de Google completas:", JSON.stringify(user, null, 2));
-
-        // Generar un ID único para el usuario
-        const userId = generarIdUnico();
-
-        // Crear un objeto de usuario con los datos de Google
-        const usuario = {
-          Id: userId,
-          Nombre: user.givenName || '',
-          Apellidos: user.familyName || '',
-          Usuario: user.email || `google_${user.id}`,
-          Contraseña: accessToken, // Usamos el token como "contraseña"
-        };
-        
-        console.log("datos de usuario de Google", JSON.stringify(usuario, null, 2));
-        
-        // Enviar los datos a tu backend
-        let response = await fetch('https://backendapi.familyseriestrack.com/usuario', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(usuario)
-        });
-
-        let respuesta = await response.json();
-        if (respuesta.success == 1) {
-          setUser({
-            id: usuario.Id,
-            nombre: usuario.Nombre,
-            apellidos: usuario.Apellidos,
-            usuario: usuario.Usuario,
-            contraseña: usuario.Contraseña,
-          });
-
-          const deviceId = await getDeviceId();
-          try {
-            await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-              },
-              body: JSON.stringify({ userId: usuario.Id, deviceId }),
-            });
-          } catch (error) {
-            console.error('Error al insertar el Device ID y User ID:', error);
-          }
-
-          navigation.reset({
-            index: 0,
-            routes: [{ name: 'Home' }],
-          });
-        } else {
-          Alert.alert('Error', respuesta.message);
-        }
-      } else {
-        // El usuario canceló el inicio de sesión
-        console.log('Google Sign In was cancelled');
-      }
-    } catch (e) {
-      console.error('Error en el inicio de sesión con Google:', e);
-      Alert.alert('Error', 'No se pudo iniciar sesión con Google');
-    }
-  };
+  
 
   return (
     <KeyboardAvoidingView
@@ -348,9 +276,6 @@ const SignUp = ({ navigation }) => {
             <Text style={globalStyles.buttonText}>Volver</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity style={styles.googleButton} onPress={handleGoogleSignIn}>
-            <Text style={styles.googleButtonText}>Crear cuenta con Google</Text>
-          </TouchableOpacity>
 
           {Platform.OS === 'ios' && (
             <AppleAuthentication.AppleAuthenticationButton
