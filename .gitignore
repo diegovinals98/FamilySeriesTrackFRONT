@@ -12,6 +12,8 @@ ios/
 #android build
 android/
 
+#build
+build/
 # Expo
 .expo/
 dist/
