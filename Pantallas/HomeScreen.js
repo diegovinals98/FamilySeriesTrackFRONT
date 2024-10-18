@@ -48,6 +48,7 @@ const HomeScreen = () => {
   const [value, setValue] = useState(null);
   const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme());
   const [seriesFavoritas, setSeriesFavoritas] = useState([]);
+  const [miembrosGrupo, setMiembrosGrupo] = useState([]);
   const opcionesFiltro = [
     { label: 'Todas', value: 'Todas' },
     { label: 'Favoritas', value: 'Favoritas' },
@@ -62,6 +63,20 @@ const HomeScreen = () => {
     React.useCallback(() => {
       if (!grupoInicialSeleccionado) {
         llamarAGrupos();
+        const fetchMiembrosGrrupo = async () => {
+
+          console.log("Nombre del grupo:", value);
+          try {
+            
+            const response = await fetch(`https://backendapi.familyseriestrack.com/miembros-grupo/${value}`);
+            const data = await response.json();
+            setMiembrosGrupo(data.members);
+            console.log("Miembros del grupo:", data.members);
+          } catch (error) {
+            console.error('Error al obtener miembros del grupo:', error);
+          }
+        };
+        fetchMiembrosGrrupo();
       }
     }, [grupoInicialSeleccionado])
   );
@@ -77,6 +92,10 @@ const HomeScreen = () => {
 
     console.log('Series favoritas:', seriesFavoritas);
   };
+
+
+
+ 
 
   useEffect(() => {
     // Establecer el contador de notificaciones a 0 siempre
@@ -99,8 +118,6 @@ const HomeScreen = () => {
     };
 
   }, []);
-
-
 
   useEffect(() => {
     const fetchData = async () => {
@@ -422,8 +439,11 @@ const HomeScreen = () => {
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#121212' : '#f7f7f7', paddingTop: Platform.OS === 'android' ? insets.top : 0 }}>
-      <StatusBar />
+    <SafeAreaView style={{ flex: 1, backgroundColor: colorScheme === 'dark' ? '#121212' : '#f7f7f7', paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0 }}>
+      <StatusBar 
+        backgroundColor={colorScheme === 'dark' ? '#121212' : '#f7f7f7'} 
+        barStyle={colorScheme === 'dark' ? 'light-content' : 'dark-content'}
+      />
       <TouchableWithoutFeedback onPress={() => resetearBusqueda()}>
         <View style={[globalStyles.container, colorScheme === 'dark' ? darkStyles.container : styles.container]}>
           <View style={colorScheme === 'dark' ? darkStyles.row : styles.row}>

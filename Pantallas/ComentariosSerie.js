@@ -18,7 +18,8 @@ import {
   RefreshControl,
   KeyboardAvoidingView,
   Platform,
-  useColorScheme
+  useColorScheme,
+  ImageBackground
 } from 'react-native';
 
 // Importaciones de React Navigation
@@ -53,6 +54,7 @@ import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
 // Obtiene las dimensiones de la ventana del dispositivo.
 const windowHeigh = Dimensions.get('window').height;
 
+
 // TODO Implementar un sistema de mensajería en tiempo real, similar a Whatsapp, para que los usuarios puedan comunicarse dentro de la plataforma.
 const ComentariosSerie = () => {
     console.log('Iniciando componente ComentariosSerie');
@@ -64,6 +66,8 @@ const ComentariosSerie = () => {
     const [nombreGrupo,setNombregrupo ] = useState(route.params.NombreGrupo)
     const [idSerie, setIdSerie ] = useState(route.params.idSerie)
     const [nombreSerie, setNombreSerie ] = useState(route.params.nombreSerie)
+    const [posterSerie, setPosterSerie] = useState(route.params.posterSerie);
+    console.log('Poster de la serie:', posterSerie);
     const [comentarioaEnviar, setComentarioaEnviar] = useState()
     const [idGrupo, setIdGrupo] = useState()
     const [comentarios, setComentarios] = useState([]);
@@ -75,7 +79,9 @@ const ComentariosSerie = () => {
     const [comentarioAResponder, setComentarioAResponder] = useState(null);
     const [miembrosGrupo, setMiembrosGrupo] = useState([]);
     let colorScheme = useColorScheme();
-   
+    
+
+
 
     // Actualiza la referencia de comentarios cuando cambia el estado
     useEffect(() => {
@@ -257,7 +263,7 @@ const ComentariosSerie = () => {
     // Renderizado del componente
     return (
         <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : "height"}
+          behavior={Platform.OS === "ios" ? "padding" : "padding"}
           style={styles(colorScheme).keyboardView}
           keyboardVerticalOffset={Platform.OS === "ios" ? 90 : 0}
         >
@@ -265,49 +271,53 @@ const ComentariosSerie = () => {
             <View style={styles(colorScheme).container}>
               <Text style={styles(colorScheme).title}>{nombreSerie}</Text>
               {/* ScrollView para los comentarios */}
-              <ScrollView 
-              ref={scrollViewRef}
-              keyboardDismissMode= 'on-drag' 
-              keyboardShouldPersistTaps= 'never' 
-              
-              style={styles(colorScheme).scrollView}>
-              {comentarios.map((comentario, index) => (
-                <View key={index} style={comentario.idUsuario === user.id ? styles(colorScheme).comentarioDerecha : styles(colorScheme).comentarioIzquierda}>
-                  <Text style={[styles(colorScheme).autor, comentario.idUsuario === user.id ? styles(colorScheme).autorDerecha : styles(colorScheme).autorIzquierda]}>{comentario.nombreCompleto}</Text>
-                  <Text style={[
-                    styles(colorScheme).comentariotexto,
-                    comentario.idUsuario === user.id ? styles(colorScheme).comentariotextoDerecha : styles(colorScheme).comentariotextoIzquierda
-                  ]}>
-                    {comentario.comentario}
-                  </Text>
-                  <Text style={[
-                    styles(colorScheme).fecha,
-                    comentario.idUsuario === user.id ? styles(colorScheme).fechaDerecha : styles(colorScheme).fechaIzquierda
-                  ]}>
-                    {moment(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}
-                  </Text>
-                  
-                  {/* Botón para responder 
-                  <TouchableOpacity onPress={() => seleccionarComentarioAResponder(comentario.id)}> 
-                    <Text style={styles(colorScheme).responderText}>Responder</Text>
-                  </TouchableOpacity>
-                  *
-                  }
+              <ImageBackground 
+                source={{ uri: `https://image.tmdb.org/t/p/w500${posterSerie}` }} 
+                style={styles(colorScheme).backgroundImage}
+              >
+                <ScrollView 
+                  ref={scrollViewRef}
+                  keyboardDismissMode= 'on-drag' 
+                  keyboardShouldPersistTaps= 'never' 
+                  style={styles(colorScheme).scrollView}
+                >
+                  {comentarios.map((comentario, index) => (
+                    <View key={index} style={comentario.idUsuario === user.id ? styles(colorScheme).comentarioDerecha : styles(colorScheme).comentarioIzquierda}>
+                      <Text style={[styles(colorScheme).autor, comentario.idUsuario === user.id ? styles(colorScheme).autorDerecha : styles(colorScheme).autorIzquierda]}>{comentario.nombreCompleto}</Text>
+                      <Text style={[
+                        styles(colorScheme).comentariotexto,
+                        comentario.idUsuario === user.id ? styles(colorScheme).comentariotextoDerecha : styles(colorScheme).comentariotextoIzquierda
+                      ]}>
+                        {comentario.comentario}
+                      </Text>
+                      <Text style={[
+                        styles(colorScheme).fecha,
+                        comentario.idUsuario === user.id ? styles(colorScheme).fechaDerecha : styles(colorScheme).fechaIzquierda
+                      ]}>
+                        {moment(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}
+                      </Text>
+                      
+                      {/* Botón para responder 
+                      <TouchableOpacity onPress={() => seleccionarComentarioAResponder(comentario.id)}> 
+                        <Text style={styles(colorScheme).responderText}>Responder</Text>
+                      </TouchableOpacity>
+                      *
+                      }
 
-                  {/* Si el comentario tiene respuestas */}
-                  {comentario.respuestas && comentario.respuestas.length > 0 && (
-                    <View style={styles(colorScheme).respuestasContainer}>
-                      {comentario.respuestas.map((respuesta, i) => (
-                        <View key={i} style={styles(colorScheme).comentarioRespuesta}>
-                          <Text>{respuesta.comentario}</Text>
+                      {/* Si el comentario tiene respuestas */}
+                      {comentario.respuestas && comentario.respuestas.length > 0 && (
+                        <View style={styles(colorScheme).respuestasContainer}>
+                          {comentario.respuestas.map((respuesta, i) => (
+                            <View key={i} style={styles(colorScheme).comentarioRespuesta}>
+                              <Text>{respuesta.comentario}</Text>
+                            </View>
+                          ))}
                         </View>
-                      ))}
+                      )}
                     </View>
-                  )}
-                </View>
-              ))}
-            
+                  ))}
                 </ScrollView>
+              </ImageBackground>
               {/* Área para introducir comentarios */}
               <View style={styles(colorScheme).commentBox}>
                 <View style={styles(colorScheme).inputRow}>
@@ -337,10 +347,12 @@ const styles = (colorScheme) => StyleSheet.create({
   keyboardView: {
     flex: 1,
     backgroundColor: colorScheme === 'dark' ? '#121212' : '#F0F2F5',
+    marginBottom: Platform.OS === "ios" ? 0 : 0,
   },
   container: {
     flex: 1,
     backgroundColor: colorScheme === 'dark' ? '#121212' : '#F0F2F5',
+    
   },
   title: {
     fontSize: 24,
@@ -353,11 +365,16 @@ const styles = (colorScheme) => StyleSheet.create({
     borderWidth: 2,
     borderColor: colorScheme === 'dark' ? '#333' : 'black',
   },
+  backgroundImage: {
+    flex: 1,
+    resizeMode: 'cover',
+    justifyContent: 'center',
+  },
   scrollView: {
     flex: 1,
-    paddingHorizontal: '4%',
-    paddingTop: '3%',
-    paddingBottom: '3%',
+    paddingRight: '2%',
+    paddingLeft: '2%',  
+    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo semi-transparente para mejorar la legibilidad
   },
   commentBox: {
     backgroundColor: colorScheme === 'dark' ? '#1E1E1E' : 'white',
@@ -397,7 +414,7 @@ const styles = (colorScheme) => StyleSheet.create({
   },
   comentarioDerecha: {
     alignSelf: 'flex-end',
-    backgroundColor: colorScheme === 'dark' ? '#0B3D91' : '#DCF8C6',
+    backgroundColor: colorScheme === 'dark' ? 'rgba(11, 61, 145, 1)' : 'rgba(220, 248, 198, 1)',
     borderRadius: 15,
     padding: '3%',
     maxWidth: '100%',
@@ -413,7 +430,7 @@ const styles = (colorScheme) => StyleSheet.create({
   },
   comentarioIzquierda: {
     alignSelf: 'flex-start',
-    backgroundColor: colorScheme === 'dark' ? '#2C2C2C' : '#FFFFFF',
+    backgroundColor: colorScheme === 'dark' ? 'rgba(44, 44, 44, 1)' : 'rgba(255, 255, 255, 1)',
     borderRadius: 15,
     padding: '3%',
     maxWidth: '80%',
@@ -430,19 +447,19 @@ const styles = (colorScheme) => StyleSheet.create({
   autorDerecha: {
     textAlign: 'right',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 17,
     color: colorScheme === 'dark' ? '#E0E0E0' : '#4A4A4A',
     marginBottom: '1%',
   },
   autorIzquierda: {
     textAlign: 'left',
     fontWeight: 'bold',
-    fontSize: 14,
+    fontSize: 17,
     color: colorScheme === 'dark' ? '#E0E0E0' : '#4A4A4A',
     marginBottom: '1%',
   },
   fecha: {
-    fontSize: 11,
+    fontSize: 12,
     color: colorScheme === 'dark' ? '#888' : '#888',
     marginTop: '1%',
     alignSelf: 'flex-end',

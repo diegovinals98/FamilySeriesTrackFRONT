@@ -140,7 +140,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   };
 
   const irComentaros = (idSerie, NombreGrupo) => {
-    navigation.navigate('Comentarios Serie', { idSerie, NombreGrupo, nombreSerie: detallesSerie.name });
+    navigation.navigate('Comentarios Serie', { idSerie, NombreGrupo, nombreSerie: detallesSerie.name, posterSerie: detallesSerie.poster_path });
   };
 
   const abrirAppPlataforma = (providerName) => {
