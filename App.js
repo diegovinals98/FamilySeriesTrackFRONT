@@ -1,5 +1,6 @@
 console.log("Iniciando App.js");
 import * as React from 'react';
+import { View, Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { UserProvider } from './userContext.js';
@@ -20,6 +21,8 @@ import RecuperarContrasena from './Pantallas/RecuperarContrasena.js';
 import RecuperarContrasena2 from './Pantallas/RecuperarContrasena2.js';
 import { useColorScheme } from 'react-native';
 
+
+
 console.log("Imports completados");
 
 const Stack = createNativeStackNavigator();
@@ -28,6 +31,9 @@ function App() {
   let colorScheme = useColorScheme();
 
   console.log("Dentro de la función App");
+  // Configuración de Firebase
+
+
 
   return (
     <UserProvider>
@@ -71,7 +77,30 @@ function App() {
             })}
           />
           <Stack.Screen name="Calendario" component={Calendario} />
-          <Stack.Screen name="Comentarios Serie" options={{ title: 'Chat' }} component={ComentariosSerie} />
+          <Stack.Screen 
+            name="Comentarios Serie" 
+            options={({ route }) => ({ 
+              title: route.params?.nombreSerie || 'Chat',
+              headerTitle: () => (
+                <View style={{ alignItems: 'flex-start' }}>
+                  <Text style={{ 
+                    fontSize: 18, 
+                    fontWeight: 'bold',
+                    color: colorScheme === 'dark' ? '#ffffff' : '#000000'
+                  }}>
+                    {route.params?.nombreSerie || 'Chat'}
+                  </Text>
+                  <Text style={{ 
+                    fontSize: 14,
+                    color: colorScheme === 'dark' ? '#ffffff' : '#000000'
+                  }}>
+                    {route.params?.NombreGrupo || ''}
+                  </Text>
+                </View>
+              ),
+            })} 
+            component={ComentariosSerie} 
+          />
           <Stack.Screen name="Estadisticas" options={{ title: 'Estadisticas' }} component={Estadisticas} />
           <Stack.Screen 
             name="Serie" 

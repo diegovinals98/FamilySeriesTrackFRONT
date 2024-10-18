@@ -11,6 +11,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   const [watchProviders, setWatchProviders] = useState([]);
   const [rating, setRating] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [trailerKey, setTrailerKey] = useState(null);
 
   const { user } = useUser();
   const colorScheme = useColorScheme();
@@ -19,7 +20,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
 
   const obtenerDetallesSerie = (idSerie) => {
     const apiKey = 'c51082efa7d62553e4c05812ebf6040e';
-    const url = `https://api.themoviedb.org/3/tv/${idSerie}?api_key=${apiKey}&language=${user?.idioma}-ES`;
+    const url = `https://api.themoviedb.org/3/tv/${idSerie}?api_key=${apiKey}&language=${user?.idioma}&append_to_response=videos`;
 
     fetch(url)
       .then((response) => response.json())
@@ -27,6 +28,14 @@ const PantallaDeDetalles = ({ route, navigation }) => {
         setDetallesSerie(data);
         setRating(data.vote_average / 2); // Convertir a escala de 5 estrellas
         navigation.setParams({ nombreSerie: data.name });
+        
+        // Buscar el trailer
+        const trailer = data.videos.results.find(
+          (video) => video.type === "Trailer" && video.site === "YouTube"
+        );
+        if (trailer) {
+          setTrailerKey(trailer.key);
+        }
       })
       .catch((error) => console.error('Error al obtener detalles de la serie:', error));
   };
@@ -227,6 +236,15 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     navigation.navigate('Serie', { serieData: idSerie  });
   };
 
+  const verTrailer = () => {
+    if (trailerKey) {
+      const youtubeUrl = `https://www.youtube.com/watch?v=${trailerKey}`;
+      Linking.openURL(youtubeUrl).catch((err) => console.error('Error al abrir el trailer:', err));
+    } else {
+      Alert.alert('Trailer no disponible', 'Lo sentimos, no hay trailer disponible para esta serie.');
+    }
+  };
+
   if (!detallesSerie) {
     return (
       <View style={styles.container}>
@@ -246,6 +264,8 @@ const PantallaDeDetalles = ({ route, navigation }) => {
           <View style={styles.providersContainer}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {watchProviders.map((provider, index) => (
+                <View style={{flexDirection: 'row', alignItems: 'center'}}>
+
                 <TouchableOpacity 
                   key={index} 
                   style={styles.providerItem} 
@@ -257,10 +277,18 @@ const PantallaDeDetalles = ({ route, navigation }) => {
                   />
                   <Text style={styles.providerName}>{provider.provider_name}</Text>
                 </TouchableOpacity>
+                
+                </View>
+                
               ))}
+              <TouchableOpacity style={styles.trailerButton} onPress={verTrailer}>
+                  <Text style={styles.trailerButtonText}>Ver Trailer</Text>
+                </TouchableOpacity>
             </ScrollView>
           </View>
         )}
+
+       
 
         <View style={styles.tableContainer}>
           <View style={styles.tableHeader}>
@@ -279,6 +307,8 @@ const PantallaDeDetalles = ({ route, navigation }) => {
             </View>
           ))}
         </View>
+
+        
 
         <Text style={styles.overviewText}>{detallesSerie.overview}</Text>
 
@@ -490,6 +520,19 @@ const lightStyles = StyleSheet.create({
     textAlign: 'center',
     width: '100%',
   },
+  trailerButton: {
+    backgroundColor: 'rgba(0,0, 0, 0.5)',
+    borderRadius: 5,
+    marginVertical: 10,
+    padding: 10,
+    alignSelf: 'center',
+    marginLeft: 20,
+  },
+  trailerButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
 
 const darkStyles = StyleSheet.create({
@@ -518,6 +561,13 @@ const darkStyles = StyleSheet.create({
     ...lightStyles.titleText,
     backgroundColor: '#2c2c2c',
     color: '#4A90E2',
+  },
+  trailerButton: {
+    ...lightStyles.trailerButton,
+  },
+  trailerButtonText: {
+    ...lightStyles.trailerButtonText,
+    color: 'white',
   },
 });
 

@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useCallback } from 'react';
-import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, useColorScheme } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, useColorScheme, Modal } from 'react-native';
 import { useUser } from '../userContext.js';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
 import { sendPushNotification } from '../Pantallas/notificaciones.js';
+import { WebView } from 'react-native-webview';
+
 const DetallesDeTemporada = ({ route }) => {
   const [idSerie, setidSerie] = useState(route.params.idSerie);
   const [numeroTemporada, setnumeroTemporada] = useState(route.params.NumeroTemporada);
@@ -13,9 +15,10 @@ const DetallesDeTemporada = ({ route }) => {
   const [capitulosVistos, setCapitulosVistos] = useState([]);
   const [actualizarVisto, setActualizarVisto] = useState(false);
   const [miembrosGrupo, setMiembrosGrupo] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedEpisode, setSelectedEpisode] = useState(null);
   const { user } = useUser();
   let colorScheme = useColorScheme();
-
 
   const obtenerCapitulosVistos = async () => {
     try {
@@ -128,6 +131,11 @@ const DetallesDeTemporada = ({ route }) => {
     return date.toLocaleDateString('es-ES', options).replace(/^\w/, (c) => c.toUpperCase());
   };
 
+  const openEpisodeModal = (episode) => {
+    setSelectedEpisode(episode);
+    setModalVisible(true);
+  };
+
   if (!detallesTemporada) {
     return (
       <View style={[styles.container, colorScheme === 'dark' && styles.darkContainer]}>
@@ -144,10 +152,12 @@ const DetallesDeTemporada = ({ route }) => {
           {detallesTemporada.episodes && detallesTemporada.episodes.map((capitulo, index) => (
             <View key={capitulo.id} style={[styles.capituloContainer, colorScheme === 'dark' && styles.darkCapituloContainer]}>
               {capitulo.still_path && (
-                <Image
-                  source={{ uri: `https://image.tmdb.org/t/p/w500${capitulo.still_path}` }}
-                  style={styles.capituloImage}
-                />
+                <TouchableOpacity onPress={() => openEpisodeModal(capitulo)}>
+                  <Image
+                    source={{ uri: `https://image.tmdb.org/t/p/w500${capitulo.still_path}` }}
+                    style={styles.capituloImage}
+                  />
+                </TouchableOpacity>
               )}
               <Text style={[styles.capituloTitle, colorScheme === 'dark' && styles.darkText]}>Capítulo {capitulo.episode_number}: {capitulo.name}</Text>
               <Text style={[styles.capituloDate, colorScheme === 'dark' && styles.darkText]}>{formatDate(capitulo.air_date)}</Text>
@@ -171,6 +181,27 @@ const DetallesDeTemporada = ({ route }) => {
           ))}
         </View>
       </ScrollView>
+      <Modal
+        animationType="slide"
+        transparent={false}
+        visible={modalVisible}
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalContainer}>
+          {selectedEpisode && (
+            <WebView
+              source={{ uri: `https://www.youtube.com/results?search_query=${encodeURIComponent(`${nombreSerie} S${detallesTemporada.season_number}E${selectedEpisode.episode_number} trailer`)}` }}
+              style={styles.webView}
+            />
+          )}
+          <TouchableOpacity
+            style={styles.closeButton}
+            onPress={() => setModalVisible(false)}
+          >
+            <Text style={styles.closeButtonText}>Cerrar</Text>
+          </TouchableOpacity>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -259,6 +290,27 @@ const styles = StyleSheet.create({
   },
   darkText: {
     color: '#fff',
+  },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.9)',
+  },
+  webView: {
+    width: '100%',
+    height: '90%',
+  },
+  closeButton: {
+    marginTop: 20,
+    padding: 10,
+    backgroundColor: '#4A90E2',
+    borderRadius: 5,
+  },
+  closeButtonText: {
+    color: 'white',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });
 

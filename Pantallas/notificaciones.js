@@ -1,14 +1,20 @@
-// Con esta funcion se pueden enviar notificaciones push a los dispositivos
+// Con esta funcion se pueden enviar notificaciones push a los dispositivos (iOS y Android)
 async function sendPushNotification(expoPushToken, titulo, body, subtitulo = '', subirBadge = false, data = null) {
     const message = {
       to: expoPushToken,
       sound: 'default',
       title: titulo,
       body: body,
+      android: {
+        sound: 'default',
+        priority: 'high',
+        channelId: 'default',
+      },
     };
 
     if (subtitulo) {
       message.subtitle = subtitulo;
+      message.android.subtitle = subtitulo;
     }
 
     if (subirBadge) {

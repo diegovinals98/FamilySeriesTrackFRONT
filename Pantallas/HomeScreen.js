@@ -79,22 +79,25 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
+    // Establecer el contador de notificaciones a 0 siempre
+    Notifications.setBadgeCountAsync(0);
+
     const subscription = Notifications.addNotificationResponseReceivedListener(response => {
       console.log('Notification response data:', response.notification.request.content.data);
       const tipo  = response.notification.request.content.data.tipo;
+      
       if (tipo === 'comentario') {
         const { nombreGrupo, idSerie, nombreSerie } = response.notification.request.content.data;
-        Notifications.setBadgeCountAsync(0);
         navigation.navigate('Comentarios Serie', { NombreGrupo: nombreGrupo, idSerie: idSerie, nombreSerie: nombreSerie });
       } else if (tipo === 'visualizacion') {
         const { nombreGrupo, idSerie } = response.notification.request.content.data;
-        Notifications.setBadgeCountAsync(0);
         navigation.navigate('Detalles Serie', { idSerie: idSerie, NombreGrupo: nombreGrupo });
       }
     });
     return () => {
       subscription.remove();
     };
+
   }, []);
 
 
@@ -596,7 +599,7 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    //elevation: 5,
   },
   initials: {
     fontSize: 28,
@@ -717,7 +720,7 @@ export const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: '0.5%' },
     shadowOpacity: 0.25,
     shadowRadius: 10,
-    elevation: '1.25%',
+    //elevation: '1.25%',
   },
   editarGrupoTexto: {
     color: 'white',
@@ -807,7 +810,7 @@ export const darkStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.25,
     shadowRadius: 3.84,
-    elevation: 5,
+    //elevation: 5,
   },
   initials: {
     fontSize: 28,
@@ -930,7 +933,7 @@ export const darkStyles = StyleSheet.create({
     shadowOffset: { width: 0, height: '0.5%' },
     shadowOpacity: 0.25,
     shadowRadius: 10,
-    elevation: '1.25%',
+    //elevation: '1.25%',
   },
   editarGrupoTexto: {
     color: 'white',
