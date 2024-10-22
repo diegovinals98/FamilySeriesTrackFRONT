@@ -31,7 +31,7 @@ const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
 
-// TODO: Cuando cierras sesion hay que borrar el token de la notificacion push del dispositivo
+
 const Settings = () => {
 
   const navigation = useNavigation();

@@ -53,6 +53,22 @@ const AnadirGrupo = () => {
     }
   };
 
+  const obtenerTokensUsuario = async (userId) => {
+    try {
+      const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${userId}`);
+      if (!response.ok) {
+        throw new Error('No se pudieron obtener los tokens');
+      }
+      const data = await response.json();
+      return data.tokens;
+    } catch (error) {
+      console.error(`Error al obtener tokens para el usuario ${userId}:`, error);
+      return [];
+    }
+  };
+
+
+
   const actualizarUsuario = (index, text) => {
     const nuevosInputs = inputsUsuarios.map((input, i) => {
       if (i === index) {
@@ -98,36 +114,54 @@ const AnadirGrupo = () => {
         });
       }
       alert('Datos del grupo actualizados correctamente.');
-      const obtenerTokenUsuario = async (userId) => {
+      
+      console.log("Usuarios a enviar notificaciones: ", inputsUsuarios); // de aqui solo tengo el value
+      // tengo que obtener el id de usuario de cada uno de estos valores
+      // y luego obtener el token de cada uno de esos ids
+      // y luego enviar la notificacion push a cada uno de esos tokens
+      // Función para obtener el ID de usuario a partir del nombre de usuario
+      const obtenerIdUsuario = async (nombreUsuario) => {
         try {
-          const response = await fetch('https://backendapi.familyseriestrack.com/obtener-tokens-usuarios/' + userId, {
-            method: 'GET',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-          });
-
+          const response = await fetch(`https://backendapi.familyseriestrack.com/usuario/${nombreUsuario}`);
           if (!response.ok) {
-            throw new Error('Error al obtener el token del usuario');
+            throw new Error('Usuario no encontrado');
           }
-
-          const data = await response.json();
-          return data.token;
+          const userData = await response.json();
+          return userData.Id; // Asumiendo que el ID del usuario se llama 'Id' en la respuesta
         } catch (error) {
-          console.error('Error al obtener el token del usuario:', error);
+          console.error(`Error al obtener ID para el usuario ${nombreUsuario}:`, error);
           return null;
         }
       };
 
-      console.log(inputsUsuarios);
-      const userIds = inputsUsuarios.map(input => input.value);
-      const tokens = await Promise.all(userIds.map(userId => obtenerTokenUsuario(userId)));
+      // Obtener los IDs de los usuarios
+      const userIds = await Promise.all(
+        inputsUsuarios.map(async (input) => {
+          const userId = await obtenerIdUsuario(input.value);
+          return userId;
+        })
+      );
 
-      tokens.forEach(token => {
-        if (token) {
-          sendPushNotification(token, 'Te han añadido a un grupo!', user.nombre + " te ha añadido al grupo " + nombreGrupo);
-        }
-      });
+      // Filtrar los IDs nulos (usuarios no encontrados)
+      const validUserIds = userIds.filter(id => id !== null);
+
+      console.log("IDs de usuarios obtenidos:", validUserIds);
+      // Función para obtener los tokens de un usuario
+      
+
+      // Obtener todos los tokens para cada usuario válido
+      for (const userId of validUserIds) {
+        const tokens = await obtenerTokensUsuario(userId);
+        console.log(`Tokens obtenidos para el usuario ${userId}:`, tokens);
+        
+        // Enviar notificación a cada token del usuario
+        tokens.forEach(token => {
+          if (token) {
+            sendPushNotification(token, 'Grupo Nuevo!', `${user.nombre} te ha añadido al grupo: ${nombreGrupo}`);
+          }
+        });
+      }
+     
       navigation.navigate('Home');
     } catch (error) {
       console.error('Error al agregar datos a la BBDD:', error);
@@ -158,6 +192,7 @@ const AnadirGrupo = () => {
                 style={styles.input}
                 onChangeText={(text) => actualizarUsuario(index, text)}
                 placeholder="Usuario a añadir"
+                autoCapitalize="none"
                 value={input.value}
                 placeholderTextColor={colorScheme === 'dark' ? '#999' : '#666'}
               />
