@@ -4,6 +4,7 @@ import { useUser } from '../userContext.js';
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import { Rating } from 'react-native-elements';
+import { sendPushNotification } from './notificaciones.js';
 const PantallaDeDetalles = ({ route, navigation }) => {
   const { idSerie, NombreGrupo } = route.params;
   const [detallesSerie, setDetallesSerie] = useState(null);
@@ -96,6 +97,16 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     return <Image source={imagePath} style={styles.posterImage} />;
   };
 
+  const obtenerMiembrosDelGrupo = async (nombre) => {
+    try {
+      const response = await fetch(`https://backendapi.familyseriestrack.com/miembros-grupo/${nombre}`);
+      const data = await response.json();
+      return data.members.map(member => member.id);
+    } catch (error) {
+      console.error('Error al obtener los miembros del grupo:', error);
+    }
+  };
+
   const posterSeason = (path) => {
     if (!path) return null;
     let imagePath = { uri: `https://image.tmdb.org/t/p/w500${path}` };
@@ -126,6 +137,42 @@ const PantallaDeDetalles = ({ route, navigation }) => {
               if (!response.ok) {
                 throw new Error('Error al eliminar la serie');
               }
+              // Sacar los ids de los miembros del grupo
+              const idsMiembros = await obtenerMiembrosDelGrupo(NombreGrupo);
+              console.log('Ids de los miembros del grupo:', idsMiembros);
+              // Enviar Notificaciones Push a los miembros del grupo
+
+              idsMiembros.forEach(async (id) => {
+                
+                if (id !== user.id) {
+                  try {
+                    // Obtenemos los tokens del miembro para enviar la notificación
+                    const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${id}`, {
+                      method: 'GET',
+                      headers: { 'Content-Type': 'application/json' },
+                    });
+
+                    if (!response.ok) {
+                      throw new Error('Error al obtener los tokens del miembro');
+                    }
+                    const data = await response.json();
+                    const tokens = data.tokens;
+                    console.log('Tokens del miembro:', tokens);
+                    
+                    // Enviamos la notificación push a todos los tokens
+                    tokens.forEach(token => {
+                      console.log('Enviando notificación push:', {
+                        token: token,
+                        title: 'Serie eliminada!',
+                        body: `${user.nombre}: ${detallesSerie.name} ha sido eliminada del grupo ${NombreGrupo}`
+                      });
+                      sendPushNotification(token, 'Serie Eliminada!', detallesSerie.name + ': ' + user.nombre + ' ha eliminado del grupo ' + NombreGrupo );
+                    })
+                  } catch (error) {
+                    console.error(`Error al obtener los tokens del miembro ${miembro.id}:`, error);
+                  }
+                }
+              });
 
               navigation.navigate('Home');
             } catch (error) {

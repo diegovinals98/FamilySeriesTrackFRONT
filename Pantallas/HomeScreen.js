@@ -26,6 +26,8 @@ import { globalStyles } from '../estilosGlobales.js';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
+import { sendPushNotification } from '../Pantallas/notificaciones';
+
 
 const windowHeight = Dimensions.get('window').height;
 
@@ -48,7 +50,9 @@ const HomeScreen = () => {
   const [value, setValue] = useState(null);
   const [colorScheme, setColorScheme] = useState(Appearance.getColorScheme());
   const [seriesFavoritas, setSeriesFavoritas] = useState([]);
-  const [miembrosGrupo, setMiembrosGrupo] = useState([]);
+  
+
+  const [miembrosGrupo, setMiembrosGrupo] = useState([]); 
   const opcionesFiltro = [
     { label: 'Todas', value: 'Todas' },
     { label: 'Favoritas', value: 'Favoritas' },
@@ -186,6 +190,17 @@ const HomeScreen = () => {
       }
     } catch (error) {
       console.error('Error al obtener los grupos:', error);
+    }
+  };
+
+
+  const obtenerMiembrosDelGrupo = async (nombre) => {
+    try {
+      const response = await fetch(`https://backendapi.familyseriestrack.com/miembros-grupo/${nombre}`);
+      const data = await response.json();
+      return data.members.map(member => member.id);
+    } catch (error) {
+      console.error('Error al obtener los miembros del grupo:', error);
     }
   };
 
@@ -370,7 +385,7 @@ const HomeScreen = () => {
     }
   };
 
-  const agregarSerieAUsuario = async (userId, idSerie, idGrupo) => {
+  const agregarSerieAUsuario = async (userId, idSerie, idGrupo, nombreSerie) => {
     try {
       let response = await fetch('https://backendapi.familyseriestrack.com/agregar-serie-usuario', {
         method: 'POST',
@@ -389,6 +404,43 @@ const HomeScreen = () => {
     } catch (error) {
       console.error('Error al enviar la solicitud:', error);
     }
+    // Sacar los ids de los miembros del grupo
+    const idsMiembros = await obtenerMiembrosDelGrupo(value);
+    console.log('Ids de los miembros del grupo:', idsMiembros);
+    // Enviar Notificaciones Push a los miembros del grupo
+
+    idsMiembros.forEach(async (id) => {
+      
+      if (id !== user.id) {
+        try {
+          // Obtenemos los tokens del miembro para enviar la notificación
+          const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${id}`, {
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' },
+          });
+
+          if (!response.ok) {
+            throw new Error('Error al obtener los tokens del miembro');
+          }
+          const data = await response.json();
+          const tokens = data.tokens;
+          console.log('Tokens del miembro:', tokens);
+          
+          // Enviamos la notificación push a todos los tokens
+          tokens.forEach(token => {
+            console.log('Enviando notificación push:', {
+              token: token,
+              title: 'Nueva Serie!',
+              body: `${user.nombre}: ${nombreSerie} ha sido añadida al grupo ${value}`
+            });
+            sendPushNotification(token, 'Nueva Serie!', nombreSerie + ': ' + user.nombre + ' ha añadido al grupo ' + value );
+          })
+        } catch (error) {
+          console.error(`Error al obtener los tokens del miembro ${miembro.id}:`, error);
+        }
+      }
+    });
+
   };
 
   const seleccionSerie = (text, idSerie) => {
@@ -399,7 +451,7 @@ const HomeScreen = () => {
         {
           text: 'Sí',
           onPress: async () => {
-            agregarSerieAUsuario(user.id, idSerie, idelegido);
+            agregarSerieAUsuario(user.id, idSerie, idelegido, text);
             resetearBusqueda();
             setRefrescar(prev => !prev);
           },

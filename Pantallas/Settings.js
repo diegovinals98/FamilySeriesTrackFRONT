@@ -23,6 +23,9 @@ import * as Crypto from 'expo-crypto';
 import * as Application from 'expo-application';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
+import * as Notifications from 'expo-notifications';
+import * as Device from 'expo-device';
+import Constants from 'expo-constants';
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
@@ -128,6 +131,44 @@ const Settings = () => {
     }
   }
 
+  const deleteToken = async () => {
+    console.log('Entramos en deleteToken de notificaciones');
+    const projectId = Constants?.expoConfig?.extra?.eas?.projectId ?? Constants?.easConfig?.projectId;
+    if (!projectId) {
+      console.error('ID del proyecto no encontrado');
+      return;
+    }
+    console.log('ID del proyecto:', projectId);
+    
+    try {
+      const pushToken = await Notifications.getExpoPushTokenAsync({ projectId });
+      const pushTokenString = pushToken.data;
+      console.log('Token de push obtenido para eliminar:', pushTokenString);
+
+
+      
+      const url = 'https://backendapi.familyseriestrack.com/eliminar-token';
+      console.log('URL de la solicitud:', url);
+
+      const response = await fetch(url, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ token: `${pushTokenString}` })
+      });
+
+      if (response.ok) {
+        console.log('Token eliminado correctamente');
+      } else {
+        const errorText = await response.text();
+        console.error('Error al eliminar el token. Estado:', response.status, 'Texto:', errorText);
+      }
+    } catch (error) {
+      console.error('Error al eliminar el token:', error);
+    }
+  }
+
   async function eliminarCuenta(idUser) {
     Alert.alert(
       '¿Estás seguro de que quieres eliminar la cuenta?',
@@ -141,6 +182,8 @@ const Settings = () => {
                 method: 'DELETE',
               });
               if (response.ok) {
+                // borrar el token de notificacion push del dispositivo
+                deleteToken();
                 navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
               } else {
                 alert('Error al eliminar la cuenta.');
@@ -186,6 +229,8 @@ const Settings = () => {
         const errorMessage = await response.text();
         throw new Error(`Error al cerrar sesión: ${errorMessage}`);
       }
+
+      deleteToken();
 
       navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
     } catch (error) {
