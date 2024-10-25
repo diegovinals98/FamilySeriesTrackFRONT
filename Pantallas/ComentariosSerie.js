@@ -160,7 +160,7 @@ const ComentariosSerie = () => {
               
               // Enviamos la notificación push a todos los tokens
               tokens.forEach(token => {
-                sendPushNotification(token, 'Nuevo Comentario!', user.nombre + ': ' + comentarioaEnviar, nombreSerie + " en " + nombreGrupo, true, datosAEnviar);
+                sendPushNotification(token, 'Nuevo Comentario!', user.nombre + ' - ' + comentarioaEnviar, nombreGrupo + ": " + nombreSerie, datosAEnviar);
               });
             } catch (error) {
               console.error(`Error al obtener los tokens del miembro ${miembro.id}:`, error);

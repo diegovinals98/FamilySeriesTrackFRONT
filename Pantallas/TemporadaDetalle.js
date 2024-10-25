@@ -87,7 +87,6 @@ const DetallesDeTemporada = ({ route }) => {
             }
             const data = await response.json();
             const tokens = data.tokens;
-            console.log(`Tokens del miembro ${miembro.id}: ${tokens}`);
             datosAEnviar = {
               tipo: 'visualizacion',
               idSerie: idSerie,
@@ -95,7 +94,7 @@ const DetallesDeTemporada = ({ route }) => {
               nombreSerie: nombreSerie,
             }
             tokens.forEach(token => {
-              sendPushNotification(token, 'Capitulo visto!', user.nombre + ' ha visto el capítulo ' + Episode_number + ' de la temporada ' + season_number, nombreSerie, true, datosAEnviar);
+              sendPushNotification(token, 'Capitulo visto!', user.nombre + ': Temporada ' + season_number + '. Capitulo ' + Episode_number, nombreGrupo + ": " + nombreSerie, datosAEnviar);
             });
           } catch (error) {
             console.error(`Error al obtener los tokens del miembro ${miembro.id}:`, error);
