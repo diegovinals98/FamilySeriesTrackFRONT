@@ -5,7 +5,7 @@ async function sendPushNotification(expoPushToken, titulo, body, subtitulo = '',
       sound: 'default',
       title: titulo,
       body: body,
-      badgeCount: (message.badgeCount || 0) + 1,
+      badgeCount: 1,
       android: {
         sound: 'default',
         priority: 'high',

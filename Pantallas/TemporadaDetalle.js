@@ -94,6 +94,7 @@ const DetallesDeTemporada = ({ route }) => {
               nombreSerie: nombreSerie,
             }
             tokens.forEach(token => {
+              console.log("Mandadndo al token: " + token);
               sendPushNotification(token, 'Capitulo visto!', user.nombre + ': Temporada ' + season_number + '. Capitulo ' + Episode_number, nombreGrupo + ": " + nombreSerie, datosAEnviar);
             });
           } catch (error) {
