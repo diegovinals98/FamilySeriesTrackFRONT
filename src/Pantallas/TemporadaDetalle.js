@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, useColorSc
 import { useUser } from '../userContext.js';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Notifications from 'expo-notifications';
-import { sendPushNotification } from '../Pantallas/notificaciones.js';
+import { sendPushNotification } from './notificaciones.js';
 import { WebView } from 'react-native-webview';
 
 const DetallesDeTemporada = ({ route }) => {
@@ -29,7 +29,7 @@ const DetallesDeTemporada = ({ route }) => {
       const data = await response.json();
       setDetallesTemporada(data);
 
-      const url2 = `https://backendapi.familyseriestrack.com/temporada-vista/${user.id}/${idSerie}/${data.season_number}`;
+      const url2 = `${global.API}/temporada-vista/${user.id}/${idSerie}/${data.season_number}`;
       const response2 = await fetch(url2);
       const data2 = await response2.json();
 
@@ -41,7 +41,7 @@ const DetallesDeTemporada = ({ route }) => {
 
   const obtenerMiembrosGrupo = async () => {
     try {
-      const response = await fetch('https://backendapi.familyseriestrack.com/miembros-grupo/' + nombreGrupo, {
+      const response = await fetch(`${global.API}/miembros-grupo/${nombreGrupo}`, {
         method: 'GET',
         headers: { 'Content-Type': 'application/json' },
       });
@@ -62,11 +62,15 @@ const DetallesDeTemporada = ({ route }) => {
 
   const marcarVisto = async (idSerie, capituloId, Name, Episode_number, season_number, userid) => {
     try {
-      const response = await fetch('https://backendapi.familyseriestrack.com/agregar-visualizacion', {
+      console.log("Marcando visto: ", idSerie, capituloId, Name, Episode_number, season_number, userid);
+      console.log("API: ", `${global.API}/agregar-visualizacion`);
+      const response = await fetch(`${global.API}/agregar-visualizacion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ idSerie, capituloId, Name, Episode_number, season_number, userid }),
       });
+
+      console.log("Respuesta: ", response);
 
       if (!response.ok) {
         throw new Error('Error al agregar capitulo');
@@ -77,7 +81,7 @@ const DetallesDeTemporada = ({ route }) => {
       for (const miembro of miembrosGrupo.members) {
         if (miembro.id !== user.id) {
           try {
-            const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${miembro.id}`, {
+            const response = await fetch(`${global.API}/obtener-token/${miembro.id}`, {
               method: 'GET',
               headers: { 'Content-Type': 'application/json' },
             });
@@ -109,7 +113,7 @@ const DetallesDeTemporada = ({ route }) => {
 
   const eliminarVisto = async (capituloId, userid) => {
     try {
-      const response = await fetch('https://backendapi.familyseriestrack.com/eliminar-visualizacion', {
+      const response = await fetch(`${global.API}/eliminar-visualizacion`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ capituloId, userid }),

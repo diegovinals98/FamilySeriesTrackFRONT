@@ -22,11 +22,13 @@ import { Dropdown } from 'react-native-element-dropdown';
 import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUser } from '../userContext.js';
-import { globalStyles } from '../estilosGlobales.js';
+import { globalStyles } from '../../estilosGlobales.js';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
 import Constants from 'expo-constants';
-import { sendPushNotification } from '../Pantallas/notificaciones';
+import { sendPushNotification } from './notificaciones.js';
+
+import LoadingIndicator from '../Componentes/loadingIndicator.js';
 
 
 const windowHeight = Dimensions.get('window').height;
@@ -54,30 +56,32 @@ const HomeScreen = () => {
 
   const [miembrosGrupo, setMiembrosGrupo] = useState([]); 
   const opcionesFiltro = [
-    { label: 'Todas', value: 'Todas' },
-    { label: 'Favoritas', value: 'Favoritas' },
-    { label: 'Viendo', value: 'Viendo' },
-    { label: 'Acabadas', value: 'Acabadas' },
-    { label: 'Pendientes', value: 'Pendientes' }
+    { label: 'Todas', value: 'Todas', key: '1' },
+    { label: 'Favoritas', value: 'Favoritas', key: '2' },
+    { label: 'Viendo', value: 'Viendo', key: '3' },
+    { label: 'Acabadas', value: 'Acabadas', key: '4' },
+    { label: 'Pendientes', value: 'Pendientes', key: '5' }
   ];
-
-  console.log(user.idioma);  
 
   useFocusEffect(
     React.useCallback(() => {
       if (!grupoInicialSeleccionado) {
         llamarAGrupos();
         const fetchMiembrosGrrupo = async () => {
-
-          console.log("Nombre del grupo:", value);
           try {
             
-            const response = await fetch(`https://backendapi.familyseriestrack.com/miembros-grupo/${value}`);
-            const data = await response.json();
-            setMiembrosGrupo(data.members);
-            console.log("Miembros del grupo:", data.members);
+            const response = await fetch(`${global.API}/miembros-grupo/${value}`);
+            if (response.ok) {
+              const data = await response.json();
+              setMiembrosGrupo(data.members);
+              console.log("Miembros del grupo:", data.members);
+              
+            }else{
+              console.log("Response not ok: ", response.ok);
+            }
+            
           } catch (error) {
-            console.error('Error al obtener miembros del grupo:', error);
+            //console.error('Error al obtener miembros del grupo, response not ok: ', error);
           }
         };
         fetchMiembrosGrrupo();
@@ -87,19 +91,13 @@ const HomeScreen = () => {
 
   const obtenerSeriesFavoritas = async () => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/series-favoritas/${user.id}`);
+      const response = await fetch(`${global.API}/series-favoritas/${user.id}`);
       const data = await response.json();
       setSeriesFavoritas(data);
     } catch (error) {
       console.error('Error al obtener las series favoritas:', error);
     }
-
-    console.log('Series favoritas:', seriesFavoritas);
   };
-
-
-
- 
 
   useEffect(() => {
     // Establecer el contador de notificaciones a 0 siempre
@@ -177,7 +175,7 @@ const HomeScreen = () => {
 
   const llamarAGrupos = async () => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/grupos/${user?.id}`);
+      const response = await fetch(`${global.API}/grupos/${user?.id}`);
       const json = await response.json();
       setTodosGrupos(json);
 
@@ -196,7 +194,7 @@ const HomeScreen = () => {
 
   const obtenerMiembrosDelGrupo = async (nombre) => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/miembros-grupo/${nombre}`);
+      const response = await fetch(`${global.API}/miembros-grupo/${nombre}`);
       const data = await response.json();
       return data.members.map(member => member.id);
     } catch (error) {
@@ -206,7 +204,7 @@ const HomeScreen = () => {
 
   const obtenerIdioma = async () => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/get-user/${user.id}`);
+      const response = await fetch(`${global.API}/get-user/${user.id}`);
       const json = await response.json();
       setUser({ ...user, idioma: json.usuario.idioma });
     } catch (error) {
@@ -264,7 +262,7 @@ const HomeScreen = () => {
         console.log('Token de push obtenido:', pushTokenString);
         console.log('Para el usuario :', user.id);
         try {
-          const response = await fetch('https://backendapi.familyseriestrack.com/registrar-token-notificacion', {
+          const response = await fetch(`${global.API}/registrar-token-notificacion`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -290,8 +288,7 @@ const HomeScreen = () => {
         handleRegistrationError(`${e}`);
       }
     } else {
-      console.error('No es un dispositivo físico');
-      handleRegistrationError('Must use physical device for push notifications');
+      console.log('No es un dispositivo físico');
     }
 
     console.log('Saliendo de registerForPushNotificationsAsync');
@@ -299,7 +296,7 @@ const HomeScreen = () => {
 
   const obtenerSeriesDelUsuario = async (userId, idgrupo) => {
     try {
-      const url = new URL(`https://backendapi.familyseriestrack.com/series-ids-usuario/${userId}/${idgrupo}`);
+      const url = new URL(`${global.API}/series-ids-usuario/${userId}/${idgrupo}`);
       const respuesta = await fetch(url);
       if (!respuesta.ok) {
         throw new Error('Respuesta de red no fue ok.');
@@ -387,7 +384,7 @@ const HomeScreen = () => {
 
   const agregarSerieAUsuario = async (userId, idSerie, idGrupo, nombreSerie) => {
     try {
-      let response = await fetch('https://backendapi.familyseriestrack.com/agregar-serie-usuario', {
+      let response = await fetch(`${global.API}/agregar-serie-usuario`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -414,7 +411,7 @@ const HomeScreen = () => {
       if (id !== user.id) {
         try {
           // Obtenemos los tokens del miembro para enviar la notificación
-          const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${id}`, {
+          const response = await fetch(`${global.API}/obtener-token/${id}`, {
             method: 'GET',
             headers: { 'Content-Type': 'application/json' },
           });
@@ -486,7 +483,6 @@ const HomeScreen = () => {
   };
 
   const estadisticas = (idUsuario) => {
-    console.log(idUsuario, "ha pulsado boton estadisticas");
     navigation.navigate('Estadisticas', { idUsuario });
   };
 
@@ -591,7 +587,7 @@ const HomeScreen = () => {
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
                   {seriesDetalles.map((detalle, index) => (
                     <TouchableOpacity
-                      key={index}
+                      key={detalle.id.toString()}
                       style={colorScheme === 'dark' ? darkStyles.serieDetailContainer : styles.serieDetailContainer}
                       onPress={() => navegarADetalles(detalle.id)}
                     >
@@ -606,9 +602,7 @@ const HomeScreen = () => {
                 </View>
               ) : (
                 <View style={colorScheme === 'dark' ? darkStyles.loadingContainer : styles.loadingContainer}>
-                  <ActivityIndicator size="large" color={colorScheme === 'dark' ? '#4A90E2' : '#4A90E2'} />
-                  <Text style={colorScheme === 'dark' ? darkStyles.loadingText : styles.loadingText}>Cargando series...</Text>
-                  <Text style={colorScheme === 'dark' ? darkStyles.loadingText : styles.loadingText}>Por favor, espere un momento</Text>
+                  <LoadingIndicator colorScheme={colorScheme} styles={styles} darkStyles={darkStyles} />
                 </View>
               )}
             </ScrollView>

@@ -9,35 +9,26 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  Button,
   Alert,
   Dimensions,
   ScrollView,
   Animated
 } from 'react-native';
-
+import { useTheme } from '../hooks/useTheme';
 import { useNavigation } from '@react-navigation/native';
-import { globalStyles } from '../estilosGlobales.js';
 import { useUser } from '../userContext.js';
 import * as Crypto from 'expo-crypto';
-import * as Application from 'expo-application';
-import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import * as Notifications from 'expo-notifications';
-import * as Device from 'expo-device';
-import Constants from 'expo-constants';
 
 const windowHeight = Dimensions.get('window').height;
 const windowWidth = Dimensions.get('window').width;
 
-
-
 const Settings = () => {
-
+  const theme = useTheme();
   const navigation = useNavigation();
   const { user, setUser } = useUser();
   const [errorMessage, setErrorMessage] = useState('');
-
   const [nombre, setNombre] = useState(user?.nombre || '');
   const [apellidos, setApellidos] = useState(user?.apellidos || '');
   const [usuario, setUsuario] = useState(user?.usuario || '');
@@ -48,7 +39,7 @@ const Settings = () => {
   const scrollViewRef = useRef();
   const [focusedInput, setFocusedInput] = useState(null);
   const animatedValue = useRef(new Animated.Value(0)).current;
-  const [isInputFocused, setIsInputFocused] = useState(false); // Nueva variable de estado
+  const [isInputFocused, setIsInputFocused] = useState(false);
 
   useEffect(() => {
     const keyboardDidShowListener = Keyboard.addListener(
@@ -105,7 +96,7 @@ const Settings = () => {
     } else {
       const newContrasenaHash = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA512, contrasena);
       try {
-        let response = await fetch(`https://backendapi.familyseriestrack.com/usuario/${userId}`, {
+        let response = await fetch(`${global.API}/usuario/${userId}`, {
           method: 'PUT',
           headers: {
             'Content-Type': 'application/json',
@@ -147,7 +138,7 @@ const Settings = () => {
 
 
       
-      const url = 'https://backendapi.familyseriestrack.com/eliminar-token';
+      const url = `${global.API}/eliminar-token`;
       console.log('URL de la solicitud:', url);
 
       const response = await fetch(url, {
@@ -178,7 +169,7 @@ const Settings = () => {
           text: 'Sí',
           onPress: async () => {
             try {
-              const response = await fetch(`https://backendapi.familyseriestrack.com/eliminar-cuenta/${idUser}`, {
+              const response = await fetch(`${global.API}/eliminar-cuenta/${idUser}`, {
                 method: 'DELETE',
               });
               if (response.ok) {
@@ -219,23 +210,20 @@ const Settings = () => {
         deviceId = await Application.getAndroidId();
       }
       console.log('Device ID: ', deviceId);
-      const response = await fetch('https://backendapi.familyseriestrack.com/delete-device-id', {
+      const response = await fetch(`${global.API}/delete-device-id`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ userId: user.id, deviceId }),
       });
 
-      if (!response.ok) {
-        const errorMessage = await response.text();
-        throw new Error(`Error al cerrar sesión: ${errorMessage}`);
+      if (response.ok) {
+        console.log('DeviceId eliminado correctamente');
+        deleteToken();
+        navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
       }
-
-      deleteToken();
-
-      navigation.reset({ index: 0, routes: [{ name: 'Welcome' }] });
     } catch (error) {
-      console.log('Error al cerrar sesión:', error);
-      alert('No se ha podido cerrar sesión');
+      console.log('Error al cerrar sesión :', error);
+      Alert.alert("Error", 'No se ha podido cerrar sesión');
     }
   };
 
@@ -246,30 +234,147 @@ const Settings = () => {
         focusedInput === placeholder && {
           transform: [{ translateY: inputTranslateY }],
           zIndex: 1,
-          backgroundColor: 'rgba(255,255,255,1)', // Fondo blanco y opaco
+          backgroundColor: theme.colors.surface,
         },
       ]}
     >
-      <Ionicons name={icon} size={24} color={focusedInput === placeholder ? "#3b5998" : "#fff"} style={styles.icon} />
+      <Ionicons 
+        name={icon} 
+        size={24} 
+        color={focusedInput === placeholder ? theme.colors.primary : theme.colors.textSecondary} 
+        style={styles.icon} 
+      />
       <TextInput 
-        style={[styles.input, focusedInput === placeholder && { color: '#000' }]} // Texto negro cuando está enfocado
+        style={[
+          styles.input,
+          focusedInput === placeholder && { color: theme.colors.text }
+        ]}
         onChangeText={onChangeText}
         value={value}
         placeholder={placeholder}
-        placeholderTextColor={focusedInput === placeholder ? "#999" : "#ccc"}
+        placeholderTextColor={focusedInput === placeholder ? theme.colors.textSecondary : theme.colors.text}
         secureTextEntry={secureTextEntry}
         autoCapitalize="none"
         onFocus={() => {
           setFocusedInput(placeholder);
-          setIsInputFocused(true); // Establecer el estado a verdadero
+          setIsInputFocused(true);
         }}
         onBlur={() => {
           setFocusedInput(null);
-          setIsInputFocused(false); // Establecer el estado a falso
+          setIsInputFocused(false);
         }}
       />
     </Animated.View>
   );
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: theme.colors.background,
+    },
+    blurBackground: {
+      ...StyleSheet.absoluteFillObject,
+      backgroundColor: theme.colors.background,
+      opacity: 0.9,
+    },
+    scrollViewContent: {
+      flexGrow: 1,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingVertical: theme.spacing.xl,
+    },
+    headerContainer: {
+      alignItems: 'center',
+      marginBottom: theme.spacing.xl,
+    },
+    headerText: {
+      ...theme.typography.h1,
+      color: theme.colors.text,
+      marginTop: theme.spacing.sm,
+    },
+    formContainer: {
+      width: '85%',
+    },
+    circle: {
+      width: windowHeight * 0.15,
+      height: windowHeight * 0.15,
+      borderRadius: 1000,
+      backgroundColor: theme.colors.primary + '40', // 40 es la opacidad en hex
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    initials: {
+      color: theme.colors.text,
+      ...theme.typography.h1,
+      fontWeight: 'bold',
+    },
+    inputGroup: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      marginBottom: theme.spacing.md,
+      borderBottomWidth: 1,
+      borderBottomColor: theme.colors.border,
+      backgroundColor: theme.colors.surface + '20',
+      borderRadius: theme.borderRadius.md,
+      padding: theme.spacing.sm,
+    },
+    icon: {
+      marginRight: theme.spacing.sm,
+    },
+    input: {
+      flex: 1,
+      color: theme.colors.text,
+      ...theme.typography.body,
+      paddingVertical: theme.spacing.xs,
+    },
+    button: {
+      backgroundColor: theme.colors.primary,
+      paddingVertical: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      alignItems: 'center',
+      marginBottom: theme.spacing.lg,
+    },
+    buttonText: {
+      color: theme.colors.text,
+      ...theme.typography.button,
+    },
+    buttonOutline: {
+      backgroundColor: 'transparent',
+      borderWidth: 2,
+      borderColor: '#fff',
+    },
+    buttonOutlineText: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    deleteButton: {
+      backgroundColor: theme.colors.error,
+      padding: theme.spacing.md,
+      borderRadius: theme.borderRadius.md,
+      alignItems: 'center',
+      width: '85%',
+    },
+    deleteButtonText: {
+      color: '#fff',
+      fontSize: 18,
+      fontWeight: 'bold',
+    },
+    errorText: {
+      color: '#ff6b6b',
+      textAlign: 'center',
+      marginBottom: '3.75%',
+    },
+    buttonRow: {
+      flexDirection: 'row',
+      width: '85%',
+      justifyContent: 'space-between',
+    },
+    halfButton: {
+      flex: 1,
+      marginHorizontal: '1.25%',
+    },
+  });
 
   return (
     <KeyboardAvoidingView 
@@ -279,8 +384,10 @@ const Settings = () => {
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
-          {isInputFocused && ( // Mostrar el fondo borroso si el input está enfocado
-            <Animated.View style={styles.blurBackground} />
+          {isInputFocused && (
+            <Animated.View style={[styles.blurBackground, {
+              backgroundColor: theme.colors.background
+            }]} />
           )}
           <ScrollView 
             contentContainerStyle={styles.scrollViewContent}
@@ -299,142 +406,29 @@ const Settings = () => {
               {renderInput("people-outline", "Apellidos", apellidos, setApellidos)}
               {renderInput("at-outline", "Nombre de Usuario", usuario, setUsuario)}
               {renderInput("lock-closed-outline", "Nueva Contraseña", contrasena, setContrasena, true)}
-              {renderInput("lock-closed-outline", "Repite Nueva Contraseña", contrasena2, setContrasena2, true)}
+              {renderInput("lock-closed-outline", "Confirmar Contraseña", contrasena2, setContrasena2, true)}
+            </View>
 
-              {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
+            {errorMessage ? <Text style={styles.errorText}>{errorMessage}</Text> : null}
 
-              <View style={styles.buttonRow}>
-                <TouchableOpacity style={[styles.button, styles.halfButton]} onPress={guardarCambios}>
-                  <Text style={styles.buttonText}>Guardar Cambios</Text>
-                </TouchableOpacity>
+            <View style={styles.buttonRow}>
+              <TouchableOpacity style={[styles.button, styles.halfButton]} onPress={guardarCambios}>
+                <Text style={styles.buttonText}>Guardar Cambios</Text>
+              </TouchableOpacity>
 
-                <TouchableOpacity style={[styles.button, styles.buttonOutline, styles.halfButton]} onPress={cerrarSesion}>
-                  <Text style={styles.buttonOutlineText}>Cerrar Sesión</Text>
-                </TouchableOpacity>
-              </View>
-
-              <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarCuenta(user.id)}>
-                <Text style={styles.deleteButtonText}>Eliminar Cuenta</Text>
+              <TouchableOpacity style={[styles.button, styles.buttonOutline, styles.halfButton]} onPress={cerrarSesion}>
+                <Text style={styles.buttonOutlineText}>Cerrar Sesión</Text>
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity style={styles.deleteButton} onPress={() => eliminarCuenta(user.id)}>
+              <Text style={styles.deleteButtonText}>Eliminar Cuenta</Text>
+            </TouchableOpacity>
           </ScrollView>
         </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#1E1E1E', // Fondo oscuro
-  },
-  overlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'black',
-  },
-  scrollViewContent: {
-    flexGrow: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: '10%',
-  },
-  headerContainer: {
-    alignItems: 'center',
-    marginBottom: '7%',
-  },
-  headerText: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
-    marginTop: '2%',
-  },
-  formContainer: {
-    width: '85%',
-  },
-  circle: {
-    width: windowHeight * 0.15,
-    height: windowHeight * 0.15,
-    borderRadius: 1000,
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  initials: {
-    color: 'white',
-    fontSize: 40,
-    fontWeight: 'bold',
-  },
-  inputGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: '5%',
-    borderBottomWidth: 1,
-    borderBottomColor: '#fff',
-    backgroundColor: 'rgba(255,255,255,0.1)',
-    borderRadius: 10,
-    padding: '2.5%',
-  },
-  icon: {
-    marginRight: '2.5%',
-  },
-  input: {
-    flex: 1,
-    color: '#fff',
-    fontSize: 16,
-    paddingVertical: '2.5%',
-  },
-  button: {
-    backgroundColor: '#fff',
-    paddingVertical: '3%',
-    borderRadius: 10,
-    alignItems: 'center',
-    marginBottom: '3.75%',
-  },
-  buttonText: {
-    color: '#3b5998',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  buttonOutline: {
-    backgroundColor: 'transparent',
-    borderWidth: 2,
-    borderColor: '#fff',
-  },
-  buttonOutlineText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  deleteButton: {
-    backgroundColor: '#ff6b6b',
-    paddingVertical: '3%',
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  deleteButtonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: 'bold',
-  },
-  errorText: {
-    color: '#ff6b6b',
-    textAlign: 'center',
-    marginBottom: '3.75%',
-  },
-  blurBackground: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)', // Fondo borroso
-    zIndex: 0,
-  },
-  buttonRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-  },
-  halfButton: {
-    flex: 1,
-    marginHorizontal: '1.25%',
-  },
-});
 
 export default Settings;

@@ -38,7 +38,7 @@ const EditarGrupo = ({ route }) => {
   useEffect(() => {
     const fetchMiembrosGrupo = async () => {
       try {
-        const response = await fetch(`https://backendapi.familyseriestrack.com/miembros-grupo/${nombreGrupo}`);
+        const response = await fetch(`${global.API}/miembros-grupo/${nombreGrupo}`);
         const data = await response.json();
         setMiembros(data.members);
         setIdGrupo(data.groupId);
@@ -50,7 +50,7 @@ const EditarGrupo = ({ route }) => {
 
     const fetchIDAdmin = async (idGrupo) => {
       try {
-        const response = await fetch(`https://backendapi.familyseriestrack.com/id-admin/${idGrupo}`);
+        const response = await fetch(`${global.API}/id-admin/${idGrupo}`);
         const data = await response.json();
         setAdmin(data.admin[0].Admin);
       } catch (error) {
@@ -71,11 +71,11 @@ const EditarGrupo = ({ route }) => {
 
   const addUserToGroup = async () => {
     try {
-      const responseId = await fetch(`https://backendapi.familyseriestrack.com/usuario_por_id/${newUserName}`);
+      const responseId = await fetch(`${global.API}/usuario_por_id/${newUserName}`);
       const data = await responseId.json();
       const idNewUser = data.idUsuario;
 
-      const response = await fetch(`https://backendapi.familyseriestrack.com/anadir_usuario_a_grupo`, {
+      const response = await fetch(`${global.API}/anadir_usuario_a_grupo`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ const EditarGrupo = ({ route }) => {
   const handleSave = async () => {
     setIsEditing(false);
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/actualizar-nombre-grupo/${idGrupo}`, {
+      const response = await fetch(`${global.API}/actualizar-nombre-grupo/${idGrupo}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -132,7 +132,7 @@ const EditarGrupo = ({ route }) => {
           text: 'Sí',
           onPress: async () => {
             try {
-              const response = await fetch(`https://backendapi.familyseriestrack.com/eliminar-usuario_grupo/${idGrupo}/${user.id}`, {
+              const response = await fetch(`${global.API}/eliminar-usuario_grupo/${idGrupo}/${user.id}`, {
                 method: 'DELETE',
               });
               if (response.ok) {
@@ -160,7 +160,7 @@ const EditarGrupo = ({ route }) => {
           text: 'Sí',
           onPress: async () => {
             try {
-              const response = await fetch(`https://backendapi.familyseriestrack.com/eliminar-grupo/${idGrupo}`, {
+              const response = await fetch(`${global.API}/eliminar-grupo/${idGrupo}`, {
                 method: 'DELETE',
               });
               if (response.ok) {

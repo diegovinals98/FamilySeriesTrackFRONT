@@ -53,7 +53,7 @@ const LogInScreen = () => {
     );
 
     try {
-      let response = await fetch('https://backendapi.familyseriestrack.com/login2', {
+      let response = await fetch(`${global.API}/login2`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -79,7 +79,7 @@ const LogInScreen = () => {
 
         const deviceId = await getDeviceId();
         try {
-          await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
+          await fetch(`${global.API}/insert-device-id`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -125,7 +125,7 @@ const LogInScreen = () => {
 
       // Make a request to the backend with the identity token and email
       if (payload.email_verified === true) {
-        let response = await fetch('https://backendapi.familyseriestrack.com/apple-login', {
+        let response = await fetch(`${global.API}/apple-login`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -153,7 +153,7 @@ const LogInScreen = () => {
 
         const deviceId = await getDeviceId();
         try {
-          await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
+          await fetch(`${global.API}/insert-device-id`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

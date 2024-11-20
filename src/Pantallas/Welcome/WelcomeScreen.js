@@ -2,7 +2,7 @@ import { React, useState, useEffect } from 'react';
 import { StyleSheet, Text, View, Image, TouchableOpacity, SafeAreaView, Platform } from 'react-native';
 import logoFST from '../../assets/logoFST.png';
 import { Dimensions } from 'react-native';
-import { globalStyles } from '../../estilosGlobales.js';
+import { globalStyles } from '../../../estilosGlobales.js';
 import * as Application from 'expo-application';
 import { useUser } from '../../userContext.js';
 import { styles} from './WelcomeScreenStyle';
@@ -43,32 +43,27 @@ export default function WelcomeScreen({ navigation }) {
 
   const checkDeviceIdInDB = async (deviceId) => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/check-device-id/${deviceId}`, {
+      const response = await fetch(`${global.API}/check-device-id/${deviceId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
       });
 
-      if (!response.ok) {
-        throw new Error('Error al consultar la base de datos');
-      }
+
 
       const data = await response.json();
 
       if (data.length !== 0 && data.IdUsuario) {
         const userId = data.IdUsuario;
-        const userResponse = await fetch(`https://backendapi.familyseriestrack.com/get-user/${userId}`, {
+        const userResponse = await fetch(`${global.API}/get-user/${userId}`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
           },
         });
 
-        if (!userResponse.ok) {
-          throw new Error('Error al obtener los detalles del usuario');
-        }
-
+    
         const userData = await userResponse.json();
         console.log("------------- USER DATA -----------------");
         console.log(userData);

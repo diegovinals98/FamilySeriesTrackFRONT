@@ -36,7 +36,7 @@ const Estadisticas = () => {
 
   const obtenerCapitulosVistos = async () => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/capitulos-vistos/${idUsuario}`);
+      const response = await fetch(`${global.API}/capitulos-vistos/${idUsuario}`);
       const data = await response.json();
       setCapitulosPorSerie(data);
     } catch (error) {
@@ -46,7 +46,7 @@ const Estadisticas = () => {
 
   const obtenerTemporadasVistas = async () => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/temporadas-vistas/${idUsuario}`);
+      const response = await fetch(`${global.API}/temporadas-vistas/${idUsuario}`);
       const data = await response.json();
       setTemporadasVistas(data.totalTemporadasVistas);
     } catch (error) {
@@ -56,7 +56,7 @@ const Estadisticas = () => {
 
   const obtenerSeriesVistas = async () => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/series-vistas/${idUsuario}`);
+      const response = await fetch(`${global.API}/series-vistas/${idUsuario}`);
       const data = await response.json();
       setSeriesVistas(data);
     } catch (error) {

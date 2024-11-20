@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { globalStyles } from '../estilosGlobales.js';
+import { globalStyles } from '../../estilosGlobales.js';
 import logoFST from '../assets/logoFST.png';
 import { useUser } from '../userContext.js'; // Importa el hook useUser
 import * as Crypto from 'expo-crypto';
@@ -81,7 +81,7 @@ const SignUp = ({ navigation }) => {
 
         
 
-        let response = await fetch('https://backendapi.familyseriestrack.com/usuario', {
+        let response = await fetch(`${global.API}/usuario`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ const SignUp = ({ navigation }) => {
 
           const deviceId = await getDeviceId();
           try {
-            await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
+            await fetch(`${global.API}/insert-device-id`, {
               method: 'POST',
               headers: {
                 'Content-Type': 'application/json',
@@ -157,7 +157,7 @@ const SignUp = ({ navigation }) => {
       console.log("datos de usuario de Apple", JSON.stringify(usuario, null, 2));
       
       // Enviar los datos a tu backend
-      let response = await fetch('https://backendapi.familyseriestrack.com/usuario', {
+      let response = await fetch(`${global.API}/usuario`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -177,7 +177,7 @@ const SignUp = ({ navigation }) => {
 
         const deviceId = await getDeviceId();
         try {
-          await fetch('https://backendapi.familyseriestrack.com/insert-device-id', {
+          await fetch(`${global.API}/insert-device-id`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

@@ -30,7 +30,7 @@ const RecuperarContrasena2 = ({ navigation }) => {
     );
 
     // Enviar los datos a un endpoint usando POST
-    fetch('https://backendapi.familyseriestrack.com/recuperar-contrasena', {
+    fetch(`${global.API}/recuperar-contrasena`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

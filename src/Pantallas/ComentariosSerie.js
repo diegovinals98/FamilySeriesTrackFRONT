@@ -24,7 +24,7 @@ import {
 
 // Importaciones de React Navigation
 import { useNavigation, useRoute } from '@react-navigation/native';
-import { sendPushNotification } from '../Pantallas/notificaciones';
+import { sendPushNotification } from './notificaciones';
 
 // Importación del contexto de usuario
 import { useUser } from '../userContext.js';
@@ -34,7 +34,7 @@ import { StatusBar } from 'expo-status-bar';
 import * as Notifications from 'expo-notifications';
 
 // Importaciones de estilos y componentes personalizados
-import { globalStyles } from '../estilosGlobales.js';
+import { globalStyles } from '../../estilosGlobales.js';
 
 // Importaciones de componentes de terceros
 import { SelectCountry, Dropdown } from 'react-native-element-dropdown';
@@ -78,10 +78,12 @@ const ComentariosSerie = () => {
     const comentariosRef = useRef(comentarios);
     const [comentarioAResponder, setComentarioAResponder] = useState(null);
     const [miembrosGrupo, setMiembrosGrupo] = useState([]);
+    const [visualizaciones, setVisualizaciones] = useState([]);
     let colorScheme = useColorScheme();
     
-
-
+  
+   
+    
 
     // Actualiza la referencia de comentarios cuando cambia el estado
     useEffect(() => {
@@ -95,10 +97,12 @@ const ComentariosSerie = () => {
       setComentarioAResponder(idComentario);
     };
 
+  
+
     const obtenerMiembrosGrupo = async () => {
       console.log('Obteniendo miembros del grupo');
       try {
-        const response = await fetch('https://backendapi.familyseriestrack.com/miembros-grupo/' + nombreGrupo, {
+        const response = await fetch(`${global.API}/miembros-grupo/${nombreGrupo}`, {
           method: 'GET',
           headers: { 'Content-Type': 'application/json' },
         });
@@ -114,7 +118,7 @@ const ComentariosSerie = () => {
       console.log('Enviando comentario');
       if (!comentarioaEnviar) return;
     
-      const url = `https://backendapi.familyseriestrack.com/anadir_comentario_a_serie`;
+      const url = `${global.API}/anadir_comentario_a_serie`;
     
       // Datos que se enviarán al servidor
       const datosAEnviar = {
@@ -147,7 +151,7 @@ const ComentariosSerie = () => {
           if (miembro.id !== userId) {
             try {
               // Obtenemos los tokens del miembro para enviar la notificación
-              const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${miembro.id}`, {
+              const response = await fetch(`${global.API}/obtener-token/${miembro.id}`, {
                 method: 'GET',
                 headers: { 'Content-Type': 'application/json' },
               });
@@ -177,6 +181,7 @@ const ComentariosSerie = () => {
         console.error('Error:', error);
       }
     }
+
     
     // Efecto para obtener y cargar datos
     useEffect(() => {
@@ -187,7 +192,7 @@ const ComentariosSerie = () => {
       
           try {
             // Lógica para obtener el ID del grupo
-            const responseGrupo = await fetch(`https://backendapi.familyseriestrack.com/grupo_por_nombre/${nombreGrupo}`);
+            const responseGrupo = await fetch(`${global.API}/grupo_por_nombre/${nombreGrupo}`);
             if (!responseGrupo.ok) {
               throw new Error('Grupo no encontrado');
             }
@@ -201,7 +206,7 @@ const ComentariosSerie = () => {
             }
       
             // Lógica para cargar los datos con el ID del grupo obtenido
-            const responseComentarios = await fetch(`https://backendapi.familyseriestrack.com/comentarios_por_grupo_serie/${dataGrupo.idGrupo}/${idSerie}`);
+            const responseComentarios = await fetch(`${global.API}/comentarios_por_grupo_serie/${dataGrupo.idGrupo}/${idSerie}`);
             if (!responseComentarios.ok) {
               throw new Error('Respuesta de red no fue ok');
             }
@@ -219,9 +224,48 @@ const ComentariosSerie = () => {
             console.error('Error:', error);
           }
         };
+
+        // Función para obtener las visualizaciones del grupo para esta serie
+        const obtenerVisualizaciones = async () => {
+          
+          try {
+            const responseGrupo = await fetch(`${global.API}/grupo_por_nombre/${nombreGrupo}`);
+            if (!responseGrupo.ok) {
+              throw new Error('Grupo no encontrado');
+            }
+            const dataGrupo = await responseGrupo.json();
+            console.log('ID del grupo:', dataGrupo.idGrupo);
+            setIdGrupo(dataGrupo.idGrupo);
+            console.log('ID del grupo (seteado):', idGrupo);
+      
+            // Asegúrate de que idGrupo esté definido antes de continuar
+            if (!dataGrupo.idGrupo) {
+              console.error('ID del Grupo no está definido');
+              return;
+            }
+
+            const response = await fetch(`${global.API}/visualizaciones-grupo-serie/${dataGrupo.idGrupo}/${idSerie}`);
+            console.log('Respuesta de visualizaciones:', response);
+            if (!response.ok) {
+              throw new Error('Error al obtener las visualizaciones');
+            }
+            const data = await response.json();
+            console.log('Visualizaciones obtenidas:', JSON.stringify(data));
+            setVisualizaciones(data);
+            setCambio(prev => !prev);
+            console.log('Visualizaciones actualizadas:', JSON.stringify(visualizaciones));
+          } catch (error) {
+            console.error('Error al obtener visualizaciones:', error);
+          }
+        };
       
         obtenerYcargarDatos();
-        const intervalId = setInterval(obtenerYcargarDatos, 5000);
+        obtenerVisualizaciones();
+        const intervalId = setInterval(() => {
+          obtenerYcargarDatos();
+          obtenerVisualizaciones();
+        }, 5000);
+        
       
         // Función de limpieza
         return () => clearInterval(intervalId);
@@ -238,11 +282,9 @@ const ComentariosSerie = () => {
     
         // Hacer scroll al final una vez cuando el componente se monta
         scrollViewRef.current?.scrollToEnd({ animated: false });
-    
         return () => {
           keyboardDidShowListener.remove();
         };
-
         
     }, []);
 
@@ -281,41 +323,92 @@ const ComentariosSerie = () => {
                   keyboardShouldPersistTaps= 'never' 
                   style={styles(colorScheme).scrollView}
                 >
-                  {comentarios.map((comentario, index) => (
-                    <View key={index} style={comentario.idUsuario === user.id ? styles(colorScheme).comentarioDerecha : styles(colorScheme).comentarioIzquierda}>
-                      <Text style={[styles(colorScheme).autor, comentario.idUsuario === user.id ? styles(colorScheme).autorDerecha : styles(colorScheme).autorIzquierda]}>{comentario.nombreCompleto}</Text>
-                      <Text style={[
-                        styles(colorScheme).comentariotexto,
-                        comentario.idUsuario === user.id ? styles(colorScheme).comentariotextoDerecha : styles(colorScheme).comentariotextoIzquierda
-                      ]}>
-                        {comentario.comentario}
-                      </Text>
-                      <Text style={[
-                        styles(colorScheme).fecha,
-                        comentario.idUsuario === user.id ? styles(colorScheme).fechaDerecha : styles(colorScheme).fechaIzquierda
-                      ]}>
-                        {moment(comentario.fechaHora).format('dddd D [de] MMMM, HH:mm')}
-                      </Text>
-                      
-                      {/* Botón para responder 
-                      <TouchableOpacity onPress={() => seleccionarComentarioAResponder(comentario.id)}> 
-                        <Text style={styles(colorScheme).responderText}>Responder</Text>
-                      </TouchableOpacity>
-                      *
-                      }
+                  {comentarios.map((comentario, index) => {
+                    // Verificar si es el primer mensaje del día o si la fecha es diferente del mensaje anterior
+                    const fechaActual = moment(comentario.fechaHora).format('LL');
+                    const fechaAnterior = index > 0 ? moment(comentarios[index-1].fechaHora).format('LL') : null;
+                    const mostrarFecha = index === 0 || fechaActual !== fechaAnterior;
 
-                      {/* Si el comentario tiene respuestas */}
-                      {comentario.respuestas && comentario.respuestas.length > 0 && (
-                        <View style={styles(colorScheme).respuestasContainer}>
-                          {comentario.respuestas.map((respuesta, i) => (
-                            <View key={i} style={styles(colorScheme).comentarioRespuesta}>
-                              <Text>{respuesta.comentario}</Text>
+                    return (
+                      <View key={index}>
+                        {mostrarFecha && (
+                          <View style={{alignItems: 'center', marginVertical: 10, borderRadius: 20}}>
+                            <Text style={{
+                              color: colorScheme === 'dark' ? 'white' : '#666',
+                              backgroundColor: colorScheme === 'dark' ? 'rgba(0,0,0,1)' : 'rgba(255,255,255,0.3)',
+                              padding: 5,
+                              borderRadius: 20
+                            }}>
+                              {(() => {
+                                const fecha = moment(comentario.fechaHora);
+                                const hoy = moment();
+                                const ayer = moment().subtract(1, 'days');
+                                
+                                if (fecha.isSame(hoy, 'day')) {
+                                  return 'Hoy';
+                                } else if (fecha.isSame(ayer, 'day')) {
+                                  return 'Ayer';
+                                } else if (fecha.isSame(hoy, 'week')) {
+                                  return fecha.format('dddd');
+                                } else if (fecha.isSame(hoy, 'year')) {
+                                  return fecha.format('dddd, D MMM').charAt(0).toUpperCase() + fecha.format('dddd, D MMM').slice(1);
+                                } else {
+                                  return fecha.format('D [de] MMMM [de] YYYY');
+                                }
+                              })()}
+                            </Text>
+                          </View>
+                        )}
+                        
+                        <View style={[
+                          comentario.idUsuario === user.id ? styles(colorScheme).comentarioDerecha : styles(colorScheme).comentarioIzquierda,
+                          index > 0 && comentarios[index-1].idUsuario === comentario.idUsuario ? {marginTop: -10} : null
+                        ]}>
+                          {(index === 0 || comentarios[index-1].idUsuario !== comentario.idUsuario) && comentario.idUsuario !== user.id && (
+                            <Text style={[styles(colorScheme).autor, comentario.idUsuario === user.id ? styles(colorScheme).autorDerecha : styles(colorScheme).autorIzquierda]}>
+                              {comentario.nombreCompleto}
+                            </Text>
+                          )}
+                          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'bottom'}}>
+                            <Text style={[
+                              styles(colorScheme).comentariotexto,
+                              comentario.idUsuario === user.id ? styles(colorScheme).comentariotextoDerecha : styles(colorScheme).comentariotextoIzquierda
+                            ]}>
+                              {comentario.comentario} 
+                            </Text>
+                            <Text style={[
+                              styles(colorScheme).fecha,
+                              styles(colorScheme).fechaDerecha
+                            ]}>
+                              {moment(comentario.fechaHora).format('HH:mm')}
+                            </Text>
+                          </View>
+                        </View>
+                        {visualizaciones
+                          .filter(visualizacion => {
+                            const fechaVisualizacion = moment(visualizacion.fecha);
+                            const fechaComentarioActual = moment(comentario.fechaHora);
+                            const fechaComentarioSiguiente = index < comentarios.length - 1 ? 
+                              moment(comentarios[index + 1].fechaHora) : null;
+                            
+                            return fechaVisualizacion.isAfter(fechaComentarioActual) && 
+                                   (!fechaComentarioSiguiente || fechaVisualizacion.isBefore(fechaComentarioSiguiente));
+                          })
+                          .map((visualizacion, index) => (
+                            <View key={index} style={{alignItems: 'center', marginTop: 10, marginBottom: 10, borderRadius: 20}}>
+                              <Text style={{
+                                color: colorScheme === 'dark' ? 'white' : '#666',
+                                backgroundColor: colorScheme === 'dark' ? 'rgba(0,0,0,1)' : 'rgba(255,255,255,0.3)', 
+                                padding: 5,
+                                borderRadius: 20
+                              }}>
+                                {`${visualizacion.nombreUsuario} - Temporada ${visualizacion.temporada} Capítulo ${visualizacion.capitulo}`}
+                              </Text>
                             </View>
                           ))}
-                        </View>
-                      )}
-                    </View>
-                  ))}
+                      </View>
+                    );
+                  })}
                 </ScrollView>
               </ImageBackground>
               {/* Área para introducir comentarios */}
@@ -395,7 +488,7 @@ const styles = (colorScheme) => StyleSheet.create({
     paddingHorizontal: '4%',
     paddingVertical: '3%',
     marginRight: '3%',
-    fontSize: 16,
+    fontSize: 14,
     backgroundColor: colorScheme === 'dark' ? '#2C2C2C' : '#F8F8F8',
     color: colorScheme === 'dark' ? '#E0E0E0' : '#000',
   },
@@ -410,13 +503,15 @@ const styles = (colorScheme) => StyleSheet.create({
   buttonText: {
     color: 'white',
     fontWeight: 'bold',
-    fontSize: 16,
+    fontSize: 14,
   },
   comentarioDerecha: {
     alignSelf: 'flex-end',
     backgroundColor: colorScheme === 'dark' ? 'rgba(11, 61, 145, 1)' : 'rgba(220, 248, 198, 1)',
-    borderRadius: 15,
-    padding: '3%',
+    borderRadius: 20,
+    paddingTop: '2%',
+    paddingLeft: '3%',
+    paddingRight: '3%',
     maxWidth: '100%',
     shadowColor: colorScheme === 'dark' ? "#FFF" : "#000",
     shadowOffset: {
@@ -431,8 +526,10 @@ const styles = (colorScheme) => StyleSheet.create({
   comentarioIzquierda: {
     alignSelf: 'flex-start',
     backgroundColor: colorScheme === 'dark' ? 'rgba(44, 44, 44, 1)' : 'rgba(255, 255, 255, 1)',
-    borderRadius: 15,
-    padding: '3%',
+    borderRadius: 20,
+    paddingTop: '2%',
+    paddingLeft: '3%',
+    paddingRight: '3%',
     maxWidth: '80%',
     shadowColor: colorScheme === 'dark' ? "#FFF" : "#000",
     shadowOffset: {
@@ -447,34 +544,24 @@ const styles = (colorScheme) => StyleSheet.create({
   autorDerecha: {
     textAlign: 'right',
     fontWeight: 'bold',
-    fontSize: 17,
+    fontSize: 15,
     color: colorScheme === 'dark' ? '#E0E0E0' : '#4A4A4A',
     marginBottom: '1%',
   },
   autorIzquierda: {
     textAlign: 'left',
     fontWeight: 'bold',
-    fontSize: 17,
+    fontSize: 15,
     color: colorScheme === 'dark' ? '#E0E0E0' : '#4A4A4A',
     marginBottom: '1%',
   },
-  fecha: {
-    fontSize: 12,
-    color: colorScheme === 'dark' ? '#888' : '#888',
-    marginTop: '1%',
-    alignSelf: 'flex-end',
-  },
   fechaDerecha:{
-    fontSize: 11,
+    paddingBottom: '3%',
+    fontSize: 10,
     color: colorScheme === 'dark' ? '#888' : '#888',
     marginTop: '1%',
+    marginLeft: '3%',
     alignSelf: 'flex-end',
-  },
-  fechaIzquierda:{
-    fontSize: 11,
-    color: colorScheme === 'dark' ? '#888' : '#888',
-    marginTop: '1%',
-    alignSelf: 'flex-start',
   },
   comentarioRespuesta: {
     textAlign: 'right',
@@ -483,13 +570,13 @@ const styles = (colorScheme) => StyleSheet.create({
 
   comentariotextoDerecha: {
     textAlign: 'right',
-    fontSize: 16,
+    fontSize: 13,
     color: colorScheme === 'dark' ? '#E0E0E0' : '#333',
     marginBottom: '2%',
   },
   comentariotextoIzquierda: {
     textAlign: 'left',
-    fontSize: 16,
+    fontSize: 13,
     color: colorScheme === 'dark' ? '#E0E0E0' : '#333',
     marginBottom: '2%',
   },

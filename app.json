@@ -2,12 +2,12 @@
   "expo": {
     "name": "FamilySeriesTrack",
     "slug": "TestTFG",
-    "version": "1.6.4",
+    "version": "1.6.5",
     "orientation": "portrait",
-    "icon": "./assets/logoFST.png",
+    "icon": "./src/assets/logoFST.png",
     "userInterfaceStyle": "automatic",
     "splash": {
-      "image": "./assets/splash.png",
+      "image": "./src/assets/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -20,15 +20,15 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./src/assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
       "googleServicesFile": "./google-services.json",
       "package": "com.edgehealth.seriesdv",
-      "versionCode": 23
+      "versionCode": 24
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./src/assets/favicon.png"
     },
     "plugins": [
       "expo-asset",

@@ -57,7 +57,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
 
   const obtenerUsuariosViendoSerie = async (nombreGrupo, idSerie) => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/usuarios-viendo-serie/${nombreGrupo}/${idSerie}`);
+      const response = await fetch(`${global.API}/usuarios-viendo-serie/${nombreGrupo}/${idSerie}`);
       if (!response.ok) {
         throw new Error('Respuesta de red no fue ok.');
       }
@@ -70,7 +70,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
 
   const obtenerSiEsFavorito = async (idSerie, idUsuario) => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/existe-favorito/${idUsuario}/${idSerie}`);
+      const response = await fetch(`${global.API}/existe-favorito/${idUsuario}/${idSerie}`);
       const data = await response.json();
       if (data.exists) {
         setIsFavorite(true);
@@ -99,7 +99,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
 
   const obtenerMiembrosDelGrupo = async (nombre) => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/miembros-grupo/${nombre}`);
+      const response = await fetch(`${global.API}/miembros-grupo/${nombre}`);
       const data = await response.json();
       return data.members.map(member => member.id);
     } catch (error) {
@@ -126,7 +126,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
           text: 'Sí',
           onPress: async () => {
             try {
-              const response = await fetch('https://backendapi.familyseriestrack.com/eliminar-serie-usuario', {
+              const response = await fetch(`${global.API}/eliminar-serie-usuario`, {
                 method: 'DELETE',
                 headers: {
                   'Content-Type': 'application/json',
@@ -147,7 +147,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
                 if (id !== user.id) {
                   try {
                     // Obtenemos los tokens del miembro para enviar la notificación
-                    const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${id}`, {
+                    const response = await fetch(`${global.API}/obtener-token/${id}`, {
                       method: 'GET',
                       headers: { 'Content-Type': 'application/json' },
                     });
@@ -224,7 +224,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     if (!isFavorite) {
       try {
         // Aquí puedes agregar la lógica para guardar el estado de favorito en el backend
-        const response = await fetch('https://backendapi.familyseriestrack.com/anadir-favorito', {
+        const response = await fetch(`${global.API}/anadir-favorito`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -240,7 +240,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
       }
     } else {
       try {
-        const response = await fetch('https://backendapi.familyseriestrack.com/eliminar-favorito', {
+        const response = await fetch(`${global.API}/eliminar-favorito`, {
           method: 'DELETE',
           headers: {
             'Content-Type': 'application/json',

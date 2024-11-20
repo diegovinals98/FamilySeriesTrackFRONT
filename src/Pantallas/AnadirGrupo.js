@@ -55,7 +55,7 @@ const AnadirGrupo = () => {
 
   const obtenerTokensUsuario = async (userId) => {
     try {
-      const response = await fetch(`https://backendapi.familyseriestrack.com/obtener-token/${userId}`);
+      const response = await fetch(`${global.API}/obtener-token/${userId}`);
       if (!response.ok) {
         throw new Error('No se pudieron obtener los tokens');
       }
@@ -92,7 +92,7 @@ const AnadirGrupo = () => {
     };
 
     try {
-      const response = await fetch('https://backendapi.familyseriestrack.com/crear-grupo-y-asociar-usuarios', {
+      const response = await fetch(`${global.API}/crear-grupo-y-asociar-usuarios`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -122,7 +122,7 @@ const AnadirGrupo = () => {
       // Función para obtener el ID de usuario a partir del nombre de usuario
       const obtenerIdUsuario = async (nombreUsuario) => {
         try {
-          const response = await fetch(`https://backendapi.familyseriestrack.com/usuario/${nombreUsuario}`);
+          const response = await fetch(`${global.API}/usuario/${nombreUsuario}`);
           if (!response.ok) {
             throw new Error('Usuario no encontrado');
           }
