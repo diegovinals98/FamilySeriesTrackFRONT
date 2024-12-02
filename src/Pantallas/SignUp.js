@@ -3,7 +3,6 @@ import { globalStyles } from '../../estilosGlobales.js';
 import logoFST from '../assets/logoFST.png';
 import { useUser } from '../userContext.js'; // Importa el hook useUser
 import * as Crypto from 'expo-crypto';
-import { SafeAreaView } from "react-native";
 import * as Application from 'expo-application';
 import {
   View,
@@ -22,7 +21,6 @@ import {
 import * as AppleAuthentication from 'expo-apple-authentication';
 
 
-const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 
 const getDeviceId = async () => {

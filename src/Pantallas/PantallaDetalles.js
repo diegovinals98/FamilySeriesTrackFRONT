@@ -1,9 +1,8 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback , useEffect} from 'react';
 import { View, Text, StyleSheet, Image, ScrollView, TouchableOpacity, Alert, Linking, Share, useColorScheme } from 'react-native';
 import { useUser } from '../userContext.js'; 
 import { useFocusEffect } from '@react-navigation/native';
 import Icon from 'react-native-vector-icons/FontAwesome';
-import { Rating } from 'react-native-elements';
 import { sendPushNotification } from './notificaciones.js';
 const PantallaDeDetalles = ({ route, navigation }) => {
   const { idSerie, NombreGrupo } = route.params;
@@ -13,7 +12,7 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   const [rating, setRating] = useState(0);
   const [isFavorite, setIsFavorite] = useState(false);
   const [trailerKey, setTrailerKey] = useState(null);
-
+  const [miembrosGrupo, setMiembrosGrupo] = useState([]);
   const { user } = useUser();
   const colorScheme = useColorScheme();
   // cambiar el primer dark a colorScheme
@@ -56,6 +55,8 @@ const PantallaDeDetalles = ({ route, navigation }) => {
   };
 
   const obtenerUsuariosViendoSerie = async (nombreGrupo, idSerie) => {
+    console.log("nombreGrupo", nombreGrupo);
+    console.log("idSerie", idSerie);  
     try {
       const response = await fetch(`${global.API}/usuarios-viendo-serie/${nombreGrupo}/${idSerie}`);
       if (!response.ok) {
@@ -67,6 +68,8 @@ const PantallaDeDetalles = ({ route, navigation }) => {
       console.error('Hubo un problema con la petición fetch:', error);
     }
   };
+
+
 
   const obtenerSiEsFavorito = async (idSerie, idUsuario) => {
     try {
@@ -82,14 +85,16 @@ const PantallaDeDetalles = ({ route, navigation }) => {
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      obtenerDetallesSerie(idSerie);
-      obtenerUsuariosViendoSerie(NombreGrupo, idSerie);
-      obtenerWatchProviders(idSerie); 
-      obtenerSiEsFavorito(idSerie, user.id);
-    }, [idSerie, NombreGrupo])
-  );
+  useEffect(() => {
+    obtenerDetallesSerie(idSerie);
+    obtenerUsuariosViendoSerie(NombreGrupo, idSerie);
+    obtenerWatchProviders(idSerie); 
+    obtenerSiEsFavorito(idSerie, user.id);
+  }, [idSerie, NombreGrupo, user.id]);
+
+  useEffect(() => {
+    console.log('Miembros del grupo actualizados: ', miembrosGrupo);
+  }, [miembrosGrupo]);
 
   const poster = (path) => {
     if (!path) return null;
@@ -343,16 +348,18 @@ const PantallaDeDetalles = ({ route, navigation }) => {
             <Text style={styles.headerCell}>TEMPORADA</Text>
             <Text style={styles.headerCell}>CAPÍTULO</Text>
           </View>
-          {UsuariosSerie.map((usuario, index) => (
-            <View key={index} style={[
-              styles.tableRow,
-              { backgroundColor: index % 2 === 0 ? (colorScheme === 'dark' ? '#2c2c2c' : '#e6e6e6') : (colorScheme === 'dark' ? '#3a3a3a' : '#f9f9f9') }
-            ]}>
-              <Text style={styles.tableCell}>{usuario.Nombre}</Text>
-              <Text style={styles.tableCell}>{usuario.Temporada_Mas_Alta}</Text>
-              <Text style={styles.tableCell}>{usuario.Capitulo_Mas_Reciente}</Text>
-            </View>
-          ))}
+          {UsuariosSerie.map((miembro, index) => {
+            return (
+              <View key={index} style={[
+                styles.tableRow,
+                { backgroundColor: index % 2 === 0 ? (colorScheme === 'dark' ? '#2c2c2c' : '#e6e6e6') : (colorScheme === 'dark' ? '#3a3a3a' : '#f9f9f9') }
+              ]}>
+                <Text style={styles.tableCell}>{miembro.Nombre}</Text>
+                <Text style={styles.tableCell}>{miembro.Temporada_Mas_Alta === 0 ? '-' : miembro.Temporada_Mas_Alta}</Text>
+                <Text style={styles.tableCell}>{miembro.Capitulo_Mas_Reciente === 0 ? '-' : miembro.Capitulo_Mas_Reciente}</Text>
+              </View>
+            );
+          })}
         </View>
 
         

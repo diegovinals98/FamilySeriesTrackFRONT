@@ -11,11 +11,9 @@ import {
   ScrollView,
   useColorScheme,
 } from 'react-native';
-import { useNavigation, useRoute } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
-import { StatusBar } from 'expo-status-bar';
 import { useFocusEffect } from '@react-navigation/native';
-import * as Notifications from 'expo-notifications';
 import { sendPushNotification } from './notificaciones.js';
 
 const windowHeight = Dimensions.get('window').height;

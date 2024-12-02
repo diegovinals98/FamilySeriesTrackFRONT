@@ -1,8 +1,7 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, StyleSheet, ScrollView, Image, TouchableOpacity, useColorScheme, Modal } from 'react-native';
 import { useUser } from '../userContext.js';
 import { useFocusEffect } from '@react-navigation/native';
-import * as Notifications from 'expo-notifications';
 import { sendPushNotification } from './notificaciones.js';
 import { WebView } from 'react-native-webview';
 

@@ -21,13 +21,13 @@ import RecuperarContrasena from './Pantallas/RecuperarContrasena.js';
 import RecuperarContrasena2 from './Pantallas/RecuperarContrasena2.js';
 import { useColorScheme } from 'react-native';
 
-const APILAPSPARTBOX = "https://api-tfg.lapspartbox.com";
+const APILAPSPARTBOX = "https://apitfg.lapspartbox.com";
 const APIGOOGLE = "https://backendapi.familyseriestrack.com";
 console.log("APILAPSPARTBOX:", APILAPSPARTBOX);
 console.log("APIGOOGLE:", APIGOOGLE);
 
 // Configuración de la API global (cual se usa)
-global.API = APIGOOGLE;
+global.API = APILAPSPARTBOX;
 console.log("API configurada:", global.API);
 
 

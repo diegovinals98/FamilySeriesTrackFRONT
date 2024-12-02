@@ -7,15 +7,9 @@ import {
   Text, 
   StyleSheet, 
   TouchableOpacity, 
-  Dimensions, 
-  Image,
   TextInput, 
-  FlatList,
   Keyboard,
-  Button,
-  Alert,
   ScrollView,
-  RefreshControl,
   KeyboardAvoidingView,
   Platform,
   useColorScheme,
@@ -29,30 +23,10 @@ import { sendPushNotification } from './notificaciones';
 // Importación del contexto de usuario
 import { useUser } from '../userContext.js';
 
-// Importaciones de Expo
-import { StatusBar } from 'expo-status-bar';
-import * as Notifications from 'expo-notifications';
-
-// Importaciones de estilos y componentes personalizados
-import { globalStyles } from '../../estilosGlobales.js';
-
-// Importaciones de componentes de terceros
-import { SelectCountry, Dropdown } from 'react-native-element-dropdown';
-import AntDesign from '@expo/vector-icons/AntDesign';
-import { useFocusEffect } from '@react-navigation/native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { head } from 'lodash';
-
 // Importación y configuración de moment para manejar fechas
 import moment from 'moment';
 import 'moment/locale/es';  
 moment.locale('es');  // Configura globalmente moment en español
-
-// Importación de componentes de gesture handler
-import { TouchableWithoutFeedback } from 'react-native-gesture-handler';
-
-// Obtiene las dimensiones de la ventana del dispositivo.
-const windowHeigh = Dimensions.get('window').height;
 
 
 // TODO Implementar un sistema de mensajería en tiempo real, similar a Whatsapp, para que los usuarios puedan comunicarse dentro de la plataforma.

@@ -15,8 +15,6 @@ import { useNavigation } from '@react-navigation/native';
 import { useUser } from '../userContext.js';
 import { Ionicons } from '@expo/vector-icons';
 
-const windowWidth = Dimensions.get('window').width;
-const windowHeight = Dimensions.get('window').height;
 
 const EditarGrupo = ({ route }) => {
   const navigation = useNavigation();
